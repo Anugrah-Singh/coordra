@@ -1,6 +1,12 @@
+# Dependency directories
+node_modules/
+
+# Environment variables (CRITICAL)
 .env
 .env.*
-node_modules
-dist
-drizzle
-*.tsbuildinfo
+
+# Build outputs
+dist/
+
+# OS metadata
+.DS_Store

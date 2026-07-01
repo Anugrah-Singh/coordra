@@ -4,7 +4,7 @@ import { tasks } from './tasks.js';
 import { users } from './users.js';
 
 export const comments = pgTable('comments', {
-    id: uuid('id').primaryKey().defaultRandom();
+    id: uuid('id').primaryKey().defaultRandom(),
 
     //strict isolation & cascading
     workspaceId: uuid('workspace_id').references(() => workspaces.id, {

@@ -1,8 +1,10 @@
 import { defineConfig } from 'drizzle-kit';
 import * as dotenv from 'dotenv';
+import { resolve } from 'path';
+
 
 // Load our environment variables
-dotenv.config();
+dotenv.config({ path: resolve(process.cwd(), '.env')});
 
 export default defineConfig({
   schema: './src/db/schema/index.ts', // 📍 Where our TypeScript schemas live
