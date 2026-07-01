@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    /* 1. Core Environment */
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "lib": ["ES2022"],
+
+    /* 2. File Organization */
+    "rootDir": "./src",
+    "outDir": "./dist",
+    
+    /* 3. The Safety Net */
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    
+    /* 4. Quality of Life */
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
+}
