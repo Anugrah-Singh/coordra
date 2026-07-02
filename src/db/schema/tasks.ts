@@ -11,7 +11,8 @@ export const taskStatusEnum = pgEnum('task_status', [
 ]);
 
 export const tasks = pgTable('tasks', {
-    id: uuid('workspace_id').references(() => workspaces.id, {
+    id: uuid('id').primaryKey().defaultRandom(),
+    workspaceId: uuid('workspace_id').references(() => workspaces.id, {
         onDelete: 'cascade'
     }).notNull(),
 

@@ -1,0 +1,46 @@
+name: Preview Environment Database Branching
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+
+jobs:
+  manage-preview-database:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        if: github.event.action != 'closed'
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        if: github.event.action != 'closed'
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+
+      - name: Install Dependencies
+        if: github.event.action != 'closed'
+        run: npm install
+
+      - name: Create Neon Database Branch
+        id: create-branch
+        if: github.event.action != 'closed'
+        uses: neondatabase/create-branch-action@v6
+        with:
+          project_id: ${{ vars.NEON_PROJECT_ID }}
+          api_key: ${{ secrets.NEON_API_KEY }}
+          branch_name: pr-${{ github.event.number }}
+
+      - name: Run Drizzle Migrations on Isolated Branch
+        if: github.event.action != 'closed'
+        env:
+          DATABASE_URL: ${{ steps.create-branch.outputs.db_url }}
+        run: npx drizzle-kit migrate
+
+      - name: Delete Neon Database Branch
+        if: github.event.action == 'closed'
+        uses: neondatabase/delete-branch-action@v3
+        with:
+          project_id: ${{ vars.NEON_PROJECT_ID }}
+          api_key: ${{ secrets.NEON_API_KEY }}
+          branch: pr-${{ github.event.number }}
