@@ -1,5 +1,5 @@
 {
-  "id": "d023c41e-b5ce-426a-8333-e2564a7d9e07",
+  "id": "5f9d0019-4fa6-491c-8ca2-ab6ca03b1f11",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -277,6 +277,13 @@
       "name": "tasks",
       "schema": "",
       "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
         "workspace_id": {
           "name": "workspace_id",
           "type": "uuid",
@@ -449,15 +456,15 @@
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
-        "comments_task_id_tasks_workspace_id_fk": {
-          "name": "comments_task_id_tasks_workspace_id_fk",
+        "comments_task_id_tasks_id_fk": {
+          "name": "comments_task_id_tasks_id_fk",
           "tableFrom": "comments",
           "tableTo": "tasks",
           "columnsFrom": [
             "task_id"
           ],
           "columnsTo": [
-            "workspace_id"
+            "id"
           ],
           "onDelete": "cascade",
           "onUpdate": "no action"
@@ -561,15 +568,15 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "task_labels_id_tasks_workspace_id_fk": {
-          "name": "task_labels_id_tasks_workspace_id_fk",
+        "task_labels_id_tasks_id_fk": {
+          "name": "task_labels_id_tasks_id_fk",
           "tableFrom": "task_labels",
           "tableTo": "tasks",
           "columnsFrom": [
             "id"
           ],
           "columnsTo": [
-            "workspace_id"
+            "id"
           ],
           "onDelete": "cascade",
           "onUpdate": "no action"
