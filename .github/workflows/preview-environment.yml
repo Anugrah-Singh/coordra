@@ -31,12 +31,12 @@ jobs:
           api_key: ${{ secrets.NEON_API_KEY }}
           branch_name: pr-${{ github.event.number }}
 
-      - name: 🚀 Run Diagnostic Drizzle Migrations
+      - name: Run Drizzle Migrations on Isolated Branch
         if: github.event.action != 'closed'
         env:
           DATABASE_URL: ${{ steps.create-branch.outputs.db_url }}
-        run: npx tsx src/db/migrate.ts
-        
+        run: npx drizzle-kit migrate
+
       - name: Delete Neon Database Branch
         if: github.event.action == 'closed'
         uses: neondatabase/delete-branch-action@v3
