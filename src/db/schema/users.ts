@@ -7,4 +7,5 @@ export const users = pgTable('users', {
     fullName: text('full_name').notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
-});# Trigger migration
+});
+//
