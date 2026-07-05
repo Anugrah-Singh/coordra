@@ -11,13 +11,6 @@ export const createWorkspaceSchema = z.object({
         .max(50, { error: 'Workspace name cannot exceed 50 characters' })
         .trim(),
 
-        // In a real app, this might come from the authenticated user's JWT,
-        // but for now, we will require it in the body to test our database.
-        ownerId: z.guid({
-            error: (issue) => issue.input === undefined
-                ? 'Owner ID is required'
-                : 'Invalid UUID format for ownerId'
-        }),
     }),
 });
 

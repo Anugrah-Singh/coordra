@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { createWorkspaceInDb } from '../services/workspace.service.js';
 import { CreateWorkspaceInput } from '../schemas/workspace.schema.js';
+import { getUserWorkspacesFromDb } from '../services/workspace.service.js';
 
 export const createWorkspaceHandler = async (
     req: Request<{}, {}, CreateWorkspaceInput>,
@@ -8,9 +9,13 @@ export const createWorkspaceHandler = async (
     next: NextFunction
 ) => {
     try {
+        const ownerId = res.locals.userId;
         // 1. The data is already safe. 
         // We don't need 'if (!req.body.name)' because our Zod middleware guaranteed it.
-        const workspaceData = req.body;
+        const workspaceData = {
+            name: req.body.name,
+            ownerId: ownerId
+        };
 
         // 2. Delegate the heavy lifting to the Service layer
         const newWorkspace = await createWorkspaceInDb(workspaceData);
@@ -27,5 +32,27 @@ export const createWorkspaceHandler = async (
     // and pass it to 'next()'. This instantly throws the error down to the 
     // Global Error Handler we wrote in server.ts.
     next(error);
+    }
+};
+
+export const getUserWorkspacesHandler = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    try {
+    
+        const userId = res.locals.userId;
+
+        const workspaces = await getUserWorkspacesFromDb(userId);
+
+        res.status(200).json({
+            success: true,
+            message: 'Workspaces retrieved successfully',
+            data: workspaces,
+        });
+
+    } catch (error) {
+        next(error);
     }
 };
