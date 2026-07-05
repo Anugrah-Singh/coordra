@@ -2,6 +2,9 @@ import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import 'dotenv/config';
+import userRoutes from './routes/user.route.js';
+import cookieParser from 'cookie-parser';
+import authRoutes from './routes/auth.route.js';
 
 // 1. Import our Database Engine & SQL helper
 import { db } from './db/index.js';
@@ -17,6 +20,7 @@ const PORT = process.env.PORT || 8000;
 app.use(helmet()); // Secures HTTP headers against common exploits
 app.use(cors()); // Allows cross-origin requests from your future React frontend
 app.use(express.json()); // Parses incoming raw JSON into req.body
+app.use(cookieParser());
 
 // --- System Diagnostics Routes ---
 app.get('/health', (req: Request, res: Response) => {
@@ -47,6 +51,8 @@ app.post('/api/test', (req: Request, res: Response) => {
 
 // --- Core API Routes ---
 // This mounts our Workspace router to the /api/workspaces prefix
+app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
 app.use('/api/workspaces', workspaceRoutes);
 
 // --- The Global Error Handler (The Safety Net) ---
