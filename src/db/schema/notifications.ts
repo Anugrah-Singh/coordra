@@ -1,28 +1,59 @@
-import { pgTable, uuid, text, timestamp, pgEnum } from 'drizzle-orm/pg-core';
+import {
+  pgTable,
+  uuid,
+  text,
+  timestamp,
+  pgEnum,
+  index,
+} from 'drizzle-orm/pg-core';
+
 import { workspaces } from './workspaces.js';
 import { users } from './users.js';
 
 export const notificationTypeEnum = pgEnum('notification_type', [
-    'TASK_ASSIGNED',
-    'COMMENT_MENTION',
-    'PROHECT_UPDATE',
+  'TASK_ASSIGNED',
+  'COMMENT_MENTION',
+  'PROHECT_UPDATE',
+
+  // new values
+    'TASK_STATUS_CHANGED',
+    'COMMENT_ADDED',
+    'MEMBER_INVITED',
+    'PROJECT_UPDATED',
 ]);
 
-export const notifications = pgTable('notifications', {
+export const notifications = pgTable(
+  'notifications',
+  {
     id: uuid('id').primaryKey().defaultRandom(),
-    workspaceId: uuid('workspace_id').references(() => workspaces.id, {
-        onDelete: 'cascade'
-    }).notNull(),
-    userId: uuid('user_id').references(() => users.id, {
-        onDelete: 'cascade'
-    }).notNull(),
-    
-    type: notificationTypeEnum('text').notNull(),
-    message: text('message').notNull(),
-// Optional: Can point to a Task ID or Project ID to create a clickable link
-    resourceId: uuid('resource_id'),
-// If null, the notification is unread
-    readAt: timestamp('read_at'),
-    createdAt: timestamp('created_at').defaultNow().notNull(),
-});
 
+    workspaceId: uuid('workspace_id')
+      .references(() => workspaces.id, {
+        onDelete: 'cascade',
+      })
+      .notNull(),
+
+    userId: uuid('user_id')
+      .references(() => users.id, {
+        onDelete: 'cascade',
+      })
+      .notNull(),
+
+    type: notificationTypeEnum('type').notNull(),
+
+    message: text('message').notNull(),
+
+    resourceType: text('resource_type'),
+
+    resourceId: uuid('resource_id'),
+
+    readAt: timestamp('read_at'),
+
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (table) => [
+    index('notifications_workspace_idx').on(table.workspaceId),
+    index('notifications_user_idx').on(table.userId),
+    index('notifications_read_idx').on(table.readAt),
+  ]
+);

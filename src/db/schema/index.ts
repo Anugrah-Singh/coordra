@@ -5,3 +5,5 @@ export * from './tasks.js';
 export * from './comments.js';
 export * from './labels.js';
 export * from './notifications.js';
+export * from './auditLogs.js';
+export * from './invites.js';

@@ -2,13 +2,33 @@ import { z } from 'zod';
 
 export const createCommentSchema = z.object({
     body: z.object({
-        content: z.string().min(1, 'Comment cannot be empty').trim(),
+        content: z
+            .string()
+            .min(1, 'Comment cannot be empty')
+            .trim(),
     }),
+
     params: z.object({
         workspaceId: z.uuid('Invalid workspace ID'),
         projectId: z.uuid('Invalid project ID'),
         taskId: z.uuid('Invalid task ID'),
-    })
+    }),
+});
+
+export const updateCommentSchema = z.object({
+    body: z.object({
+        content: z
+            .string()
+            .min(1, 'Comment cannot be empty')
+            .trim(),
+    }),
+
+    params: z.object({
+        workspaceId: z.uuid('Invalid workspace ID'),
+        projectId: z.uuid('Invalid project ID'),
+        taskId: z.uuid('Invalid task ID'),
+        commentId: z.uuid('Invalid comment ID'),
+    }),
 });
 
 export const deleteCommentSchema = z.object({
@@ -17,9 +37,12 @@ export const deleteCommentSchema = z.object({
         projectId: z.uuid('Invalid project ID'),
         taskId: z.uuid('Invalid task ID'),
         commentId: z.uuid('Invalid comment ID'),
-    })
+    }),
 });
 
 export type CreateCommentInput = z.infer<typeof createCommentSchema>['body'];
+export type UpdateCommentInput = z.infer<typeof updateCommentSchema>['body'];
+
 export type CommentParams = z.infer<typeof createCommentSchema>['params'];
+export type UpdateCommentParams = z.infer<typeof updateCommentSchema>['params'];
 export type DeleteCommentParams = z.infer<typeof deleteCommentSchema>['params'];
