@@ -45,7 +45,7 @@ ALTER TABLE "tasks" ALTER COLUMN "status" SET DEFAULT 'BACKLOG';--> statement-br
 ALTER TABLE "labels" ALTER COLUMN "workspace_id" SET NOT NULL;--> statement-breakpoint
 ALTER TABLE "task_labels" ADD CONSTRAINT "task_labels_task_id_label_id_pk" PRIMARY KEY("task_id","label_id");--> statement-breakpoint
 ALTER TABLE "workspace_members" ADD COLUMN "removed_at" timestamp;--> statement-breakpoint
-ALTER TABLE "workspaces" ADD COLUMN "owner_id" uuid NOT NULL;--> statement-breakpoint
+ALTER TABLE "workspaces" ADD COLUMN "owner_id" uuid;--> statement-breakpoint
 ALTER TABLE "workspaces" ADD COLUMN "updated_at" timestamp DEFAULT now() NOT NULL;--> statement-breakpoint
 ALTER TABLE "tasks" ADD COLUMN "created_by_id" uuid;--> statement-breakpoint
 ALTER TABLE "tasks" ADD COLUMN "priority" "task_priority" DEFAULT 'MEDIUM' NOT NULL;--> statement-breakpoint
