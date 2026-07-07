@@ -1,5 +1,5 @@
 {
-  "id": "fdaf58e5-cc46-45cb-9d29-26fb84cbc820",
+  "id": "c3d1564d-d557-4409-82c5-beee57a0e4be",
   "prevId": "5f9d0019-4fa6-491c-8ca2-ab6ca03b1f11",
   "version": "7",
   "dialect": "postgresql",
@@ -193,7 +193,7 @@
           "name": "owner_id",
           "type": "uuid",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "created_at": {
           "name": "created_at",
