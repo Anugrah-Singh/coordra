@@ -5,6 +5,7 @@ import 'dotenv/config';
 import userRoutes from './routes/user.route.js';
 import cookieParser from 'cookie-parser';
 import authRoutes from './routes/auth.route.js';
+import { globalErrorHandler } from './middlewares/error.middleware.js';
 
 // 1. Import our Database Engine & SQL helper
 import { db } from './db/index.js';
@@ -67,6 +68,7 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
     });
 });
 
+app.use(globalErrorHandler);
 
 // --- Boot Sequence ---
 app.listen(PORT, () => {
