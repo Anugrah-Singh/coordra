@@ -1,5 +1,7 @@
-console.log("Workspace ROuter file executed");
 import { Router } from 'express';
+import { addMemberHandler, getWorkspaceMembersHandler } from '../controllers/member.controller.js';
+import { requireWorkspaceOwner, requireWorkspaceMember } from '../middlewares/rbac.middleware.js';
+import { addMemberSchema } from '../schemas/member.schema.js';
 import { createWorkspaceHandler, getUserWorkspacesHandler } from '../controllers/workspace.controllers.js';
 import { validate } from '../middlewares/validate.middleware.js';
 import { createWorkspaceSchema } from '../schemas/workspace.schema.js';
@@ -15,6 +17,21 @@ router.post(
     createWorkspaceHandler           // Step B: The Manager handles the request
 );
 
+router.post(
+    '/:workspaceId/members',
+    requireAuth,
+    requireWorkspaceOwner,
+    validate(addMemberSchema),
+    addMemberHandler
+);
+
 router.get('/', requireAuth, getUserWorkspacesHandler);
+
+router.get(
+    '/:workspaceId/members',
+    requireAuth,
+    requireWorkspaceMember,
+    getWorkspaceMembersHandler
+);
 
 export default router;
