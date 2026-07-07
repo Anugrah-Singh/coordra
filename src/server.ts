@@ -6,7 +6,8 @@ import userRoutes from './routes/user.route.js';
 import cookieParser from 'cookie-parser';
 import authRoutes from './routes/auth.route.js';
 import { globalErrorHandler } from './middlewares/error.middleware.js';
-
+import { createServer } from 'http';
+import { initSocket } from './socket.js'; 
 // 1. Import our Database Engine & SQL helper
 import { db } from './db/index.js';
 import { sql } from 'drizzle-orm';
@@ -16,6 +17,10 @@ import workspaceRoutes from './routes/workspace.route.js';
 
 const app = express();
 const PORT = process.env.PORT || 8000;
+
+const httpServer = createServer(app);
+
+initSocket(httpServer);
 
 // --- Global Security & Parsing Middleware ---
 app.use(helmet()); // Secures HTTP headers against common exploits
@@ -71,6 +76,7 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
 app.use(globalErrorHandler);
 
 // --- Boot Sequence ---
-app.listen(PORT, () => {
+httpServer.listen(PORT, () => {
     console.log(`Server initialized on http://localhost:${PORT}`);
+    console.log('Websocket Server initialized')
 });
