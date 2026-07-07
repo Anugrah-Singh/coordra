@@ -1,16 +1,13 @@
 name: Production Database Migration
 
-# when to run?
 on:
   push:
     branches:
       - main
-    #only trigger when actually db related file changed
     paths:
       - 'src/db/schema/**'
       - 'drizzle/**'
 
-# what should it do?
 jobs:
   migrate-database:
     runs-on: ubuntu-latest
@@ -23,12 +20,12 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: '24'
+          cache: npm
 
       - name: Install Dependencies
-        run: npm install
+        run: npm ci
 
       - name: Run Drizzle Migrations
-      # This securely injects the secret from GitHub into Node's process.env
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: npx drizzle-kit migrate
