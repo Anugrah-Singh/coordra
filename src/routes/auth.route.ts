@@ -1,9 +1,11 @@
 import { Router } from 'express';
-import { loginHandler } from '../controllers/auth.controller.js';
+import { login, logout, getMe } from '../controllers/auth.controller.js';
+import { requireAuth } from '../middlewares/auth.middleware.js';
 
 const router = Router();
 
-// We map this to a POST request because we are sending sensitive credentials in the body
-router.post('/login', loginHandler);
+router.post('/login', login);
+router.post('/logout', logout);
+router.get('/me', requireAuth, getMe);
 
 export default router;
