@@ -2,6 +2,14 @@ import { Request, Response, NextFunction } from 'express';
 import { createWorkspaceInDb } from '../services/workspace.service.js';
 import { CreateWorkspaceInput } from '../schemas/workspace.schema.js';
 import { getUserWorkspacesFromDb } from '../services/workspace.service.js';
+import {
+  TransferWorkspaceOwnerInput,
+  WorkspaceParams,
+} from '../schemas/workspace.schema.js';
+
+import { 
+    transferWorkspaceOwnershipInDb 
+} from '../services/workspace.service.js';
 
 export const createWorkspaceHandler = async (
     req: Request<{}, {}, CreateWorkspaceInput>,
@@ -55,4 +63,30 @@ export const getUserWorkspacesHandler = async (
     } catch (error) {
         next(error);
     }
+};
+
+export const transferWorkspaceOwnerHandler = async (
+  req: Request<WorkspaceParams, {}, TransferWorkspaceOwnerInput>,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { workspaceId } = req.params;
+    const { newOwnerMemberId } = req.body;
+    const currentOwnerId = res.locals.userId as string;
+
+    const result = await transferWorkspaceOwnershipInDb({
+      workspaceId,
+      currentOwnerId,
+      newOwnerMemberId,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Workspace ownership transferred successfully',
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
 };
