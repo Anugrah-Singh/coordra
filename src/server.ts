@@ -12,6 +12,7 @@ import { initSocket } from './socket.js';
 import { db } from './db/index.js';
 import { sql } from 'drizzle-orm';
 
+
 // 2. Import our Routers (The Waiters)
 import workspaceRoutes from './routes/workspace.route.js';
 
@@ -24,9 +25,12 @@ initSocket(httpServer);
 
 // --- Global Security & Parsing Middleware ---
 app.use(helmet()); // Secures HTTP headers against common exploits
-app.use(cors()); // Allows cross-origin requests from your future React frontend
-app.use(express.json()); // Parses incoming raw JSON into req.body
+app.use(cors({
+    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    credentials: true,
+  })); // Allows cross-origin requests from your future React frontend
 app.use(cookieParser());
+app.use(express.json()); // Parses incoming raw JSON into req.body
 
 // --- System Diagnostics Routes ---
 app.get('/health', (req: Request, res: Response) => {
