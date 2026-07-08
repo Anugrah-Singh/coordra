@@ -25,8 +25,8 @@ export const workspaces = pgTable('workspaces', {
   slug: text('slug').notNull().unique(),
 
   ownerId: uuid('owner_id').references(() => users.id, {
-      onDelete: 'restrict',
-    }),
+    onDelete: 'restrict',
+  }).notNull(),
 
   createdAt: timestamp('created_at').defaultNow().notNull(),
 
