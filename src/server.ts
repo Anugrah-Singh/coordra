@@ -65,18 +65,17 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/workspaces', workspaceRoutes);
 
-// --- The Global Error Handler (The Safety Net) ---
-// If any route or Zod validation throws an unexpected error,
-//  it falls down here.
-app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-    console.error('\n [Server Error]:', err.message || err);
-
-    res.status(err.status || 500).json({
-        success: false,
-        message: err.message || 'Internal Server Error',
-    });
+// --- 404 Handler ---
+// This catches requests that did not match any route above.
+app.use((req: Request, res: Response) => {
+  res.status(404).json({
+    success: false,
+    message: `Route not found: ${req.method} ${req.originalUrl}`,
+  });
 });
 
+
+// --- Global Error Handler ---
 app.use(globalErrorHandler);
 
 // --- Boot Sequence ---
