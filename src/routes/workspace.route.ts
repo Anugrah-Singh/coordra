@@ -1,37 +1,60 @@
 import { Router } from 'express';
-import { addMemberHandler, getWorkspaceMembersHandler } from '../controllers/member.controller.js';
-import { requireWorkspaceOwner, requireWorkspaceMember } from '../middlewares/rbac.middleware.js';
-import { addMemberSchema } from '../schemas/member.schema.js';
-import { createWorkspaceHandler, getUserWorkspacesHandler } from '../controllers/workspace.controllers.js';
-import { validate } from '../middlewares/validate.middleware.js';
-import { createWorkspaceSchema } from '../schemas/workspace.schema.js';
+import inviteRoutes from './invite.route.js';
+
+import labelRoutes from './label.route.js';
+
+import {
+  createWorkspaceHandler,
+  getUserWorkspacesHandler,
+  transferWorkspaceOwnerHandler
+} from '../controllers/workspace.controllers.js';
+
 import { requireAuth } from '../middlewares/auth.middleware.js';
+import { validate } from '../middlewares/validate.middleware.js';
+import { 
+    createWorkspaceSchema, 
+    transferWorkspaceOwnerSchema
+} from '../schemas/workspace.schema.js';
+
+import { 
+    requireWorkspaceOwner 
+} from '../middlewares/rbac.middleware.js';
+
+import memberRoutes from './member.route.js';
+import projectRoutes from './project.route.js';
+import auditLogRoutes from './auditLog.route.js';
 
 const router = Router();
 
-// Define the POST route and string our middleware and controller together
 router.post(
-    '/',
-    requireAuth,
-    validate(createWorkspaceSchema), // Step A: The Bouncer checks the payload
-    createWorkspaceHandler           // Step B: The Manager handles the request
+  '/',
+  requireAuth,
+  validate(createWorkspaceSchema),
+  createWorkspaceHandler
 );
-
-router.post(
-    '/:workspaceId/members',
-    requireAuth,
-    requireWorkspaceOwner,
-    validate(addMemberSchema),
-    addMemberHandler
-);
-
-router.get('/', requireAuth, getUserWorkspacesHandler);
 
 router.get(
-    '/:workspaceId/members',
-    requireAuth,
-    requireWorkspaceMember,
-    getWorkspaceMembersHandler
+  '/',
+  requireAuth,
+  getUserWorkspacesHandler
 );
+
+router.patch(
+  '/:workspaceId/transfer-owner',
+  requireAuth,
+  requireWorkspaceOwner,
+  validate(transferWorkspaceOwnerSchema),
+  transferWorkspaceOwnerHandler
+);
+
+router.use('/:workspaceId/audit-logs', auditLogRoutes);
+
+router.use('/:workspaceId/labels', labelRoutes);
+
+router.use('/:workspaceId/invites', inviteRoutes);
+
+router.use('/:workspaceId/members', memberRoutes);
+
+router.use('/:workspaceId/projects', projectRoutes);
 
 export default router;

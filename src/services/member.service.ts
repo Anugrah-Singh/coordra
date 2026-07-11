@@ -1,17 +1,281 @@
-import { eq } from 'drizzle-orm';
+import { and, desc, eq, isNull } from 'drizzle-orm';
+
 import { db } from '../db/index.js';
+import { auditLogs } from '../db/schema/auditLogs.js';
 import { users } from '../db/schema/users.js';
 import { workspaceMembers } from '../db/schema/workspaces.js';
+import { getPagination } from '../utils/pagination.js';
 
-export const getWorkspaceMembersFromDb = async (workspaceId: string) => {
-    return await db
-        .select({
-            id: users.id,
-            fullName: users.fullName,
-            email: users.email,
-            role: workspaceMembers.role,
+type AssignableWorkspaceRole = 'ADMIN' | 'MANAGER' | 'MEMBER' | 'VIEWER';
+
+const createHttpError = (message: string, status: number) => {
+  return Object.assign(new Error(message), {
+    status,
+    statusCode: status,
+  });
+};
+
+export const getWorkspaceMembersFromDb = async (data: {
+  workspaceId: string;
+  page?: string | undefined;
+  limit?: string | undefined;
+}) => {
+  const pagination = getPagination({
+    page: data.page,
+    limit: data.limit,
+  });
+
+  return await db
+    .select({
+      membershipId: workspaceMembers.id,
+      userId: users.id,
+      fullName: users.fullName,
+      email: users.email,
+      role: workspaceMembers.role,
+      joinedAt: workspaceMembers.joinedAt,
+    })
+    .from(workspaceMembers)
+    .innerJoin(users, eq(workspaceMembers.userId, users.id))
+    .where(
+      and(
+        eq(workspaceMembers.workspaceId, data.workspaceId),
+        isNull(workspaceMembers.removedAt)
+      )
+    )
+    .orderBy(
+      desc(workspaceMembers.joinedAt),
+      desc(workspaceMembers.id)
+    )
+    .limit(pagination.limit)
+    .offset(pagination.offset);
+};
+
+export const addWorkspaceMemberByEmail = async (data: {
+  workspaceId: string;
+  actorId: string;
+  email: string;
+  role: AssignableWorkspaceRole;
+}) => {
+  return await db.transaction(async (tx) => {
+    const [targetUser] = await tx
+      .select()
+      .from(users)
+      .where(eq(users.email, data.email))
+      .limit(1);
+
+    if (!targetUser) {
+      throw createHttpError('User not found in the system', 404);
+    }
+
+    const [existingMembership] = await tx
+      .select()
+      .from(workspaceMembers)
+      .where(
+        and(
+          eq(workspaceMembers.workspaceId, data.workspaceId),
+          eq(workspaceMembers.userId, targetUser.id)
+        )
+      )
+      .limit(1);
+
+    if (existingMembership && existingMembership.removedAt === null) {
+      throw createHttpError(
+        'User is already an active member of this workspace',
+        409
+      );
+    }
+
+    if (existingMembership && existingMembership.removedAt !== null) {
+      const [reactivatedMember] = await tx
+        .update(workspaceMembers)
+        .set({
+          role: data.role,
+          removedAt: null,
+          joinedAt: new Date(),
         })
-        .from(workspaceMembers)
-        .innerJoin(users, eq(workspaceMembers.userId, users.id))
-        .where(eq(workspaceMembers.workspaceId, workspaceId));
+        .where(eq(workspaceMembers.id, existingMembership.id))
+        .returning();
+
+      if (!reactivatedMember) {
+        throw createHttpError('Failed to reactivate workspace member', 500);
+      }
+
+      await tx.insert(auditLogs).values({
+        workspaceId: data.workspaceId,
+        actorId: data.actorId,
+        action: 'MEMBER_ADDED',
+        entityType: 'workspace_member',
+        entityId: reactivatedMember.id,
+        oldValue: {
+          userId: targetUser.id,
+          role: existingMembership.role,
+          removedAt: existingMembership.removedAt,
+        },
+        newValue: {
+          userId: targetUser.id,
+          role: reactivatedMember.role,
+          removedAt: reactivatedMember.removedAt,
+        },
+      });
+
+      return {
+        membership: reactivatedMember,
+        user: targetUser,
+      };
+    }
+
+    const [newMember] = await tx
+      .insert(workspaceMembers)
+      .values({
+        workspaceId: data.workspaceId,
+        userId: targetUser.id,
+        role: data.role,
+      })
+      .returning();
+
+    if (!newMember) {
+      throw createHttpError('Failed to add workspace member', 500);
+    }
+
+    await tx.insert(auditLogs).values({
+      workspaceId: data.workspaceId,
+      actorId: data.actorId,
+      action: 'MEMBER_ADDED',
+      entityType: 'workspace_member',
+      entityId: newMember.id,
+      oldValue: null,
+      newValue: {
+        userId: targetUser.id,
+        role: newMember.role,
+      },
+    });
+
+    return {
+      membership: newMember,
+      user: targetUser,
+    };
+  });
+};
+
+export const updateWorkspaceMemberRoleInDb = async (data: {
+  workspaceId: string;
+  actorId: string;
+  memberId: string;
+  role: AssignableWorkspaceRole;
+}) => {
+  return await db.transaction(async (tx) => {
+    const [targetMember] = await tx
+      .select()
+      .from(workspaceMembers)
+      .where(
+        and(
+          eq(workspaceMembers.id, data.memberId),
+          eq(workspaceMembers.workspaceId, data.workspaceId),
+          isNull(workspaceMembers.removedAt)
+        )
+      )
+      .limit(1);
+
+    if (!targetMember) {
+      throw createHttpError('Member not found', 404);
+    }
+
+    if (targetMember.role === 'OWNER') {
+      throw createHttpError(
+        'Owner role cannot be changed from member settings',
+        400
+      );
+    }
+
+    const [updatedMember] = await tx
+      .update(workspaceMembers)
+      .set({
+        role: data.role,
+      })
+      .where(eq(workspaceMembers.id, data.memberId))
+      .returning();
+
+    if (!updatedMember) {
+      throw createHttpError('Failed to update member role', 500);
+    }
+
+    await tx.insert(auditLogs).values({
+      workspaceId: data.workspaceId,
+      actorId: data.actorId,
+      action: 'MEMBER_ROLE_UPDATED',
+      entityType: 'workspace_member',
+      entityId: updatedMember.id,
+      oldValue: {
+        role: targetMember.role,
+      },
+      newValue: {
+        role: updatedMember.role,
+      },
+    });
+
+    return updatedMember;
+  });
+};
+
+export const softRemoveWorkspaceMemberInDb = async (data: {
+  workspaceId: string;
+  actorId: string;
+  memberId: string;
+}) => {
+  return await db.transaction(async (tx) => {
+    const [targetMember] = await tx
+      .select()
+      .from(workspaceMembers)
+      .where(
+        and(
+          eq(workspaceMembers.id, data.memberId),
+          eq(workspaceMembers.workspaceId, data.workspaceId),
+          isNull(workspaceMembers.removedAt)
+        )
+      )
+      .limit(1);
+
+    if (!targetMember) {
+      throw createHttpError('Member not found', 404);
+    }
+
+    if (targetMember.role === 'OWNER') {
+      throw createHttpError(
+        'Workspace owner cannot be removed from member settings',
+        400
+      );
+    }
+
+    const [removedMember] = await tx
+      .update(workspaceMembers)
+      .set({
+        removedAt: new Date(),
+      })
+      .where(eq(workspaceMembers.id, data.memberId))
+      .returning();
+
+    if (!removedMember) {
+      throw createHttpError('Failed to remove workspace member', 500);
+    }
+
+    await tx.insert(auditLogs).values({
+      workspaceId: data.workspaceId,
+      actorId: data.actorId,
+      action: 'MEMBER_REMOVED',
+      entityType: 'workspace_member',
+      entityId: removedMember.id,
+      oldValue: {
+        userId: targetMember.userId,
+        role: targetMember.role,
+        removedAt: targetMember.removedAt,
+      },
+      newValue: {
+        userId: removedMember.userId,
+        role: removedMember.role,
+        removedAt: removedMember.removedAt,
+      },
+    });
+
+    return removedMember;
+  });
 };

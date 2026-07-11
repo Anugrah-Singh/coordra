@@ -1,105 +1,321 @@
 import { Request, Response, NextFunction } from 'express';
 
 import {
-    createTaskInDb,
-    getProjectTasksFromDb,
-    updateTaskInDb,
+  archiveTaskInDb,
+  assignTaskInDb,
+  createTaskInDb,
+  duplicateTaskInDb,
+  getProjectTasksFromDb,
+  getTaskByIdFromDb,
+  unarchiveTaskInDb,
+  updateTaskInDb,
+  updateTaskStatusInDb,
 } from '../services/task.service.js';
 
 import {
-    CreateTaskInput,
-    UpdateTaskInput,
-    TaskParams,
-    TaskUpdateParams,
+  AssignTaskInput,
+  CreateTaskInput,
+  TaskActionParams,
+  TaskListQuery,
+  TaskParams,
+  UpdateTaskInput,
+  UpdateTaskStatusInput,
 } from '../schemas/task.schema.js';
 
-import { getIO } from '../socket.js';
+import {
+    emitUserEvent,
+    emitWorkspaceEvent
+} from '../utils/socketEvents.js';
 
 export const createTaskHandler = async (
-    req: Request<TaskParams, {}, CreateTaskInput>,
-    res: Response,
-    next: NextFunction
+  req: Request<TaskParams, {}, CreateTaskInput>,
+  res: Response,
+  next: NextFunction
 ) => {
-    try {
-        const { workspaceId, projectId } = req.params;
-        const createdById = res.locals.userId as string;
+  try {
+    const { workspaceId, projectId } = req.params;
+    const createdById = res.locals.userId as string;
 
-        const newTask = await createTaskInDb({
-            workspaceId,
-            projectId,
-            createdById,
-            ...req.body,
-        });
+    const newTask = await createTaskInDb({
+      workspaceId,
+      projectId,
+      createdById,
+      title: req.body.title,
+      description: req.body.description,
+      status: req.body.status,
+      priority: req.body.priority,
+      assigneeId: req.body.assigneeId,
+      dueDate: req.body.dueDate,
+    });
 
-        const io = getIO();
-        io.to(workspaceId).emit('task_created', {
-            projectId,
-            task: newTask,
-        });
+    emitWorkspaceEvent(workspaceId, 'task_created', {
+      workspaceId,
+      projectId,
+      task: newTask,
+    });
 
-        res.status(201).json({
-            success: true,
-            message: 'Task created successfully',
-            data: newTask,
-        });
-    } catch (error) {
-        next(error);
-    }
+    res.status(201).json({
+      success: true,
+      message: 'Task created successfully',
+      data: newTask,
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
 export const getProjectTasksHandler = async (
-    req: Request<TaskParams>,
-    res: Response,
-    next: NextFunction
+  req: Request<TaskParams, {}, {}, TaskListQuery>,
+  res: Response,
+  next: NextFunction
 ) => {
-    try {
-        const { workspaceId, projectId } = req.params;
+  try {
+    const { workspaceId, projectId } = req.params;
 
-        const projectTasks = await getProjectTasksFromDb(workspaceId, projectId);
+    const projectTasks = await getProjectTasksFromDb({
+      workspaceId,
+      projectId,
+      filters: req.query,
+    });
 
-        res.status(200).json({
-            success: true,
-            message: 'Tasks retrieved successfully',
-            data: projectTasks,
-        });
-    } catch (error) {
-        next(error);
-    }
+    res.status(200).json({
+      success: true,
+      message: 'Tasks retrieved successfully',
+      data: projectTasks,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getTaskByIdHandler = async (
+  req: Request<TaskActionParams>,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { workspaceId, projectId, taskId } = req.params;
+
+    const task = await getTaskByIdFromDb(workspaceId, projectId, taskId);
+
+    res.status(200).json({
+      success: true,
+      message: 'Task retrieved successfully',
+      data: task,
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
 export const updateTaskHandler = async (
-    req: Request<TaskUpdateParams, {}, UpdateTaskInput>,
-    res: Response,
-    next: NextFunction
+  req: Request<TaskActionParams, {}, UpdateTaskInput>,
+  res: Response,
+  next: NextFunction
 ) => {
-    try {
-        const { workspaceId, projectId, taskId } = req.params;
+  try {
+    const { workspaceId, projectId, taskId } = req.params;
+    const actorId = res.locals.userId as string;
 
-        const updatedTask = await updateTaskInDb(
-            workspaceId,
-            taskId,
-            req.body
-        );
+    const updatedTask = await updateTaskInDb({
+      workspaceId,
+      projectId,
+      taskId,
+      actorId,
+      title: req.body.title,
+      description: req.body.description,
+      status: req.body.status,
+      priority: req.body.priority,
+      assigneeId: req.body.assigneeId,
+      dueDate: req.body.dueDate,
+    });
 
-        if (!updatedTask) {
-            return res.status(404).json({
-                success: false,
-                message: 'Task not found',
-            });
-        }
+    emitWorkspaceEvent(workspaceId, 'task_updated', {
+      workspaceId,
+      projectId,
+      taskId,
+      task: updatedTask,
+    });
 
-        const io = getIO();
-        io.to(workspaceId).emit('task_updated', {
-            projectId,
-            task: updatedTask,
-        });
+    res.status(200).json({
+      success: true,
+      message: 'Task updated successfully',
+      data: updatedTask,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
-        res.status(200).json({
-            success: true,
-            message: 'Task updated successfully',
-            data: updatedTask,
-        });
-    } catch (error) {
-        next(error);
+export const updateTaskStatusHandler = async (
+  req: Request<TaskActionParams, {}, UpdateTaskStatusInput>,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { workspaceId, projectId, taskId } = req.params;
+    const actorId = res.locals.userId as string;
+
+    const updatedTask = await updateTaskStatusInDb({
+      workspaceId,
+      projectId,
+      taskId,
+      actorId,
+      status: req.body.status,
+    });
+
+    emitWorkspaceEvent(workspaceId, 'task_status_changed', {
+      workspaceId,
+      projectId,
+      taskId,
+      task: updatedTask,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Task status updated successfully',
+      data: updatedTask,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const assignTaskHandler = async (
+  req: Request<TaskActionParams, {}, AssignTaskInput>,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { workspaceId, projectId, taskId } = req.params;
+    const actorId = res.locals.userId as string;
+
+    const result = await assignTaskInDb({
+      workspaceId,
+      projectId,
+      taskId,
+      actorId,
+      assigneeId: req.body.assigneeId,
+    });
+
+    emitWorkspaceEvent(workspaceId, 'task_assigned', {
+      workspaceId,
+      projectId,
+      taskId,
+      task: result.task,
+    });
+
+    if (result.notification) {
+      emitUserEvent(result.notification.userId, 'notification_created', {
+        notification: result.notification,
+      });
     }
+
+    res.status(200).json({
+      success: true,
+      message: 'Task assignment updated successfully',
+      data: result.task,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const archiveTaskHandler = async (
+  req: Request<TaskActionParams>,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { workspaceId, projectId, taskId } = req.params;
+    const actorId = res.locals.userId as string;
+
+    const archivedTask = await archiveTaskInDb({
+      workspaceId,
+      projectId,
+      taskId,
+      actorId,
+    });
+
+    emitWorkspaceEvent(workspaceId, 'task_archived', {
+      workspaceId,
+      projectId,
+      taskId,
+      task: archivedTask,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Task archived successfully',
+      data: archivedTask,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const unarchiveTaskHandler = async (
+  req: Request<TaskActionParams>,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { workspaceId, projectId, taskId } = req.params;
+    const actorId = res.locals.userId as string;
+
+    const unarchivedTask = await unarchiveTaskInDb({
+      workspaceId,
+      projectId,
+      taskId,
+      actorId,
+    });
+
+    emitWorkspaceEvent(workspaceId, 'task_unarchived', {
+      workspaceId,
+      projectId,
+      taskId,
+      task: unarchivedTask,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Task unarchived successfully',
+      data: unarchivedTask,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const duplicateTaskHandler = async (
+  req: Request<TaskActionParams>,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { workspaceId, projectId, taskId } = req.params;
+    const actorId = res.locals.userId as string;
+
+    const duplicatedTask = await duplicateTaskInDb({
+      workspaceId,
+      projectId,
+      taskId,
+      actorId,
+    });
+
+    emitWorkspaceEvent(workspaceId, 'task_duplicated', {
+      workspaceId,
+      projectId,
+      sourceTaskId: taskId,
+      task: duplicatedTask,
+    });
+
+    res.status(201).json({
+      success: true,
+      message: 'Task duplicated successfully',
+      data: duplicatedTask,
+    });
+  } catch (error) {
+    next(error);
+  }
 };

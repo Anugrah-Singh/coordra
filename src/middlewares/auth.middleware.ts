@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import { env } from '../config/env.js';
 
 export const requireAuth = (
     req: Request,
@@ -18,7 +19,7 @@ export const requireAuth = (
         }
 
         const decoded = jwt.verify(
-            token, process.env.JWT_SECRET as string
+            token, env.JWT_SECRET
         ) as { userId: string };
 
         res.locals.userId = decoded.userId;
