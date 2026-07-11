@@ -1,5 +1,6 @@
 import {
   and,
+  count,
   desc,
   eq,
   isNull,
@@ -60,17 +61,22 @@ export const getUnreadNotificationCountFromDb = async (data: {
   ];
 
   if (data.workspaceId !== undefined) {
-    conditions.push(eq(notifications.workspaceId, data.workspaceId));
+    conditions.push(
+      eq(
+        notifications.workspaceId,
+        data.workspaceId
+      )
+    );
   }
 
-  const unreadNotifications = await db
+  const [result] = await db
     .select({
-      id: notifications.id,
+      count: count(),
     })
     .from(notifications)
     .where(and(...conditions));
 
-  return unreadNotifications.length;
+  return result?.count ?? 0;
 };
 
 export const markNotificationReadInDb = async (data: {
