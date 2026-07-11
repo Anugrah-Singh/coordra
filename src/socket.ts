@@ -210,6 +210,11 @@ export const getIo = (): Server => {
   return io;
 };
 
+export const getIoIfInitialized =
+  (): Server | undefined => {
+    return io;
+  };
+
 export const closeSocketServer =
   async (): Promise<void> => {
     if (!io) {
