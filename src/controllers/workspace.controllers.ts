@@ -11,6 +11,8 @@ import {
     transferWorkspaceOwnershipInDb 
 } from '../services/workspace.service.js';
 
+import { emitWorkspaceEvent } from '../utils/socketEvents.js';
+
 export const createWorkspaceHandler = async (
     req: Request<{}, {}, CreateWorkspaceInput>,
     res: Response,
@@ -79,6 +81,14 @@ export const transferWorkspaceOwnerHandler = async (
       workspaceId,
       currentOwnerId,
       newOwnerMemberId,
+    });
+
+    emitWorkspaceEvent(workspaceId, 'owner_transferred', {
+        workspaceId,
+        oldOwnerId: currentOwnerId,
+        newOwnerMemberId,
+        workspace: result.workspace,
+        newOwnerMembership: result.newOwnerMembership,
     });
 
     res.status(200).json({

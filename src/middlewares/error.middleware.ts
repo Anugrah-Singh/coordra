@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { ZodError } from 'zod';
+import { env } from '../config/env.js';
 
 export const globalErrorHandler = (
   err: any,
@@ -33,16 +34,24 @@ const errCode = err?.code || err?.cause?.code;
     return;
   }
 
+  if (err?.type === 'entity.too.large') {
+      res.status(413).json({
+      success: false,
+      message: 'Request body is too large.',
+    });
+    return;
+  }
+
   const statusCode = Number(err?.statusCode || err?.status) || 500;
 
   const message =
-    statusCode === 500 && process.env.NODE_ENV === 'production'
+    statusCode === 500 && env.NODE_ENV === 'production'
       ? 'Internal server error'
       : errMessage;
 
   res.status(statusCode).json({
     success: false,
     message,
-    stack: process.env.NODE_ENV === 'development' ? errStack : undefined,
+    stack: env.NODE_ENV === 'development' ? errStack : undefined,
   });
 };

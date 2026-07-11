@@ -6,6 +6,7 @@ import { eq } from 'drizzle-orm';
 import { db } from '../db/index.js';
 import { users } from '../db/schema/users.js';
 import { AUTH_COOKIE_NAME, getAuthCookieOptions } from '../utils/auth-cookie.js';
+import { env } from '../config/env.js';
 
 export const login = async (
   req: Request,
@@ -45,7 +46,7 @@ export const login = async (
         userId: user.id,
         email: user.email,
       },
-      process.env.JWT_SECRET as string,
+      env.JWT_SECRET,
       {
         expiresIn: '7d',
       }
