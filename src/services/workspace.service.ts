@@ -1,11 +1,25 @@
 import { db } from '../db/index.js';
-import { eq, and, isNull } from 'drizzle-orm';
+import {
+  and,
+  eq,
+  isNull,
+} from 'drizzle-orm';
 import { workspaces, workspaceMembers } from '../db/schema/workspaces.js';
 import { auditLogs } from '../db/schema/auditLogs.js';
 
 type CreateWorkspaceServiceInput = {
     name: string;
     ownerId: string;
+};
+
+const createWorkspaceCrudError = (
+  message: string,
+  status: number
+) => {
+  return Object.assign(new Error(message), {
+    status,
+    statusCode: status,
+  });
 };
 
 const generateWorkspaceSlug = (name: string) => {
@@ -173,4 +187,157 @@ export const transferWorkspaceOwnershipInDb = async (
       newOwnerMembership: promotedMember,
     };
   });
+};
+
+export const getWorkspaceByIdFromDb = async (
+  workspaceId: string
+) => {
+  const [workspace] = await db
+    .select({
+      id: workspaces.id,
+      name: workspaces.name,
+      slug: workspaces.slug,
+      ownerId: workspaces.ownerId,
+      createdAt: workspaces.createdAt,
+      updatedAt: workspaces.updatedAt,
+    })
+    .from(workspaces)
+    .where(eq(workspaces.id, workspaceId))
+    .limit(1);
+
+  if (!workspace) {
+    throw createWorkspaceCrudError(
+      'Workspace not found',
+      404
+    );
+  }
+
+  return workspace;
+};
+
+export const updateWorkspaceInDb = async (data: {
+  workspaceId: string;
+  actorId: string;
+  name: string;
+}) => {
+  return await db.transaction(async (tx) => {
+    const [existingWorkspace] = await tx
+      .select({
+        id: workspaces.id,
+        name: workspaces.name,
+        slug: workspaces.slug,
+        ownerId: workspaces.ownerId,
+        createdAt: workspaces.createdAt,
+        updatedAt: workspaces.updatedAt,
+      })
+      .from(workspaces)
+      .where(eq(workspaces.id, data.workspaceId))
+      .limit(1);
+
+    if (!existingWorkspace) {
+      throw createWorkspaceCrudError(
+        'Workspace not found',
+        404
+      );
+    }
+
+    const [updatedWorkspace] = await tx
+      .update(workspaces)
+      .set({
+        name: data.name,
+        updatedAt: new Date(),
+      })
+      .where(eq(workspaces.id, data.workspaceId))
+      .returning();
+
+    if (!updatedWorkspace) {
+      throw createWorkspaceCrudError(
+        'Failed to update workspace',
+        500
+      );
+    }
+
+    await tx.insert(auditLogs).values({
+      workspaceId: data.workspaceId,
+      actorId: data.actorId,
+      action: 'WORKSPACE_UPDATED',
+      entityType: 'workspace',
+      entityId: updatedWorkspace.id,
+      oldValue: {
+        name: existingWorkspace.name,
+      },
+      newValue: {
+        name: updatedWorkspace.name,
+      },
+    });
+
+    return updatedWorkspace;
+  });
+};
+
+export const deleteWorkspaceFromDb = async (data: {
+  workspaceId: string;
+  actorId: string;
+  confirmationName: string;
+}) => {
+  const [existingWorkspace] = await db
+    .select({
+      id: workspaces.id,
+      name: workspaces.name,
+      slug: workspaces.slug,
+      ownerId: workspaces.ownerId,
+      createdAt: workspaces.createdAt,
+      updatedAt: workspaces.updatedAt,
+    })
+    .from(workspaces)
+    .where(eq(workspaces.id, data.workspaceId))
+    .limit(1);
+
+  if (!existingWorkspace) {
+    throw createWorkspaceCrudError(
+      'Workspace not found',
+      404
+    );
+  }
+
+  if (existingWorkspace.ownerId !== data.actorId) {
+    throw createWorkspaceCrudError(
+      'Only the workspace owner can delete this workspace',
+      403
+    );
+  }
+
+  if (existingWorkspace.name !== data.confirmationName) {
+    throw createWorkspaceCrudError(
+      'Workspace name confirmation does not match',
+      400
+    );
+  }
+
+  const [deletedWorkspace] = await db
+    .delete(workspaces)
+    .where(
+      and(
+        eq(workspaces.id, data.workspaceId),
+        eq(workspaces.ownerId, data.actorId),
+        eq(workspaces.name, data.confirmationName)
+      )
+    )
+    .returning({
+      id: workspaces.id,
+      name: workspaces.name,
+      slug: workspaces.slug,
+      ownerId: workspaces.ownerId,
+      createdAt: workspaces.createdAt,
+      updatedAt: workspaces.updatedAt,
+    });
+
+  if (!deletedWorkspace) {
+    throw createWorkspaceCrudError(
+      'Workspace changed before it could be deleted',
+      409
+    );
+  }
+
+  return deletedWorkspace;
 };
