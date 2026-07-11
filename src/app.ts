@@ -12,6 +12,7 @@ import { db } from './db/index.js';
 
 import { globalErrorHandler } from './middlewares/error.middleware.js';
 import { apiRateLimiter } from './middlewares/rateLimit.middleware.js';
+import { requireTrustedOrigin } from './middlewares/csrf.middleware.js';
 
 import authRoutes from './routes/auth.route.js';
 import inviteTokenRoutes from './routes/inviteToken.route.js';
@@ -48,6 +49,11 @@ export const createApp = (
   );
 
   app.use(cookieParser());
+
+  app.use(
+  '/api',
+  requireTrustedOrigin
+);
 
   app.use('/api', apiRateLimiter);
 
