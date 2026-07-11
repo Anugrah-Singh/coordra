@@ -6,7 +6,12 @@ on:
       - main
     paths:
       - 'src/db/schema/**'
+      - 'src/db/migrate.ts'
       - 'drizzle/**'
+      - 'drizzle.config.ts'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/migrate.yml'
 
 jobs:
   migrate-database:

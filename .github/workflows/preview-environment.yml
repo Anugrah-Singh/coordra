@@ -2,7 +2,19 @@ name: Preview Environment Database Branching
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened, closed]
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
+      - reopened
+
+permissions:
+  contents: read
+
+concurrency:
+  group: neon-preview-pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
 
 jobs:
   manage-preview-database:
