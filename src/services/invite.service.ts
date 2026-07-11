@@ -1,6 +1,12 @@
 import { createHash, randomBytes } from 'node:crypto';
 
-import { and, desc, eq } from 'drizzle-orm';
+import {
+  and,
+  desc,
+  eq,
+  gt,
+  lte,
+} from 'drizzle-orm';
 
 import { db } from '../db/index.js';
 import { auditLogs } from '../db/schema/auditLogs.js';
@@ -30,6 +36,29 @@ const getInviteExpiryDate = () => {
   const expiresAt = new Date();
   expiresAt.setDate(expiresAt.getDate() + INVITE_EXPIRY_DAYS);
   return expiresAt;
+};
+
+const markInviteExpiredIfNeeded = async (
+  tokenHash: string,
+  checkedAt: Date
+): Promise<boolean> => {
+  const [expiredInvite] = await db
+    .update(workspaceInvites)
+    .set({
+      status: 'EXPIRED',
+    })
+    .where(
+      and(
+        eq(workspaceInvites.tokenHash, tokenHash),
+        eq(workspaceInvites.status, 'PENDING'),
+        lte(workspaceInvites.expiresAt, checkedAt)
+      )
+    )
+    .returning({
+      id: workspaceInvites.id,
+    });
+
+  return expiredInvite !== undefined;
 };
 
 export const getWorkspaceInvitesFromDb = async (data: {
@@ -233,8 +262,20 @@ export const acceptWorkspaceInviteInDb = async (data: {
   token: string;
   actorId: string;
 }) => {
+  const tokenHash = hashInviteToken(data.token);
+  const checkedAt = new Date();
+
+  const inviteWasExpired =
+    await markInviteExpiredIfNeeded(
+      tokenHash,
+      checkedAt
+    );
+
+  if (inviteWasExpired) {
+    throw createHttpError('Invite has expired', 400);
+  }
+
   return await db.transaction(async (tx) => {
-    const tokenHash = hashInviteToken(data.token);
 
     const [invite] = await tx
       .select()
@@ -248,17 +289,6 @@ export const acceptWorkspaceInviteInDb = async (data: {
 
     if (invite.status !== 'PENDING') {
       throw createHttpError(`Invite is already ${invite.status.toLowerCase()}`, 400);
-    }
-
-    if (invite.expiresAt.getTime() <= Date.now()) {
-      await tx
-        .update(workspaceInvites)
-        .set({
-          status: 'EXPIRED',
-        })
-        .where(eq(workspaceInvites.id, invite.id));
-
-      throw createHttpError('Invite has expired', 400);
     }
 
     const [actor] = await tx
@@ -283,11 +313,20 @@ export const acceptWorkspaceInviteInDb = async (data: {
         status: 'ACCEPTED',
         acceptedAt: now,
       })
-      .where(eq(workspaceInvites.id, invite.id))
+      .where(
+        and(
+          eq(workspaceInvites.id, invite.id),
+          eq(workspaceInvites.status, 'PENDING'),
+          gt(workspaceInvites.expiresAt, checkedAt)
+        )
+      )
       .returning();
 
     if (!updatedInvite) {
-      throw createHttpError('Failed to accept invite', 500);
+      throw createHttpError(
+        'Invite state changed before it could be accepted',
+        409
+      );
     }
 
     const [existingMembership] = await tx
@@ -368,8 +407,20 @@ export const declineWorkspaceInviteInDb = async (data: {
   token: string;
   actorId: string;
 }) => {
+  const tokenHash = hashInviteToken(data.token);
+  const checkedAt = new Date();
+
+  const inviteWasExpired =
+    await markInviteExpiredIfNeeded(
+      tokenHash,
+      checkedAt
+    );
+
+  if (inviteWasExpired) {
+    throw createHttpError('Invite has expired', 400);
+  }
+
   return await db.transaction(async (tx) => {
-    const tokenHash = hashInviteToken(data.token);
 
     const [invite] = await tx
       .select()
@@ -383,17 +434,6 @@ export const declineWorkspaceInviteInDb = async (data: {
 
     if (invite.status !== 'PENDING') {
       throw createHttpError(`Invite is already ${invite.status.toLowerCase()}`, 400);
-    }
-
-    if (invite.expiresAt.getTime() <= Date.now()) {
-      await tx
-        .update(workspaceInvites)
-        .set({
-          status: 'EXPIRED',
-        })
-        .where(eq(workspaceInvites.id, invite.id));
-
-      throw createHttpError('Invite has expired', 400);
     }
 
     const [actor] = await tx
@@ -416,11 +456,20 @@ export const declineWorkspaceInviteInDb = async (data: {
         status: 'DECLINED',
         declinedAt: new Date(),
       })
-      .where(eq(workspaceInvites.id, invite.id))
+      .where(
+        and(
+          eq(workspaceInvites.id, invite.id),
+          eq(workspaceInvites.status, 'PENDING'),
+          gt(workspaceInvites.expiresAt, checkedAt)
+        )
+      )
       .returning();
 
     if (!declinedInvite) {
-      throw createHttpError('Failed to decline invite', 500);
+      throw createHttpError(
+        'Invite state changed before it could be declined',
+        409
+      );
     }
 
     await tx.insert(auditLogs).values({
