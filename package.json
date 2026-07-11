@@ -13,6 +13,7 @@
     "typecheck": "tsc --noEmit",
     "test:typecheck": "tsc --noEmit -p tsconfig.test.json",
     "test": "tsx --test tests/*.test.ts",
+    "test:integration": "tsx --test --test-concurrency=1 tests/integration/*.test.ts",
     "build": "tsc",
     "start": "node --enable-source-maps dist/server.js",
     "db:generate": "drizzle-kit generate",
