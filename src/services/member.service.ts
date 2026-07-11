@@ -1,9 +1,10 @@
-import { and, eq, isNull } from 'drizzle-orm';
+import { and, desc, eq, isNull } from 'drizzle-orm';
 
 import { db } from '../db/index.js';
 import { auditLogs } from '../db/schema/auditLogs.js';
 import { users } from '../db/schema/users.js';
 import { workspaceMembers } from '../db/schema/workspaces.js';
+import { getPagination } from '../utils/pagination.js';
 
 type AssignableWorkspaceRole = 'ADMIN' | 'MANAGER' | 'MEMBER' | 'VIEWER';
 
@@ -14,7 +15,16 @@ const createHttpError = (message: string, status: number) => {
   });
 };
 
-export const getWorkspaceMembersFromDb = async (workspaceId: string) => {
+export const getWorkspaceMembersFromDb = async (data: {
+  workspaceId: string;
+  page?: string | undefined;
+  limit?: string | undefined;
+}) => {
+  const pagination = getPagination({
+    page: data.page,
+    limit: data.limit,
+  });
+
   return await db
     .select({
       membershipId: workspaceMembers.id,
@@ -28,10 +38,16 @@ export const getWorkspaceMembersFromDb = async (workspaceId: string) => {
     .innerJoin(users, eq(workspaceMembers.userId, users.id))
     .where(
       and(
-        eq(workspaceMembers.workspaceId, workspaceId),
+        eq(workspaceMembers.workspaceId, data.workspaceId),
         isNull(workspaceMembers.removedAt)
       )
-    );
+    )
+    .orderBy(
+      desc(workspaceMembers.joinedAt),
+      desc(workspaceMembers.id)
+    )
+    .limit(pagination.limit)
+    .offset(pagination.offset);
 };
 
 export const addWorkspaceMemberByEmail = async (data: {

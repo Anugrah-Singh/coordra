@@ -1,72 +1,130 @@
-import express, { Request, Response, NextFunction } from 'express';
-import cors from 'cors';
-import helmet from 'helmet';
-import 'dotenv/config';
-import userRoutes from './routes/user.route.js';
+import { createServer } from 'node:http';
+
 import cookieParser from 'cookie-parser';
-import authRoutes from './routes/auth.route.js';
-import { globalErrorHandler } from './middlewares/error.middleware.js';
-import { createServer } from 'http';
-import { initSocket } from './socket.js'; 
-// 1. Import our Database Engine & SQL helper
-import { db } from './db/index.js';
+import cors from 'cors';
 import { sql } from 'drizzle-orm';
+import express, { Request, Response } from 'express';
+import helmet from 'helmet';
 
+import { env } from './config/env.js';
+import {
+  closeDatabase,
+  db,
+} from './db/index.js';
 
-// 2. Import our Routers (The Waiters)
+import { globalErrorHandler } from './middlewares/error.middleware.js';
+import { apiRateLimiter } from './middlewares/rateLimit.middleware.js';
+
+import authRoutes from './routes/auth.route.js';
+import inviteTokenRoutes from './routes/inviteToken.route.js';
+import notificationRoutes from './routes/notification.route.js';
+import userRoutes from './routes/user.route.js';
 import workspaceRoutes from './routes/workspace.route.js';
 
-const app = express();
-const PORT = process.env.PORT || 8000;
+import {
+  closeSocketServer,
+  initSocket,
+} from './socket.js';
 
+const app = express();
 const httpServer = createServer(app);
+
+let isReady = false;
+let isShuttingDown = false;
+
+app.disable('x-powered-by');
 
 initSocket(httpServer);
 
-// --- Global Security & Parsing Middleware ---
-app.use(helmet()); // Secures HTTP headers against common exploits
-app.use(cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+httpServer.requestTimeout = 30_000;
+httpServer.headersTimeout = 15_000;
+httpServer.keepAliveTimeout = 5_000;
+
+// Security and parsing
+app.use(helmet());
+
+app.use(
+  cors({
+    origin: env.FRONTEND_URL,
     credentials: true,
-  })); // Allows cross-origin requests from your future React frontend
+  })
+);
+
 app.use(cookieParser());
-app.use(express.json()); // Parses incoming raw JSON into req.body
 
-// --- System Diagnostics Routes ---
-app.get('/health', (req: Request, res: Response) => {
+app.use('/api', apiRateLimiter);
+
+app.use(
+  express.json({
+    limit: '100kb',
+  })
+);
+
+// Health checks
+app.get(
+  '/health/live',
+  (_req: Request, res: Response) => {
     res.status(200).json({
-        status: 'ok',
-        timestamp: new Date().toISOString()
+      status: 'alive',
+      timestamp: new Date().toISOString(),
+      uptimeSeconds: Math.floor(process.uptime()),
     });
-});
+  }
+);
 
-app.get('/test-db', async (req: Request, res: Response, next: NextFunction) => {
-    try {
-        const result = await db.execute(sql`SELECT current_timestamp`);
-        res.json({
-            success: true,
-            message: "The Pooled Connection is alive!",
-            database_time: result.rows[0]
-        });
-        
-    } catch (error) {
-        next(error);
+app.get(
+  '/health/ready',
+  async (_req: Request, res: Response) => {
+    if (isShuttingDown || !isReady) {
+      res.status(503).json({
+        status: 'not-ready',
+        reason: isShuttingDown
+          ? 'Server is shutting down'
+          : 'Server is starting',
+        timestamp: new Date().toISOString(),
+      });
+      return;
     }
+
+    try {
+      await db.execute(sql`SELECT 1`);
+
+      res.status(200).json({
+        status: 'ready',
+        database: 'connected',
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error(
+        '[Readiness Check Failed]:',
+        error
+      );
+
+      res.status(503).json({
+        status: 'not-ready',
+        database: 'disconnected',
+        timestamp: new Date().toISOString(),
+      });
+    }
+  }
+);
+
+// Backwards-compatible health route
+app.get('/health', (_req: Request, res: Response) => {
+  res.status(200).json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+  });
 });
 
-// --- RAW POST DIAGNOSTIC ---
-app.post('/api/test', (req: Request, res: Response) => {
-  res.status(200).json({ message: "DIRECT POST IS WORKING" });
-});
-
-// --- Core API Routes ---
-// This mounts our Workspace router to the /api/workspaces prefix
+// Core API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/workspace-invites', inviteTokenRoutes);
 app.use('/api/workspaces', workspaceRoutes);
 
-// --- 404 Handler ---
-// This catches requests that did not match any route above.
+// JSON 404
 app.use((req: Request, res: Response) => {
   res.status(404).json({
     success: false,
@@ -74,12 +132,107 @@ app.use((req: Request, res: Response) => {
   });
 });
 
-
-// --- Global Error Handler ---
+// Central error handler
 app.use(globalErrorHandler);
 
-// --- Boot Sequence ---
-httpServer.listen(PORT, () => {
-    console.log(`Server initialized on http://localhost:${PORT}`);
-    console.log('Websocket Server initialized')
+const startServer = async (): Promise<void> => {
+  // Fail startup if the database cannot be reached.
+  await db.execute(sql`SELECT 1`);
+
+  await new Promise<void>((resolve, reject) => {
+    const handleError = (error: Error) => {
+      reject(error);
+    };
+
+    httpServer.once('error', handleError);
+
+    httpServer.listen(env.PORT, () => {
+      httpServer.off('error', handleError);
+      resolve();
+    });
+  });
+
+  isReady = true;
+
+  console.log(
+    `HTTP server initialized on http://localhost:${env.PORT}`
+  );
+
+  console.log('Socket.IO server initialized');
+};
+
+const shutdown = async (
+  reason: string,
+  exitCode = 0
+): Promise<void> => {
+  if (isShuttingDown) {
+    return;
+  }
+
+  isShuttingDown = true;
+  isReady = false;
+
+  console.log(
+    `[Shutdown] ${reason} received. Closing services...`
+  );
+
+  const forceShutdownTimer = setTimeout(() => {
+    console.error(
+      '[Shutdown] Graceful shutdown timed out. Forcing exit.'
+    );
+
+    httpServer.closeAllConnections();
+    process.exit(1);
+  }, env.SHUTDOWN_TIMEOUT_MS);
+
+  forceShutdownTimer.unref();
+
+  try {
+    // Socket.IO also closes the attached HTTP server.
+    await closeSocketServer();
+
+    await closeDatabase();
+
+    clearTimeout(forceShutdownTimer);
+
+    console.log('[Shutdown] Completed successfully.');
+
+    process.exit(exitCode);
+  } catch (error) {
+    clearTimeout(forceShutdownTimer);
+
+    console.error('[Shutdown] Failed:', error);
+
+    httpServer.closeAllConnections();
+    process.exit(1);
+  }
+};
+
+process.once('SIGTERM', () => {
+  void shutdown('SIGTERM');
+});
+
+process.once('SIGINT', () => {
+  void shutdown('SIGINT');
+});
+
+process.once('uncaughtException', (error) => {
+  console.error('[Uncaught Exception]:', error);
+  void shutdown('uncaughtException', 1);
+});
+
+process.once('unhandledRejection', (reason) => {
+  console.error('[Unhandled Rejection]:', reason);
+  void shutdown('unhandledRejection', 1);
+});
+
+void startServer().catch(async (error) => {
+  console.error('[Startup Failed]:', error);
+
+  try {
+    await closeSocketServer();
+    await closeDatabase();
+  } finally {
+    process.exit(1);
+  }
 });

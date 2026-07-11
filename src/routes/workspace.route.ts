@@ -1,4 +1,7 @@
 import { Router } from 'express';
+import inviteRoutes from './invite.route.js';
+
+import labelRoutes from './label.route.js';
 
 import {
   createWorkspaceHandler,
@@ -45,6 +48,10 @@ router.patch(
 );
 
 router.use('/:workspaceId/audit-logs', auditLogRoutes);
+
+router.use('/:workspaceId/labels', labelRoutes);
+
+router.use('/:workspaceId/invites', inviteRoutes);
 
 router.use('/:workspaceId/members', memberRoutes);
 

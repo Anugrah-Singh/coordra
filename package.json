@@ -1,19 +1,23 @@
 {
   "name": "saas-team-workspace",
   "version": "1.0.0",
+  "private": true,
   "engines": {
-    "node": ">=24.0.0"
+    "node": ">=24.18.0 <25"
   },
   "description": "",
-  "main": "index.js",
+  "main": "dist/server.js",
   "type": "module",
   "scripts": {
-    "dev" : "tsx watch src/server.ts",
-    "build" : "tsc",
-    "start" : "node dist/server.js",
+    "dev": "tsx watch src/server.ts",
+    "typecheck": "tsc --noEmit",
+    "build": "tsc",
+    "start": "node --enable-source-maps dist/server.js",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/db/migrate.ts",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "test:smoke": "tsx scripts/smoke-test.ts",
+    "backend:verify": "npm run typecheck && npm run build && npm audit --omit=dev"
   },
   "keywords": [],
   "author": "",
@@ -25,6 +29,7 @@
     "dotenv": "^17.4.2",
     "drizzle-orm": "^0.45.2",
     "express": "^5.2.1",
+    "express-rate-limit": "^8.5.2",
     "helmet": "^8.2.0",
     "jsonwebtoken": "^9.0.3",
     "pg": "^8.22.0",
@@ -36,12 +41,11 @@
     "@types/cookie-parser": "^1.4.10",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
-    "@types/helmet": "^0.0.48",
     "@types/jsonwebtoken": "^9.0.10",
-    "@types/node": "^26.0.1",
+    "@types/node": "^24.13.3",
     "@types/pg": "^8.20.0",
-    "@types/socket.io": "^3.0.1",
     "drizzle-kit": "^0.31.10",
+    "socket.io-client": "^4.8.3",
     "tsx": "^4.22.4",
     "typescript": "^6.0.3"
   }

@@ -13,6 +13,7 @@ import {
   addMemberSchema,
   updateMemberRoleSchema,
   removeMemberSchema,
+  getWorkspaceMembersSchema,
 } from '../schemas/member.schema.js';
 
 import {
@@ -28,6 +29,7 @@ router.get(
   '/',
   requireAuth,
   requireWorkspaceMember,
+  validate(getWorkspaceMembersSchema),
   getWorkspaceMembersHandler
 );
 

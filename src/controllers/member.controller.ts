@@ -1,5 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 
+import { emitWorkspaceEvent } from '../utils/socketEvents.js';
+
 import {
   getWorkspaceMembersFromDb,
   addWorkspaceMemberByEmail,
@@ -12,6 +14,7 @@ import {
   UpdateMemberRoleInput,
   MemberParams,
   MemberActionParams,
+  MemberListQuery,
 } from '../schemas/member.schema.js';
 
 export const addMemberHandler = async (
@@ -32,6 +35,17 @@ export const addMemberHandler = async (
       role,
     });
 
+    emitWorkspaceEvent(workspaceId, 'member_added', {
+        workspaceId,
+        member: {
+        membershipId: result.membership?.id,
+        userId: result.user.id,
+        email: result.user.email,
+        fullName: result.user.fullName,
+        role: result.membership?.role,
+      },
+    });
+
     res.status(201).json({
       success: true,
       message: 'Member successfully added to the workspace',
@@ -49,14 +63,18 @@ export const addMemberHandler = async (
 };
 
 export const getWorkspaceMembersHandler = async (
-  req: Request<MemberParams>,
+  req: Request<MemberParams, {}, {}, MemberListQuery>,
   res: Response,
   next: NextFunction
 ) => {
   try {
     const { workspaceId } = req.params;
 
-    const members = await getWorkspaceMembersFromDb(workspaceId);
+    const members = await getWorkspaceMembersFromDb({
+      workspaceId,
+      page: req.query.page,
+      limit: req.query.limit,
+    });
 
     res.status(200).json({
       success: true,
@@ -86,6 +104,12 @@ export const updateMemberRoleHandler = async (
       role,
     });
 
+    emitWorkspaceEvent(workspaceId, 'member_role_updated', {
+        workspaceId,
+        memberId,
+        member: updatedMember,
+    });
+
     res.status(200).json({
       success: true,
       message: 'Member role updated successfully',
@@ -110,6 +134,12 @@ export const removeMemberHandler = async (
       workspaceId,
       actorId,
       memberId,
+    });
+
+    emitWorkspaceEvent(workspaceId, 'member_removed', {
+      workspaceId,
+      memberId,
+      member: removedMember,
     });
 
     res.status(200).json({
