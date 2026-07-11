@@ -11,13 +11,15 @@
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "typecheck": "tsc --noEmit",
+    "test:typecheck": "tsc --noEmit -p tsconfig.test.json",
+    "test": "tsx --test tests/*.test.ts",
     "build": "tsc",
     "start": "node --enable-source-maps dist/server.js",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/db/migrate.ts",
     "db:studio": "drizzle-kit studio",
     "test:smoke": "tsx scripts/smoke-test.ts",
-    "backend:verify": "npm run typecheck && npm run build && npm audit --omit=dev"
+    "backend:verify": "npm run typecheck && npm run test:typecheck && npm test && npm run build && npm audit --omit=dev"
   },
   "keywords": [],
   "author": "",
@@ -44,8 +46,10 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.13.3",
     "@types/pg": "^8.20.0",
+    "@types/supertest": "^7.2.0",
     "drizzle-kit": "^0.31.10",
     "socket.io-client": "^4.8.3",
+    "supertest": "^7.2.2",
     "tsx": "^4.22.4",
     "typescript": "^6.0.3"
   }
