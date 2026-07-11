@@ -164,3 +164,18 @@ socket.on('workspace_invite_accepted', (payload) => {
 socket.on('workspace_invite_declined', (payload) => {
   console.log('❌ workspace_invite_declined:', JSON.stringify(payload, null, 2));
 });
+
+
+socket.on('workspace_updated', (payload) => {
+  console.log(
+    '🏢 workspace_updated:',
+    JSON.stringify(payload, null, 2)
+  );
+});
+
+socket.on('workspace_deleted', (payload) => {
+  console.log(
+    '🗑️ workspace_deleted:',
+    JSON.stringify(payload, null, 2)
+  );
+});

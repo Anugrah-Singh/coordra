@@ -1,15 +1,20 @@
 import { Request, Response, NextFunction } from 'express';
-import { createWorkspaceInDb } from '../services/workspace.service.js';
-import { CreateWorkspaceInput } from '../schemas/workspace.schema.js';
-import { getUserWorkspacesFromDb } from '../services/workspace.service.js';
 import {
+  createWorkspaceInDb,
+  deleteWorkspaceFromDb,
+  getUserWorkspacesFromDb,
+  getWorkspaceByIdFromDb,
+  transferWorkspaceOwnershipInDb,
+  updateWorkspaceInDb,
+} from '../services/workspace.service.js';
+
+import {
+  CreateWorkspaceInput,
+  DeleteWorkspaceInput,
   TransferWorkspaceOwnerInput,
+  UpdateWorkspaceInput,
   WorkspaceParams,
 } from '../schemas/workspace.schema.js';
-
-import { 
-    transferWorkspaceOwnershipInDb 
-} from '../services/workspace.service.js';
 
 import { emitWorkspaceEvent } from '../utils/socketEvents.js';
 
@@ -95,6 +100,106 @@ export const transferWorkspaceOwnerHandler = async (
       success: true,
       message: 'Workspace ownership transferred successfully',
       data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getWorkspaceByIdHandler = async (
+  req: Request<WorkspaceParams>,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { workspaceId } = req.params;
+
+    const workspace =
+      await getWorkspaceByIdFromDb(workspaceId);
+
+    res.status(200).json({
+      success: true,
+      message: 'Workspace retrieved successfully',
+      data: workspace,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateWorkspaceHandler = async (
+  req: Request<
+    WorkspaceParams,
+    {},
+    UpdateWorkspaceInput
+  >,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { workspaceId } = req.params;
+    const actorId = res.locals.userId as string;
+
+    const updatedWorkspace =
+      await updateWorkspaceInDb({
+        workspaceId,
+        actorId,
+        name: req.body.name,
+      });
+
+    emitWorkspaceEvent(
+      workspaceId,
+      'workspace_updated',
+      {
+        workspaceId,
+        workspace: updatedWorkspace,
+      }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: 'Workspace updated successfully',
+      data: updatedWorkspace,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteWorkspaceHandler = async (
+  req: Request<
+    WorkspaceParams,
+    {},
+    DeleteWorkspaceInput
+  >,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { workspaceId } = req.params;
+    const actorId = res.locals.userId as string;
+
+    const deletedWorkspace =
+      await deleteWorkspaceFromDb({
+        workspaceId,
+        actorId,
+        confirmationName:
+          req.body.confirmationName,
+      });
+
+    emitWorkspaceEvent(
+      workspaceId,
+      'workspace_deleted',
+      {
+        workspaceId,
+        workspace: deletedWorkspace,
+      }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: 'Workspace deleted successfully',
+      data: deletedWorkspace,
     });
   } catch (error) {
     next(error);
