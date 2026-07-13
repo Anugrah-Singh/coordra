@@ -1,44 +1,86 @@
-import { Request, Response, NextFunction } from 'express';
+import {
+  NextFunction,
+  Request,
+  Response,
+} from 'express';
+
 import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
 import { eq } from 'drizzle-orm';
+import jwt from 'jsonwebtoken';
+
+import { env } from '../config/env.js';
 
 import { db } from '../db/index.js';
 import { users } from '../db/schema/users.js';
-import { AUTH_COOKIE_NAME, getAuthCookieOptions } from '../utils/auth-cookie.js';
-import { env } from '../config/env.js';
+
+import { LoginInput } from '../schemas/auth.schema.js';
+
+import {
+  APP_ERROR_CODES,
+} from '../utils/AppError.js';
+
+import {
+  AUTH_COOKIE_NAME,
+  getAuthCookieOptions,
+} from '../utils/auth-cookie.js';
 
 export const login = async (
-  req: Request,
+  req: Request<
+    Record<string, never>,
+    unknown,
+    LoginInput
+  >,
   res: Response,
   next: NextFunction
-) => {
+): Promise<void> => {
   try {
-    const { email, password } = req.body;
+    const {
+      email,
+      password,
+    } = req.body;
 
     const [user] = await db
       .select()
       .from(users)
-      .where(eq(users.email, email))
+      .where(
+        eq(users.email, email)
+      )
       .limit(1);
 
     if (!user) {
-      return res.status(401).json({
+      res.status(401).json({
         success: false,
-        message: 'Invalid email or password',
+
+        code:
+          APP_ERROR_CODES
+            .INVALID_CREDENTIALS,
+
+        message:
+          'Invalid email or password',
       });
+
+      return;
     }
 
-    const isPasswordValid = await bcrypt.compare(
-      password,
-      user.passwordHash
-    );
+    const isPasswordValid =
+      await bcrypt.compare(
+        password,
+        user.passwordHash
+      );
 
     if (!isPasswordValid) {
-      return res.status(401).json({
+      res.status(401).json({
         success: false,
-        message: 'Invalid email or password',
+
+        code:
+          APP_ERROR_CODES
+            .INVALID_CREDENTIALS,
+
+        message:
+          'Invalid email or password',
       });
+
+      return;
     }
 
     const token = jwt.sign(
@@ -52,15 +94,24 @@ export const login = async (
       }
     );
 
-    res.cookie(AUTH_COOKIE_NAME, token, getAuthCookieOptions());
+    res.cookie(
+      AUTH_COOKIE_NAME,
+      token,
+      getAuthCookieOptions()
+    );
 
-    return res.status(200).json({
+    res.status(200).json({
       success: true,
-      message: 'Logged in successfully',
+
+      message:
+        'Logged in successfully',
+
       data: {
         user: {
           id: user.id,
           email: user.email,
+          fullName:
+            user.fullName,
         },
       },
     });
@@ -69,50 +120,67 @@ export const login = async (
   }
 };
 
-export const logout = async (
+export const logout = (
   _req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    res.clearCookie(AUTH_COOKIE_NAME, getAuthCookieOptions());
+  res: Response
+): void => {
+  res.clearCookie(
+    AUTH_COOKIE_NAME,
+    getAuthCookieOptions()
+  );
 
-    return res.status(200).json({
-      success: true,
-      message: 'Logged out successfully',
-    });
-  } catch (error) {
-    next(error);
-  }
+  res.status(200).json({
+    success: true,
+
+    message:
+      'Logged out successfully',
+  });
 };
 
 export const getMe = async (
   _req: Request,
   res: Response,
   next: NextFunction
-) => {
+): Promise<void> => {
   try {
-    const userId = res.locals.userId as string;
+    const userId =
+      res.locals.userId as string;
 
     const [user] = await db
       .select({
         id: users.id,
         email: users.email,
-        createdAt: users.createdAt,
+        fullName:
+          users.fullName,
+        createdAt:
+          users.createdAt,
+        updatedAt:
+          users.updatedAt,
       })
       .from(users)
-      .where(eq(users.id, userId))
+      .where(
+        eq(users.id, userId)
+      )
       .limit(1);
 
     if (!user) {
-      return res.status(401).json({
+      res.status(401).json({
         success: false,
-        message: 'User not found',
+
+        code:
+          APP_ERROR_CODES
+            .INVALID_AUTH_TOKEN,
+
+        message:
+          'User account no longer exists',
       });
+
+      return;
     }
 
-    return res.status(200).json({
+    res.status(200).json({
       success: true,
+
       data: {
         user,
       },
