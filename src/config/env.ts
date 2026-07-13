@@ -49,6 +49,18 @@ const envSchema = z.object({
     .max(50)
     .default(20),
 
+  TRUST_PROXY_HOPS: z.coerce
+    .number()
+    .int()
+    .min(0)
+    .max(10)
+    .default(0),
+
+  DEMO_MODE: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((value) => value === 'true'),
+
   SHUTDOWN_TIMEOUT_MS: z.coerce
     .number()
     .int()
