@@ -6,6 +6,10 @@ import {
 
 import { env } from '../config/env.js';
 
+import {
+  APP_ERROR_CODES,
+} from '../utils/AppError.js';
+
 const SAFE_METHODS = new Set([
   'GET',
   'HEAD',
@@ -62,6 +66,17 @@ const getRequestOrigin = (
   }
 };
 
+const sendOriginError = (
+  res: Response,
+  message: string
+): void => {
+  res.status(403).json({
+    success: false,
+    code: APP_ERROR_CODES.FORBIDDEN,
+    message,
+  });
+};
+
 export const requireTrustedOrigin = (
   req: Request,
   res: Response,
@@ -75,40 +90,48 @@ export const requireTrustedOrigin = (
   const requestOrigin =
     getRequestOrigin(req);
 
-  if (requestOrigin.status === 'invalid') {
-    res.status(403).json({
-      success: false,
-      message:
-        'Request origin could not be verified',
-    });
+  if (
+    requestOrigin.status === 'invalid'
+  ) {
+    sendOriginError(
+      res,
+      'Request origin could not be verified'
+    );
 
     return;
   }
 
-  if (requestOrigin.status === 'missing') {
-    if (env.NODE_ENV !== 'production') {
+  if (
+    requestOrigin.status === 'missing'
+  ) {
+    if (
+      env.NODE_ENV !== 'production'
+    ) {
       next();
       return;
     }
 
-    res.status(403).json({
-      success: false,
-      message:
-        'Request origin could not be verified',
-    });
+    sendOriginError(
+      res,
+      'Request origin could not be verified'
+    );
 
     return;
   }
 
   const trustedOrigin =
-    new URL(env.FRONTEND_URL).origin;
+    new URL(
+      env.FRONTEND_URL
+    ).origin;
 
-  if (requestOrigin.value !== trustedOrigin) {
-    res.status(403).json({
-      success: false,
-      message:
-        'Request origin is not allowed',
-    });
+  if (
+    requestOrigin.value !==
+    trustedOrigin
+  ) {
+    sendOriginError(
+      res,
+      'Request origin is not allowed'
+    );
 
     return;
   }
