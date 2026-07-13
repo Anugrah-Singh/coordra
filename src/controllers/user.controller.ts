@@ -3,12 +3,7 @@ import { Request, Response, NextFunction } from 'express';
 import { createUserInDb } from '../services/user.service.js';
 import { CreateUserInput } from '../schemas/user.schema.js';
 
-const createHttpError = (message: string, status: number) => {
-  return Object.assign(new Error(message), {
-    status,
-    statusCode: status,
-  });
-};
+import { internalError } from '../utils/httpErrors.js';
 
 export const createUserHandler = async (
   req: Request<{}, {}, CreateUserInput>,
@@ -19,7 +14,9 @@ export const createUserHandler = async (
     const newUser = await createUserInDb(req.body);
 
     if (!newUser) {
-      throw createHttpError('Failed to create user', 500);
+      throw internalError(
+        'Failed to create user'
+      );
     }
 
     const safeUser = {
