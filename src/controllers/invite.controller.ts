@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import { env } from '../config/env.js';
 
 import {
   acceptWorkspaceInviteInDb,
@@ -74,11 +75,22 @@ export const createWorkspaceInviteHandler = async (
 
     res.status(201).json({
       success: true,
-      message: 'Workspace invite created successfully',
+        
+      message:
+        'Workspace invite created successfully',
+        
       data: {
         invite: result.invite,
-        token: result.rawToken,
-        invitePath: `/workspace-invites/${result.rawToken}`,
+      
+        ...(env.NODE_ENV === 'test'
+          ? {
+              token:
+                result.rawToken,
+          
+              invitePath:
+                `/workspace-invites/${result.rawToken}`,
+            }
+          : {}),
       },
     });
   } catch (error) {

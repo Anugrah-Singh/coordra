@@ -5,7 +5,7 @@
   "engines": {
     "node": ">=24.18.0 <25"
   },
-  "description": "",
+  "description": "Multi-tenant SaaS team workspace backend with real-time collaboration, RBAC, PostgreSQL and automated Neon preview environments.",
   "main": "dist/server.js",
   "type": "module",
   "scripts": {
@@ -14,6 +14,7 @@
     "test:typecheck": "tsc --noEmit -p tsconfig.test.json",
     "test": "tsx --test tests/*.test.ts",
     "test:integration": "tsx --test --test-concurrency=1 tests/integration/*.test.ts",
+    "test:coverage": "tsx --test --experimental-test-coverage tests/*.test.ts",
     "build": "tsc",
     "start": "node --enable-source-maps dist/server.js",
     "db:generate": "drizzle-kit generate",
@@ -22,8 +23,18 @@
     "test:smoke": "tsx scripts/smoke-test.ts",
     "backend:verify": "npm run typecheck && npm run test:typecheck && npm test && npm run build && npm audit --omit=dev"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "nodejs",
+    "typescript",
+    "express",
+    "postgresql",
+    "drizzle",
+    "neon",
+    "socket.io",
+    "saas",
+    "rbac"
+  ],
+  "author": "Anugrah Singh",
   "license": "ISC",
   "dependencies": {
     "bcrypt": "^6.0.0",

@@ -1,4 +1,10 @@
-import { rateLimit } from 'express-rate-limit';
+import {
+  rateLimit,
+} from 'express-rate-limit';
+
+import {
+  APP_ERROR_CODES,
+} from '../utils/AppError.js';
 
 type LimiterOptions = {
   windowMs: number;
@@ -8,7 +14,9 @@ type LimiterOptions = {
   skipSuccessfulRequests?: boolean;
 };
 
-const createRateLimiter = (options: LimiterOptions) =>
+const createRateLimiter = (
+  options: LimiterOptions
+) =>
   rateLimit({
     windowMs: options.windowMs,
     limit: options.limit,
@@ -16,56 +24,88 @@ const createRateLimiter = (options: LimiterOptions) =>
     standardHeaders: 'draft-8',
     legacyHeaders: false,
 
-    identifier: options.identifier,
+    identifier:
+      options.identifier,
+
     ipv6Subnet: 56,
 
     skipSuccessfulRequests:
-      options.skipSuccessfulRequests ?? false,
+      options.skipSuccessfulRequests ??
+      false,
 
-    // Do not count browser CORS preflight requests.
-    skip: (req) => req.method === 'OPTIONS',
+    skip: (req) =>
+      req.method === 'OPTIONS',
 
     statusCode: 429,
 
     message: {
       success: false,
-      message: options.message,
+
+      code:
+        APP_ERROR_CODES
+          .RATE_LIMITED,
+
+      message:
+        options.message,
     },
 
-    // Fail closed if the limiter's store fails.
     passOnStoreError: false,
   });
 
-export const apiRateLimiter = createRateLimiter({
-  windowMs: 15 * 60 * 1000,
-  limit: 1000,
-  identifier: 'general-api',
-  message:
-    'Too many API requests. Please wait before trying again.',
-});
+export const apiRateLimiter =
+  createRateLimiter({
+    windowMs:
+      15 * 60 * 1000,
 
-export const loginRateLimiter = createRateLimiter({
-  windowMs: 15 * 60 * 1000,
-  limit: 10,
-  identifier: 'login-attempts',
-  message:
-    'Too many failed login attempts. Please try again later.',
-  // Successful logins do not consume the failed-login quota.
-  skipSuccessfulRequests: true,
-});
+    limit: 1000,
 
-export const registrationRateLimiter = createRateLimiter({
-  windowMs: 60 * 60 * 1000,
-  limit: 10,
-  identifier: 'user-registration',
-  message:
-    'Too many account creation attempts. Please try again later.',
-});
+    identifier:
+      'general-api',
 
-export const inviteCreationRateLimiter = createRateLimiter({
-  windowMs: 60 * 60 * 1000,
-  limit: 30,
-  identifier: 'workspace-invites',
-  message:
-    'Too many workspace invites created. Please try again later.',
-});
+    message:
+      'Too many API requests. Please wait before trying again.',
+  });
+
+export const loginRateLimiter =
+  createRateLimiter({
+    windowMs:
+      15 * 60 * 1000,
+
+    limit: 10,
+
+    identifier:
+      'login-attempts',
+
+    message:
+      'Too many failed login attempts. Please try again later.',
+
+    skipSuccessfulRequests: true,
+  });
+
+export const registrationRateLimiter =
+  createRateLimiter({
+    windowMs:
+      60 * 60 * 1000,
+
+    limit: 10,
+
+    identifier:
+      'user-registration',
+
+    message:
+      'Too many account creation attempts. Please try again later.',
+  });
+
+export const inviteCreationRateLimiter =
+  createRateLimiter({
+    windowMs:
+      60 * 60 * 1000,
+
+    limit: 30,
+
+    identifier:
+      'workspace-invites',
+
+    message:
+      'Too many workspace invites created. Please try again later.',
+  });

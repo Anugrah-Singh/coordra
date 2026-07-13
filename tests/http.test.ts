@@ -396,7 +396,8 @@ describe(
           response.body,
           {
             success: false,
-
+            code:
+              APP_ERROR_CODES.FORBIDDEN,
             message:
               'Request origin is not allowed',
           }
@@ -466,7 +467,8 @@ describe(
           response.body,
           {
             success: false,
-
+            code:
+              APP_ERROR_CODES.FORBIDDEN,
             message:
               'Request origin could not be verified',
           }
