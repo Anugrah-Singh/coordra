@@ -8,8 +8,10 @@ import express, {
 } from 'express';
 
 import helmet from 'helmet';
+import swaggerUi from 'swagger-ui-express';
 
 import { env } from './config/env.js';
+import { openApiDocument } from './docs/openapi.js';
 
 import { db } from './db/index.js';
 
@@ -57,6 +59,34 @@ export const createApp = (
 
   app.disable(
     'x-powered-by'
+  );
+
+  if (env.TRUST_PROXY_HOPS > 0) {
+    app.set(
+      'trust proxy',
+      env.TRUST_PROXY_HOPS
+    );
+  }
+
+  app.get(
+    '/api-docs.json',
+    (_req: Request, res: Response) => {
+      res.status(200).json(
+        openApiDocument
+      );
+    }
+  );
+
+  app.use(
+    '/api-docs',
+    swaggerUi.serve,
+    swaggerUi.setup(
+      openApiDocument,
+      {
+        customSiteTitle:
+          'SaaS Team Workspace API',
+      }
+    )
   );
 
   app.use(helmet());

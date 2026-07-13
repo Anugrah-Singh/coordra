@@ -1,13 +1,15 @@
-# Dependency directories
 node_modules/
-
-# Environment variables (CRITICAL)
+frontend/node_modules/
+dist/
+frontend/dist/
+coverage/
 .env
 .env.*
-
-# Build outputs
-dist/
-
-# OS metadata
-.DS_Storecookies.txt
-*-cookies.txt
+!.env.example
+frontend/.env
+frontend/.env.*
+!frontend/.env.example
+*.log
+.DS_Store
+.vscode/
+.idea/
