@@ -54,7 +54,8 @@ const envSchema = z.object({
     .url({
       message: 'FRONTEND_URL must be a valid URL',
     })
-    .default('http://localhost:3000'),
+    .default('http://localhost:3000')
+    .transform((value) => new URL(value).origin),
 
   DB_POOL_MAX: z.coerce
     .number()

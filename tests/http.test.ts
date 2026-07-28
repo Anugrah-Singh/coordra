@@ -16,8 +16,11 @@ process.env.DATABASE_URL =
 process.env.JWT_SECRET =
   'test-only-jwt-secret-that-is-at-least-32-characters';
 
-process.env.FRONTEND_URL =
+const frontendOrigin =
   'http://localhost:3000';
+
+process.env.FRONTEND_URL =
+  `${frontendOrigin}/`;
 
 process.env.DB_POOL_MAX =
   '1';
@@ -341,8 +344,7 @@ describe(
             .post('/api/users')
             .set(
               'Origin',
-              process.env
-                .FRONTEND_URL!
+              frontendOrigin
             )
             .send({
               email:
@@ -413,7 +415,7 @@ describe(
             .post('/api/users')
             .set(
               'Referer',
-              `${process.env.FRONTEND_URL}/register`
+              `${frontendOrigin}/register`
             )
             .send({
               email:
@@ -530,8 +532,7 @@ describe(
             .post('/api/users')
             .set(
               'Origin',
-              process.env
-                .FRONTEND_URL!
+              frontendOrigin
             )
             .send({
               email:
@@ -573,8 +574,7 @@ describe(
             .post('/api/users')
             .set(
               'Origin',
-              process.env
-                .FRONTEND_URL!
+              frontendOrigin
             )
             .send({
               email:
