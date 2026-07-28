@@ -35,9 +35,9 @@ A user can:
 
 ```text
 Browser
-  ├─ React 19 + Vite + TypeScript
+  ├─ Next.js App Router + React 19 + TypeScript
   ├─ TanStack Query + Axios
-  ├─ React Router
+  ├─ Tailwind CSS + shadcn/ui
   ├─ dnd-kit Kanban interactions
   └─ Socket.IO Client
           │ HTTPS / WebSocket (HttpOnly auth cookie)
@@ -72,8 +72,8 @@ Migrations  → direct/unpooled Neon connection
 ### Frontend
 
 - React 19 and TypeScript
-- Vite
-- React Router
+- Next.js App Router
+- Tailwind CSS and shadcn/ui
 - TanStack Query
 - Axios
 - React Hook Form and Zod
@@ -147,7 +147,7 @@ NODE_ENV=development
 PORT=8000
 DATABASE_URL=<pooled-neon-runtime-url>
 JWT_SECRET=<random-value-at-least-32-characters>
-FRONTEND_URL=http://localhost:5173
+FRONTEND_URL=http://localhost:3000
 TRUST_PROXY_HOPS=0
 ```
 
@@ -158,7 +158,7 @@ cp frontend/.env.example frontend/.env
 ```
 
 ```env
-VITE_API_URL=http://localhost:8000
+NEXT_PUBLIC_API_URL=http://localhost:8000
 ```
 
 The browser never stores the JWT. Axios and Socket.IO send the backend’s HttpOnly cookie with credentials.
@@ -191,7 +191,7 @@ Terminal two:
 npm run frontend:dev
 ```
 
-Open `http://localhost:5173`.
+Open `http://localhost:3000`.
 
 ## Demo data
 
@@ -230,6 +230,7 @@ npm run backend:verify
 
 # Frontend
 npm run frontend:typecheck
+npm run frontend:lint
 npm run frontend:build
 
 # Both
@@ -302,7 +303,7 @@ A concrete Vercel + Render + Neon guide is included in [`docs/DEPLOYMENT.md`](do
 Included deployment assets:
 
 - `render.yaml` for the Express API
-- `frontend/vercel.json` for SPA route rewrites
+- native Vercel Next.js routing from the `frontend/` root
 - frontend production environment example
 - production smoke-test command
 - frontend and backend GitHub Actions verification

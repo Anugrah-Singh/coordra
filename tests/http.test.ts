@@ -17,7 +17,7 @@ process.env.JWT_SECRET =
   'test-only-jwt-secret-that-is-at-least-32-characters';
 
 process.env.FRONTEND_URL =
-  'http://localhost:5173';
+  'http://localhost:3000';
 
 process.env.DB_POOL_MAX =
   '1';

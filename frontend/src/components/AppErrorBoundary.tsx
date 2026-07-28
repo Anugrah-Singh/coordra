@@ -1,3 +1,5 @@
+"use client";
+
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { AlertTriangle } from 'lucide-react';
 import { Button, Card } from './ui';
@@ -24,8 +26,8 @@ export class AppErrorBoundary extends Component<
     }
 
     return (
-      <main className="fatal-page">
-        <Card className="fatal-card">
+      <main className="grid min-h-screen place-items-center bg-background p-4">
+        <Card className="w-full max-w-lg gap-4 p-6">
           <AlertTriangle size={34} />
           <h1>The workspace UI hit an unexpected error.</h1>
           <p>{this.state.error.message}</p>

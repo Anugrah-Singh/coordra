@@ -1,7 +1,7 @@
 import axios, { AxiosError, type AxiosRequestConfig } from 'axios';
 import type { ApiEnvelope, ApiErrorPayload } from '../types/api';
 
-const apiBaseUrl = (import.meta.env.VITE_API_URL as string | undefined)?.replace(
+const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL?.replace(
   /\/$/,
   ''
 ) ?? 'http://localhost:8000';

@@ -98,7 +98,7 @@ jobs:
           NODE_ENV: test
           DATABASE_URL: ${{ steps.create-branch.outputs.db_url }}
           JWT_SECRET: integration-test-only-jwt-secret-with-at-least-32-characters
-          FRONTEND_URL: http://localhost:5173
+          FRONTEND_URL: http://localhost:3000
           DB_POOL_MAX: 2
           SHUTDOWN_TIMEOUT_MS: 1000
         run: npm run test:integration

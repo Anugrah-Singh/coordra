@@ -27,7 +27,7 @@ process.env.JWT_SECRET ??=
   'integration-test-only-jwt-secret-with-at-least-32-characters';
 
 process.env.FRONTEND_URL ??=
-  'http://localhost:5173';
+  'http://localhost:3000';
 
 process.env.DB_POOL_MAX ??= '2';
 

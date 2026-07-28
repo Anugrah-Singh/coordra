@@ -1,16 +1,15 @@
+import 'dotenv/config';
+
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import { Client } from 'pg';
 
-async function runDiagnosticMigration() {
-  if (!process.env.DATABASE_URL) {
-    console.error('❌ DATABASE_URL is missing!');
-    process.exit(1);
-  }
+import { env } from '../config/env.js';
 
+async function runDiagnosticMigration() {
   // Create a direct client connection
   const client = new Client({
-    connectionString: process.env.DATABASE_URL,
+    connectionString: env.DATABASE_URL,
   });
 
   try {

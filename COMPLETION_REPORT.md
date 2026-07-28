@@ -4,7 +4,7 @@
 
 The attached backend repository snapshot was reconstructed and preserved at the project root. The following recruiter-facing layers were added without replacing the existing Express/Drizzle/Neon architecture:
 
-- React 19 + TypeScript + Vite frontend in `frontend/`
+- Next.js App Router + React 19 + TypeScript frontend in `frontend/`
 - cookie-based authentication restoration and protected routing
 - responsive workspace application shell
 - workspace creation, switching, dashboard, and settings

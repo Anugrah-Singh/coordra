@@ -1,3 +1,5 @@
+"use client";
+
 import {
   createContext,
   useContext,
@@ -76,7 +78,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     [
       authQuery.data,
       authQuery.isLoading,
-      loginMutation.mutateAsync,
+      loginMutation,
       logoutMutation.mutateAsync,
       registerMutation.mutateAsync,
     ]

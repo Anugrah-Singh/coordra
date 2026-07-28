@@ -28,7 +28,21 @@ const envSchema = z.object({
         message:
           'DATABASE_URL must use the postgres:// or postgresql:// protocol',
       }
-    ),
+    )
+    .transform((value) => {
+      const url = new URL(value);
+      const sslMode = url.searchParams.get('sslmode');
+
+      if (
+        sslMode === 'prefer' ||
+        sslMode === 'require' ||
+        sslMode === 'verify-ca'
+      ) {
+        url.searchParams.set('sslmode', 'verify-full');
+      }
+
+      return url.toString();
+    }),
 
   JWT_SECRET: z
     .string()
@@ -40,7 +54,7 @@ const envSchema = z.object({
     .url({
       message: 'FRONTEND_URL must be a valid URL',
     })
-    .default('http://localhost:5173'),
+    .default('http://localhost:3000'),
 
   DB_POOL_MAX: z.coerce
     .number()

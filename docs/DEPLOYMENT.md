@@ -1,6 +1,6 @@
 # Deployment Guide
 
-This repository keeps the Express backend at the project root and the Vite frontend in `frontend/`.
+This repository keeps the Express backend at the project root and the Next.js frontend in `frontend/`.
 
 ## Recommended topology
 
@@ -34,10 +34,11 @@ Import the repository into Vercel and set the root directory to `frontend`.
 Set:
 
 ```env
-VITE_API_URL=https://<api-host>
+NEXT_PUBLIC_API_URL=https://<api-host>
 ```
 
-The included `frontend/vercel.json` preserves React Router routes on refresh.
+No `vercel.json` rewrite is required. Vercel detects the Next.js App Router
+from `frontend/` and serves static and dynamic routes natively.
 
 ## 3. Cookie and cross-origin checks
 
