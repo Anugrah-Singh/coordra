@@ -105,9 +105,9 @@ export const WorkspaceListPage = () => {
         </div>
       )}
 
-      <Card className="grid gap-6 overflow-hidden border-primary/20 bg-primary text-primary-foreground md:grid-cols-[1fr_auto] md:items-center [&_h2]:mt-2 [&_h2]:font-heading [&_h2]:text-2xl [&_p]:mt-2 [&_p]:max-w-2xl [&_p]:text-primary-foreground/70">
+      <Card className="grid gap-6 overflow-hidden border-primary/20 bg-primary p-6 text-primary-foreground sm:p-7 md:grid-cols-[minmax(0,1fr)_auto] md:items-center [&_h2]:mt-2 [&_h2]:text-balance [&_h2]:font-heading [&_h2]:text-2xl [&_p]:mt-2 [&_p]:max-w-2xl [&_p]:text-pretty [&_p]:text-primary-foreground/70">
         <div>
-          <span className="font-mono text-[10px] font-medium uppercase tracking-[.16em] text-primary">
+          <span className="font-mono text-[10px] font-medium uppercase tracking-[.16em] text-primary-foreground/70">
             Under the hood
           </span>
           <h2>Multi-tenant by design, not by convention.</h2>
@@ -116,7 +116,7 @@ export const WorkspaceListPage = () => {
             by hierarchical RBAC.
           </p>
         </div>
-        <div className="flex max-w-md flex-wrap gap-2 [&>span]:rounded-full [&>span]:border [&>span]:border-primary-foreground/20 [&>span]:px-3 [&>span]:py-1.5 [&>span]:font-mono [&>span]:text-[10px] [&>span]:uppercase">
+        <div className="flex max-w-md flex-wrap gap-2 md:justify-end [&>span]:rounded-full [&>span]:border [&>span]:border-primary-foreground/20 [&>span]:px-3 [&>span]:py-1.5 [&>span]:font-mono [&>span]:text-[10px] [&>span]:uppercase">
           <span>Express 5</span>
           <span>Drizzle ORM</span>
           <span>Neon branches</span>

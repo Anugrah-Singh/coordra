@@ -82,30 +82,42 @@ export const ProjectsPage = () => {
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {projects.map((project) => (
             <Card className="gap-0 overflow-hidden shadow-xs" key={project.id}>
-              <div className="grid size-10 place-items-center rounded-xl bg-secondary text-secondary-foreground">
-                <FolderKanban size={20} />
-              </div>
-              <div className="px-5 pb-5 text-sm text-muted-foreground">
-                <div className="flex items-start justify-between gap-3 p-5">
-                  <h2>{project.name}</h2>
-                  {canDelete ? (
-                    <button
-                      className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
-                      type="button"
-                      onClick={() => setDeleteTarget(project)}
-                      aria-label={`Delete ${project.name}`}
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  ) : (
-                    <MoreHorizontal size={17} />
-                  )}
+              <div className="flex items-start gap-3 px-5 py-5">
+                <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-secondary text-secondary-foreground">
+                  <FolderKanban size={20} />
                 </div>
-                <p>{project.description || 'No project description yet.'}</p>
+                <div className="min-w-0 flex-1">
+                  <div className="flex min-h-10 items-center justify-between gap-3">
+                    <h2 className="truncate text-balance text-base font-semibold text-card-foreground">
+                      {project.name}
+                    </h2>
+                    {canDelete ? (
+                      <button
+                        className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
+                        type="button"
+                        onClick={() => setDeleteTarget(project)}
+                        aria-label={`Delete ${project.name}`}
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    ) : (
+                      <MoreHorizontal
+                        className="shrink-0 text-muted-foreground"
+                        size={17}
+                      />
+                    )}
+                  </div>
+                  <p className="mt-3 line-clamp-2 min-h-10 text-pretty text-sm leading-5 text-muted-foreground">
+                    {project.description || 'No project description yet.'}
+                  </p>
+                </div>
               </div>
               <div className="flex items-center justify-between border-t px-5 py-3 text-xs text-muted-foreground">
                 <span>Updated {formatDate(project.updatedAt)}</span>
-                <Link href={`/app/workspaces/${workspaceId}/projects/${project.id}`}>
+                <Link
+                  className="inline-flex items-center gap-1 font-medium text-foreground hover:text-primary"
+                  href={`/app/workspaces/${workspaceId}/projects/${project.id}`}
+                >
                   Open board <ArrowRight size={15} />
                 </Link>
               </div>
