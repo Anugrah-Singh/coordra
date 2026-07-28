@@ -1,16 +1,8 @@
 import { z } from 'zod';
 
-import {
-  paginationQuerySchema,
-  PaginationQuery,
-} from './pagination.schema.js';
+import { paginationQuerySchema, PaginationQuery } from './pagination.schema.js';
 
-const assignableInviteRoleEnum = z.enum([
-  'ADMIN',
-  'MANAGER',
-  'MEMBER',
-  'VIEWER',
-]);
+const assignableInviteRoleEnum = z.enum(['ADMIN', 'MANAGER', 'MEMBER', 'VIEWER']);
 
 export const createWorkspaceInviteSchema = z.object({
   params: z.object({
@@ -49,17 +41,15 @@ export const getWorkspaceInvitesSchema = z.object({
   }),
 });
 
-export type CreateWorkspaceInviteInput =
-  z.infer<typeof createWorkspaceInviteSchema>['body'];
+export type CreateWorkspaceInviteInput = z.infer<
+  typeof createWorkspaceInviteSchema
+>['body'];
 
-export type WorkspaceInviteParams =
-  z.infer<typeof createWorkspaceInviteSchema>['params'];
+export type WorkspaceInviteParams = z.infer<typeof createWorkspaceInviteSchema>['params'];
 
-export type InviteActionParams =
-  z.infer<typeof inviteParamsSchema>['params'];
+export type InviteActionParams = z.infer<typeof inviteParamsSchema>['params'];
 
-export type InviteTokenParams =
-  z.infer<typeof inviteTokenSchema>['params'];
+export type InviteTokenParams = z.infer<typeof inviteTokenSchema>['params'];
 
-export type InviteListQuery =
-  z.infer<typeof getWorkspaceInvitesSchema>['query'] & PaginationQuery;
+export type InviteListQuery = z.infer<typeof getWorkspaceInvitesSchema>['query'] &
+  PaginationQuery;

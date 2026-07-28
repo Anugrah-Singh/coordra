@@ -1,13 +1,13 @@
 import { Request, Response, NextFunction } from 'express';
 
 import {
-  addLabelToTaskInDb,
-  createLabelInDb,
-  deleteLabelInDb,
-  getTaskLabelsFromDb,
-  getWorkspaceLabelsFromDb,
-  removeLabelFromTaskInDb,
-  updateLabelInDb,
+  addLabelToTask,
+  createLabel,
+  deleteLabel,
+  getTaskLabels,
+  getWorkspaceLabels,
+  removeLabelFromTask,
+  updateLabel,
 } from '../services/label.service.js';
 
 import {
@@ -31,7 +31,7 @@ export const getWorkspaceLabelsHandler = async (
   try {
     const { workspaceId } = req.params;
 
-    const workspaceLabels = await getWorkspaceLabelsFromDb({
+    const workspaceLabels = await getWorkspaceLabels({
       workspaceId,
       page: req.query.page,
       limit: req.query.limit,
@@ -56,7 +56,7 @@ export const createLabelHandler = async (
     const { workspaceId } = req.params;
     const actorId = res.locals.userId as string;
 
-    const newLabel = await createLabelInDb({
+    const newLabel = await createLabel({
       workspaceId,
       actorId,
       name: req.body.name,
@@ -107,7 +107,7 @@ export const updateLabelHandler = async (
       updateData.color = req.body.color;
     }
 
-    const updatedLabel = await updateLabelInDb(updateData);
+    const updatedLabel = await updateLabel(updateData);
 
     emitWorkspaceEvent(workspaceId, 'label_updated', {
       workspaceId,
@@ -134,7 +134,7 @@ export const deleteLabelHandler = async (
     const { workspaceId, labelId } = req.params;
     const actorId = res.locals.userId as string;
 
-    const deletedLabel = await deleteLabelInDb({
+    const deletedLabel = await deleteLabel({
       workspaceId,
       labelId,
       actorId,
@@ -164,7 +164,7 @@ export const getTaskLabelsHandler = async (
   try {
     const { workspaceId, projectId, taskId } = req.params;
 
-    const taskLabelList = await getTaskLabelsFromDb({
+    const taskLabelList = await getTaskLabels({
       workspaceId,
       projectId,
       taskId,
@@ -191,7 +191,7 @@ export const addLabelToTaskHandler = async (
     const { workspaceId, projectId, taskId, labelId } = req.params;
     const actorId = res.locals.userId as string;
 
-    const label = await addLabelToTaskInDb({
+    const label = await addLabelToTask({
       workspaceId,
       projectId,
       taskId,
@@ -226,7 +226,7 @@ export const removeLabelFromTaskHandler = async (
     const { workspaceId, projectId, taskId, labelId } = req.params;
     const actorId = res.locals.userId as string;
 
-    const label = await removeLabelFromTaskInDb({
+    const label = await removeLabelFromTask({
       workspaceId,
       projectId,
       taskId,

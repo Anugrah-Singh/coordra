@@ -1,10 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
 
 import {
-  createCommentInDb,
-  deleteCommentFromDb,
-  getTaskCommentsFromDb,
-  updateCommentInDb,
+  createComment,
+  deleteComment,
+  getTaskComments,
+  updateComment,
 } from '../services/comment.service.js';
 
 import {
@@ -27,7 +27,7 @@ export const createCommentHandler = async (
     const { workspaceId, projectId, taskId } = req.params;
     const userId = res.locals.userId as string;
 
-    const newComment = await createCommentInDb({
+    const newComment = await createComment({
       workspaceId,
       projectId,
       taskId,
@@ -60,7 +60,7 @@ export const getTaskCommentsHandler = async (
   try {
     const { workspaceId, projectId, taskId } = req.params;
 
-    const taskComments = await getTaskCommentsFromDb({
+    const taskComments = await getTaskComments({
       workspaceId,
       projectId,
       taskId,
@@ -87,7 +87,7 @@ export const updateCommentHandler = async (
     const { workspaceId, projectId, taskId, commentId } = req.params;
     const actorId = res.locals.userId as string;
 
-    const updatedComment = await updateCommentInDb({
+    const updatedComment = await updateComment({
       workspaceId,
       projectId,
       taskId,
@@ -123,7 +123,7 @@ export const deleteCommentHandler = async (
     const { workspaceId, projectId, taskId, commentId } = req.params;
     const actorId = res.locals.userId as string;
 
-    const deletedComment = await deleteCommentFromDb({
+    const deletedComment = await deleteComment({
       workspaceId,
       projectId,
       taskId,

@@ -1,11 +1,11 @@
 import { Request, Response, NextFunction } from 'express';
 
 import {
-  createProjectInDb,
-  deleteProjectFromDb,
-  getProjectByIdFromDb,
-  getWorkspaceProjectsFromDb,
-  updateProjectInDb,
+  createProject,
+  deleteProject,
+  getProjectById,
+  getWorkspaceProjects,
+  updateProject,
 } from '../services/project.service.js';
 
 import {
@@ -27,7 +27,7 @@ export const createProjectHandler = async (
     const { workspaceId } = req.params;
     const actorId = res.locals.userId as string;
 
-    const newProject = await createProjectInDb({
+    const newProject = await createProject({
       workspaceId,
       actorId,
       name: req.body.name,
@@ -56,7 +56,7 @@ export const getWorkspaceProjectsHandler = async (
   try {
     const { workspaceId } = req.params;
 
-    const workspaceProjects = await getWorkspaceProjectsFromDb({
+    const workspaceProjects = await getWorkspaceProjects({
       workspaceId,
       page: req.query.page,
       limit: req.query.limit,
@@ -80,7 +80,7 @@ export const getProjectByIdHandler = async (
   try {
     const { workspaceId, projectId } = req.params;
 
-    const project = await getProjectByIdFromDb(workspaceId, projectId);
+    const project = await getProjectById(workspaceId, projectId);
 
     res.status(200).json({
       success: true,
@@ -102,26 +102,26 @@ export const updateProjectHandler = async (
     const actorId = res.locals.userId as string;
 
     const updateData: {
-        workspaceId: string;
-        projectId: string;
-        actorId: string;
-        name?: string;
-        description?: string | null;
+      workspaceId: string;
+      projectId: string;
+      actorId: string;
+      name?: string;
+      description?: string | null;
     } = {
-        workspaceId,
-        projectId,
-        actorId,
+      workspaceId,
+      projectId,
+      actorId,
     };
 
     if (req.body.name !== undefined) {
-        updateData.name = req.body.name;
+      updateData.name = req.body.name;
     }
 
     if (req.body.description !== undefined) {
-        updateData.description = req.body.description;
+      updateData.description = req.body.description;
     }
 
-    const updatedProject = await updateProjectInDb(updateData);
+    const updatedProject = await updateProject(updateData);
 
     emitWorkspaceEvent(workspaceId, 'project_updated', {
       workspaceId,
@@ -148,7 +148,7 @@ export const deleteProjectHandler = async (
     const { workspaceId, projectId } = req.params;
     const actorId = res.locals.userId as string;
 
-    const deletedProject = await deleteProjectFromDb({
+    const deletedProject = await deleteProject({
       workspaceId,
       projectId,
       actorId,

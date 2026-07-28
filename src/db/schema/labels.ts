@@ -29,10 +29,7 @@ export const labels = pgTable(
     createdAt: timestamp('created_at').defaultNow().notNull(),
   },
   (table) => [
-    uniqueIndex('labels_workspace_name_unique_idx').on(
-      table.workspaceId,
-      table.name
-    ),
+    uniqueIndex('labels_workspace_name_unique_idx').on(table.workspaceId, table.name),
   ]
 );
 

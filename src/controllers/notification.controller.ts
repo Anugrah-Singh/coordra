@@ -1,10 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
 
 import {
-  getUnreadNotificationCountFromDb,
-  getUserNotificationsFromDb,
-  markAllNotificationsReadInDb,
-  markNotificationReadInDb,
+  getUnreadNotificationCount,
+  getUserNotifications,
+  markAllNotificationsRead,
+  markNotificationRead,
 } from '../services/notification.service.js';
 
 import {
@@ -23,7 +23,7 @@ export const getNotificationsHandler = async (
   try {
     const userId = res.locals.userId as string;
 
-    const userNotifications = await getUserNotificationsFromDb({
+    const userNotifications = await getUserNotifications({
       userId,
       workspaceId: req.query.workspaceId,
       unreadOnly: req.query.unreadOnly,
@@ -49,7 +49,7 @@ export const getUnreadNotificationCountHandler = async (
   try {
     const userId = res.locals.userId as string;
 
-    const count = await getUnreadNotificationCountFromDb({
+    const count = await getUnreadNotificationCount({
       userId,
       workspaceId: req.query.workspaceId,
     });
@@ -75,7 +75,7 @@ export const markNotificationReadHandler = async (
     const userId = res.locals.userId as string;
     const { notificationId } = req.params;
 
-    const notification = await markNotificationReadInDb({
+    const notification = await markNotificationRead({
       userId,
       notificationId,
     });
@@ -102,7 +102,7 @@ export const markAllNotificationsReadHandler = async (
   try {
     const userId = res.locals.userId as string;
 
-    const notifications = await markAllNotificationsReadInDb({
+    const notifications = await markAllNotificationsRead({
       userId,
       workspaceId: req.query.workspaceId,
     });

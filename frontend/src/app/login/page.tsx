@@ -1,3 +1,9 @@
-import { PublicOnlyGate } from "@/components/AuthGates";
-import { LoginPage } from "@/views/LoginPage";
-export default function Page() { return <PublicOnlyGate><LoginPage /></PublicOnlyGate>; }
+import { PublicOnlyGate } from '@/features/auth/AuthGates';
+import { LoginPage } from '@/features/auth/LoginPage';
+export default function Page() {
+  return (
+    <PublicOnlyGate>
+      <LoginPage />
+    </PublicOnlyGate>
+  );
+}

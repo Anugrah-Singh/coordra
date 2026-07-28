@@ -1,16 +1,6 @@
-export type WorkspaceRole =
-  | 'OWNER'
-  | 'ADMIN'
-  | 'MANAGER'
-  | 'MEMBER'
-  | 'VIEWER';
+export type WorkspaceRole = 'OWNER' | 'ADMIN' | 'MANAGER' | 'MEMBER' | 'VIEWER';
 
-export type TaskStatus =
-  | 'BACKLOG'
-  | 'TODO'
-  | 'IN_PROGRESS'
-  | 'BLOCKED'
-  | 'DONE';
+export type TaskStatus = 'BACKLOG' | 'TODO' | 'IN_PROGRESS' | 'BLOCKED' | 'DONE';
 
 export type TaskPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
 

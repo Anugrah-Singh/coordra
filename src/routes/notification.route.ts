@@ -18,12 +18,7 @@ import {
 
 const router = Router();
 
-router.get(
-  '/',
-  requireAuth,
-  validate(getNotificationsSchema),
-  getNotificationsHandler
-);
+router.get('/', requireAuth, validate(getNotificationsSchema), getNotificationsHandler);
 
 router.get(
   '/unread-count',

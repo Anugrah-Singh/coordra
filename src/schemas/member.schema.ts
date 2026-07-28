@@ -1,16 +1,8 @@
 import { z } from 'zod';
 
-import {
-  paginationQuerySchema,
-  PaginationQuery,
-} from './pagination.schema.js';
+import { paginationQuerySchema, PaginationQuery } from './pagination.schema.js';
 
-const assignableMemberRoleEnum = z.enum([
-  'ADMIN',
-  'MANAGER',
-  'MEMBER',
-  'VIEWER',
-]);
+const assignableMemberRoleEnum = z.enum(['ADMIN', 'MANAGER', 'MEMBER', 'VIEWER']);
 
 export const addMemberSchema = z.object({
   params: z.object({
@@ -52,12 +44,10 @@ export const getWorkspaceMembersSchema = z.object({
 });
 
 export type AddMemberInput = z.infer<typeof addMemberSchema>['body'];
-export type UpdateMemberRoleInput =
-  z.infer<typeof updateMemberRoleSchema>['body'];
+export type UpdateMemberRoleInput = z.infer<typeof updateMemberRoleSchema>['body'];
 
 export type MemberParams = z.infer<typeof addMemberSchema>['params'];
-export type MemberActionParams =
-  z.infer<typeof updateMemberRoleSchema>['params'];
+export type MemberActionParams = z.infer<typeof updateMemberRoleSchema>['params'];
 
-export type MemberListQuery =
-  z.infer<typeof getWorkspaceMembersSchema>['query'] & PaginationQuery;
+export type MemberListQuery = z.infer<typeof getWorkspaceMembersSchema>['query'] &
+  PaginationQuery;

@@ -6,7 +6,7 @@ import { db } from '../db/index.js';
 import { auditLogs } from '../db/schema/auditLogs.js';
 import { users } from '../db/schema/users.js';
 
-export const getWorkspaceAuditLogsFromDb = async (data: {
+export const getWorkspaceAuditLogs = async (data: {
   workspaceId: string;
   page?: string | undefined;
   limit?: string | undefined;

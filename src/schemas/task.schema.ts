@@ -1,19 +1,13 @@
 import { z } from 'zod';
 import { paginationQuerySchema, PaginationQuery } from './pagination.schema.js';
 
-const taskStatusEnum = z.enum(
-  ['BACKLOG', 'TODO', 'IN_PROGRESS', 'DONE', 'BLOCKED'],
-  {
-    error: () => 'Invalid task status',
-  }
-);
+const taskStatusEnum = z.enum(['BACKLOG', 'TODO', 'IN_PROGRESS', 'DONE', 'BLOCKED'], {
+  error: () => 'Invalid task status',
+});
 
-const taskPriorityEnum = z.enum(
-  ['LOW', 'MEDIUM', 'HIGH', 'URGENT'],
-  {
-    error: () => 'Invalid task priority',
-  }
-);
+const taskPriorityEnum = z.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT'], {
+  error: () => 'Invalid task priority',
+});
 
 const taskBaseParamsSchema = z.object({
   workspaceId: z.uuid({ message: 'Invalid workspace ID' }),
@@ -44,13 +38,9 @@ export const createTaskSchema = z.object({
 
     priority: taskPriorityEnum.optional(),
 
-    assigneeId: z
-      .uuid({ message: 'Invalid assignee ID' })
-      .optional()
-      .nullable(),
+    assigneeId: z.uuid({ message: 'Invalid assignee ID' }).optional().nullable(),
 
-    dueDate: z
-      .iso
+    dueDate: z.iso
       .datetime({ message: 'Due date must be a valid ISO datetime' })
       .optional()
       .nullable(),
@@ -78,11 +68,7 @@ export const updateTaskSchema = z.object({
 
   body: z
     .object({
-      title: z
-        .string()
-        .min(1, { message: 'Title cannot be empty' })
-        .trim()
-        .optional(),
+      title: z.string().min(1, { message: 'Title cannot be empty' }).trim().optional(),
 
       description: z.string().trim().optional().nullable(),
 
@@ -90,16 +76,9 @@ export const updateTaskSchema = z.object({
 
       priority: taskPriorityEnum.optional(),
 
-      assigneeId: z
-        .uuid({ message: 'Invalid assignee ID' })
-        .optional()
-        .nullable(),
+      assigneeId: z.uuid({ message: 'Invalid assignee ID' }).optional().nullable(),
 
-      dueDate: z
-        .iso
-        .datetime({ message: 'Invalid ISO datetime' })
-        .optional()
-        .nullable(),
+      dueDate: z.iso.datetime({ message: 'Invalid ISO datetime' }).optional().nullable(),
     })
     .refine((data) => Object.keys(data).length > 0, {
       message: 'At least one field is required to update task',
@@ -118,19 +97,15 @@ export const assignTaskSchema = z.object({
   params: taskActionParamsSchema,
 
   body: z.object({
-    assigneeId: z
-      .uuid({ message: 'Invalid assignee ID' })
-      .nullable(),
+    assigneeId: z.uuid({ message: 'Invalid assignee ID' }).nullable(),
   }),
 });
 
 export type CreateTaskInput = z.infer<typeof createTaskSchema>['body'];
 export type UpdateTaskInput = z.infer<typeof updateTaskSchema>['body'];
-export type UpdateTaskStatusInput =
-  z.infer<typeof updateTaskStatusSchema>['body'];
+export type UpdateTaskStatusInput = z.infer<typeof updateTaskStatusSchema>['body'];
 export type AssignTaskInput = z.infer<typeof assignTaskSchema>['body'];
 
 export type TaskParams = z.infer<typeof createTaskSchema>['params'];
 export type TaskActionParams = z.infer<typeof taskParamsSchema>['params'];
-export type TaskListQuery =
-  z.infer<typeof getTasksSchema>['query'] & PaginationQuery;
+export type TaskListQuery = z.infer<typeof getTasksSchema>['query'] & PaginationQuery;

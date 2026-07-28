@@ -1,15 +1,13 @@
-"use client";
+'use client';
 
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { AlertTriangle } from 'lucide-react';
-import { Button, Card } from './ui';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 
 type State = { error: Error | null };
 
-export class AppErrorBoundary extends Component<
-  { children: ReactNode },
-  State
-> {
+export class AppErrorBoundary extends Component<{ children: ReactNode }, State> {
   state: State = { error: null };
 
   static getDerivedStateFromError(error: Error): State {

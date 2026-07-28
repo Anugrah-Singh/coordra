@@ -1,15 +1,10 @@
 import { z } from 'zod';
 
-import {
-  paginationQuerySchema,
-  PaginationQuery,
-} from './pagination.schema.js';
+import { paginationQuerySchema, PaginationQuery } from './pagination.schema.js';
 
-const colorSchema = z
-  .string()
-  .regex(/^#[0-9A-Fa-f]{6}$/, {
-    message: 'Color must be a valid hex color like #FFAA00',
-  });
+const colorSchema = z.string().regex(/^#[0-9A-Fa-f]{6}$/, {
+  message: 'Color must be a valid hex color like #FFAA00',
+});
 
 export const createLabelSchema = z.object({
   params: z.object({
@@ -90,20 +85,16 @@ export const getWorkspaceLabelsSchema = z.object({
 export type CreateLabelInput = z.infer<typeof createLabelSchema>['body'];
 export type UpdateLabelInput = z.infer<typeof updateLabelSchema>['body'];
 
-export type LabelWorkspaceParams =
-  z.infer<typeof createLabelSchema>['params'];
+export type LabelWorkspaceParams = z.infer<typeof createLabelSchema>['params'];
 
-export type LabelActionParams =
-  z.infer<typeof labelParamsSchema>['params'];
+export type LabelActionParams = z.infer<typeof labelParamsSchema>['params'];
 
-export type TaskLabelParams =
-  z.infer<typeof taskLabelParamsSchema>['params'];
+export type TaskLabelParams = z.infer<typeof taskLabelParamsSchema>['params'];
 
-export type TaskLabelsListParams =
-  z.infer<typeof taskLabelsListSchema>['params'];
+export type TaskLabelsListParams = z.infer<typeof taskLabelsListSchema>['params'];
 
-export type LabelListQuery =
-  z.infer<typeof getWorkspaceLabelsSchema>['query'] & PaginationQuery;
+export type LabelListQuery = z.infer<typeof getWorkspaceLabelsSchema>['query'] &
+  PaginationQuery;
 
-export type TaskLabelListQuery =
-  z.infer<typeof taskLabelsListSchema>['query'] & PaginationQuery;
+export type TaskLabelListQuery = z.infer<typeof taskLabelsListSchema>['query'] &
+  PaginationQuery;

@@ -68,17 +68,13 @@ export const getProjectsSchema = z.object({
   }),
 });
 
-export type CreateProjectInput =
-  z.infer<typeof createProjectSchema>['body'];
+export type CreateProjectInput = z.infer<typeof createProjectSchema>['body'];
 
-export type UpdateProjectInput =
-  z.infer<typeof updateProjectSchema>['body'];
+export type UpdateProjectInput = z.infer<typeof updateProjectSchema>['body'];
 
-export type ProjectWorkspaceParams =
-  z.infer<typeof createProjectSchema>['params'];
+export type ProjectWorkspaceParams = z.infer<typeof createProjectSchema>['params'];
 
-export type ProjectActionParams =
-  z.infer<typeof projectParamsSchema>['params'];
+export type ProjectActionParams = z.infer<typeof projectParamsSchema>['params'];
 
-export type GetProjectsQuery =
-  z.infer<typeof getProjectsSchema>['query'] & PaginationQuery;
+export type GetProjectsQuery = z.infer<typeof getProjectsSchema>['query'] &
+  PaginationQuery;

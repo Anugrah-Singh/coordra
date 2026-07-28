@@ -2,10 +2,7 @@ import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import { sql } from 'drizzle-orm';
 
-import express, {
-  Request,
-  Response,
-} from 'express';
+import express, { Request, Response } from 'express';
 
 import helmet from 'helmet';
 import swaggerUi from 'swagger-ui-express';
@@ -31,88 +28,56 @@ import userRoutes from './routes/user.route.js';
 
 import workspaceRoutes from './routes/workspace.route.js';
 
-import {
-  APP_ERROR_CODES,
-} from './utils/AppError.js';
+import { APP_ERROR_CODES } from './utils/AppError.js';
 
 export type AppReadinessState = {
   isReady: () => boolean;
 
-  isShuttingDown:
-    () => boolean;
+  isShuttingDown: () => boolean;
 };
 
-const defaultReadinessState:
-  AppReadinessState = {
+const defaultReadinessState: AppReadinessState = {
   isReady: () => false,
 
-  isShuttingDown:
-    () => false,
+  isShuttingDown: () => false,
 };
 
-export const createApp = (
-  readinessState:
-    AppReadinessState =
-      defaultReadinessState
-) => {
+export const createApp = (readinessState: AppReadinessState = defaultReadinessState) => {
   const app = express();
 
-  app.disable(
-    'x-powered-by'
-  );
+  app.disable('x-powered-by');
 
   if (env.TRUST_PROXY_HOPS > 0) {
-    app.set(
-      'trust proxy',
-      env.TRUST_PROXY_HOPS
-    );
+    app.set('trust proxy', env.TRUST_PROXY_HOPS);
   }
 
-  app.get(
-    '/api-docs.json',
-    (_req: Request, res: Response) => {
-      res.status(200).json(
-        openApiDocument
-      );
-    }
-  );
+  app.get('/api-docs.json', (_req: Request, res: Response) => {
+    res.status(200).json(openApiDocument);
+  });
 
   app.use(
     '/api-docs',
     swaggerUi.serve,
-    swaggerUi.setup(
-      openApiDocument,
-      {
-        customSiteTitle:
-          'SaaS Team Workspace API',
-      }
-    )
+    swaggerUi.setup(openApiDocument, {
+      customSiteTitle: 'SaaS Team Workspace API',
+    })
   );
 
   app.use(helmet());
 
   app.use(
     cors({
-      origin:
-        env.FRONTEND_URL,
+      origin: env.FRONTEND_URL,
 
       credentials: true,
     })
   );
 
-  app.use(
-    cookieParser()
-  );
+  app.use(cookieParser());
 
-  app.use(
-    '/api',
-    requireTrustedOrigin
-  );
+  app.use('/api', requireTrustedOrigin);
 
-  app.use(
-    '/api',
-    apiRateLimiter
-  );
+  app.use('/api', apiRateLimiter);
 
   app.use(
     express.json({
@@ -120,157 +85,83 @@ export const createApp = (
     })
   );
 
-  app.get(
-    '/health/live',
-    (
-      _req: Request,
-      res: Response
-    ) => {
+  app.get('/health/live', (_req: Request, res: Response) => {
+    res.status(200).json({
+      status: 'alive',
+
+      timestamp: new Date().toISOString(),
+
+      uptimeSeconds: Math.floor(process.uptime()),
+    });
+  });
+
+  app.get('/health/ready', async (_req: Request, res: Response) => {
+    if (readinessState.isShuttingDown() || !readinessState.isReady()) {
+      res.status(503).json({
+        status: 'not-ready',
+
+        reason: readinessState.isShuttingDown()
+          ? 'Server is shutting down'
+          : 'Server is starting',
+
+        timestamp: new Date().toISOString(),
+      });
+
+      return;
+    }
+
+    try {
+      await db.execute(sql`SELECT 1`);
+
       res.status(200).json({
-        status: 'alive',
+        status: 'ready',
 
-        timestamp:
-          new Date()
-            .toISOString(),
+        database: 'connected',
 
-        uptimeSeconds:
-          Math.floor(
-            process.uptime()
-          ),
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error('[Readiness Check Failed]:', error);
+
+      res.status(503).json({
+        status: 'not-ready',
+
+        database: 'disconnected',
+
+        timestamp: new Date().toISOString(),
       });
     }
-  );
+  });
 
-  app.get(
-    '/health/ready',
-    async (
-      _req: Request,
-      res: Response
-    ) => {
-      if (
-        readinessState
-          .isShuttingDown() ||
-        !readinessState
-          .isReady()
-      ) {
-        res.status(503).json({
-          status:
-            'not-ready',
+  app.get('/health', (_req: Request, res: Response) => {
+    res.status(200).json({
+      status: 'ok',
 
-          reason:
-            readinessState
-              .isShuttingDown()
-              ? 'Server is shutting down'
-              : 'Server is starting',
+      timestamp: new Date().toISOString(),
+    });
+  });
 
-          timestamp:
-            new Date()
-              .toISOString(),
-        });
+  app.use('/api/auth', authRoutes);
 
-        return;
-      }
+  app.use('/api/users', userRoutes);
 
-      try {
-        await db.execute(
-          sql`SELECT 1`
-        );
+  app.use('/api/notifications', notificationRoutes);
 
-        res.status(200).json({
-          status: 'ready',
+  app.use('/api/workspace-invites', inviteTokenRoutes);
 
-          database:
-            'connected',
+  app.use('/api/workspaces', workspaceRoutes);
 
-          timestamp:
-            new Date()
-              .toISOString(),
-        });
-      } catch (error) {
-        console.error(
-          '[Readiness Check Failed]:',
-          error
-        );
+  app.use((req: Request, res: Response) => {
+    res.status(404).json({
+      success: false,
 
-        res.status(503).json({
-          status:
-            'not-ready',
+      code: APP_ERROR_CODES.ROUTE_NOT_FOUND,
 
-          database:
-            'disconnected',
+      message: `Route not found: ` + `${req.method} ` + `${req.originalUrl}`,
+    });
+  });
 
-          timestamp:
-            new Date()
-              .toISOString(),
-        });
-      }
-    }
-  );
-
-  app.get(
-    '/health',
-    (
-      _req: Request,
-      res: Response
-    ) => {
-      res.status(200).json({
-        status: 'ok',
-
-        timestamp:
-          new Date()
-            .toISOString(),
-      });
-    }
-  );
-
-  app.use(
-    '/api/auth',
-    authRoutes
-  );
-
-  app.use(
-    '/api/users',
-    userRoutes
-  );
-
-  app.use(
-    '/api/notifications',
-    notificationRoutes
-  );
-
-  app.use(
-    '/api/workspace-invites',
-    inviteTokenRoutes
-  );
-
-  app.use(
-    '/api/workspaces',
-    workspaceRoutes
-  );
-
-  app.use(
-    (
-      req: Request,
-      res: Response
-    ) => {
-      res.status(404).json({
-        success: false,
-
-        code:
-          APP_ERROR_CODES
-            .ROUTE_NOT_FOUND,
-
-        message:
-          `Route not found: ` +
-          `${req.method} ` +
-          `${req.originalUrl}`,
-      });
-    }
-  );
-
-  app.use(
-    globalErrorHandler
-  );
+  app.use(globalErrorHandler);
 
   return app;
 };

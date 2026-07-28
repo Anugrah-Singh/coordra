@@ -1,2 +1,4 @@
-import { WorkspaceListPage } from "@/views/WorkspaceListPage";
-export default function Page() { return <WorkspaceListPage />; }
+import { WorkspaceListPage } from '@/features/workspaces/WorkspaceListPage';
+export default function Page() {
+  return <WorkspaceListPage />;
+}

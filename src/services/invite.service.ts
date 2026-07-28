@@ -1,12 +1,6 @@
 import { createHash, randomBytes } from 'node:crypto';
 
-import {
-  and,
-  desc,
-  eq,
-  gt,
-  lte,
-} from 'drizzle-orm';
+import { and, desc, eq, gt, lte } from 'drizzle-orm';
 
 import { db } from '../db/index.js';
 import { auditLogs } from '../db/schema/auditLogs.js';
@@ -61,7 +55,7 @@ const markInviteExpiredIfNeeded = async (
   return expiredInvite !== undefined;
 };
 
-export const getWorkspaceInvitesFromDb = async (data: {
+export const getWorkspaceInvites = async (data: {
   workspaceId: string;
   page?: string | undefined;
   limit?: string | undefined;
@@ -86,15 +80,12 @@ export const getWorkspaceInvitesFromDb = async (data: {
     })
     .from(workspaceInvites)
     .where(eq(workspaceInvites.workspaceId, data.workspaceId))
-    .orderBy(
-      desc(workspaceInvites.createdAt),
-      desc(workspaceInvites.id)
-    )
+    .orderBy(desc(workspaceInvites.createdAt), desc(workspaceInvites.id))
     .limit(pagination.limit)
     .offset(pagination.offset);
 };
 
-export const createWorkspaceInviteInDb = async (data: {
+export const createWorkspaceInvite = async (data: {
   workspaceId: string;
   invitedById: string;
   email: string;
@@ -115,10 +106,7 @@ export const createWorkspaceInviteInDb = async (data: {
       )
       .limit(1);
 
-    if (
-      existingPendingInvite &&
-      existingPendingInvite.expiresAt.getTime() > Date.now()
-    ) {
+    if (existingPendingInvite && existingPendingInvite.expiresAt.getTime() > Date.now()) {
       throw createHttpError('A pending invite already exists for this email', 409);
     }
 
@@ -205,7 +193,7 @@ export const createWorkspaceInviteInDb = async (data: {
   });
 };
 
-export const deleteWorkspaceInviteInDb = async (data: {
+export const deleteWorkspaceInvite = async (data: {
   workspaceId: string;
   inviteId: string;
   actorId: string;
@@ -258,25 +246,17 @@ export const deleteWorkspaceInviteInDb = async (data: {
   });
 };
 
-export const acceptWorkspaceInviteInDb = async (data: {
-  token: string;
-  actorId: string;
-}) => {
+export const acceptWorkspaceInvite = async (data: { token: string; actorId: string }) => {
   const tokenHash = hashInviteToken(data.token);
   const checkedAt = new Date();
 
-  const inviteWasExpired =
-    await markInviteExpiredIfNeeded(
-      tokenHash,
-      checkedAt
-    );
+  const inviteWasExpired = await markInviteExpiredIfNeeded(tokenHash, checkedAt);
 
   if (inviteWasExpired) {
     throw createHttpError('Invite has expired', 400);
   }
 
   return await db.transaction(async (tx) => {
-
     const [invite] = await tx
       .select()
       .from(workspaceInvites)
@@ -323,10 +303,7 @@ export const acceptWorkspaceInviteInDb = async (data: {
       .returning();
 
     if (!updatedInvite) {
-      throw createHttpError(
-        'Invite state changed before it could be accepted',
-        409
-      );
+      throw createHttpError('Invite state changed before it could be accepted', 409);
     }
 
     const [existingMembership] = await tx
@@ -403,25 +380,20 @@ export const acceptWorkspaceInviteInDb = async (data: {
   });
 };
 
-export const declineWorkspaceInviteInDb = async (data: {
+export const declineWorkspaceInvite = async (data: {
   token: string;
   actorId: string;
 }) => {
   const tokenHash = hashInviteToken(data.token);
   const checkedAt = new Date();
 
-  const inviteWasExpired =
-    await markInviteExpiredIfNeeded(
-      tokenHash,
-      checkedAt
-    );
+  const inviteWasExpired = await markInviteExpiredIfNeeded(tokenHash, checkedAt);
 
   if (inviteWasExpired) {
     throw createHttpError('Invite has expired', 400);
   }
 
   return await db.transaction(async (tx) => {
-
     const [invite] = await tx
       .select()
       .from(workspaceInvites)
@@ -466,10 +438,7 @@ export const declineWorkspaceInviteInDb = async (data: {
       .returning();
 
     if (!declinedInvite) {
-      throw createHttpError(
-        'Invite state changed before it could be declined',
-        409
-      );
+      throw createHttpError('Invite state changed before it could be declined', 409);
     }
 
     await tx.insert(auditLogs).values({

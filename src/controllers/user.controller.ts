@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 
-import { createUserInDb } from '../services/user.service.js';
+import { createUser } from '../services/user.service.js';
 import { CreateUserInput } from '../schemas/user.schema.js';
 
 import { internalError } from '../utils/httpErrors.js';
@@ -11,12 +11,10 @@ export const createUserHandler = async (
   next: NextFunction
 ) => {
   try {
-    const newUser = await createUserInDb(req.body);
+    const newUser = await createUser(req.body);
 
     if (!newUser) {
-      throw internalError(
-        'Failed to create user'
-      );
+      throw internalError('Failed to create user');
     }
 
     const safeUser = {

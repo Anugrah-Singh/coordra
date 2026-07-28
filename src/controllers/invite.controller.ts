@@ -2,11 +2,11 @@ import { Request, Response, NextFunction } from 'express';
 import { env } from '../config/env.js';
 
 import {
-  acceptWorkspaceInviteInDb,
-  createWorkspaceInviteInDb,
-  declineWorkspaceInviteInDb,
-  deleteWorkspaceInviteInDb,
-  getWorkspaceInvitesFromDb,
+  acceptWorkspaceInvite,
+  createWorkspaceInvite,
+  declineWorkspaceInvite,
+  deleteWorkspaceInvite,
+  getWorkspaceInvites,
 } from '../services/invite.service.js';
 
 import {
@@ -17,10 +17,7 @@ import {
   InviteListQuery,
 } from '../schemas/invite.schema.js';
 
-import {
-  emitUserEvent,
-  emitWorkspaceEvent,
-} from '../utils/socketEvents.js';
+import { emitUserEvent, emitWorkspaceEvent } from '../utils/socketEvents.js';
 
 export const getWorkspaceInvitesHandler = async (
   req: Request<WorkspaceInviteParams, {}, {}, InviteListQuery>,
@@ -30,7 +27,7 @@ export const getWorkspaceInvitesHandler = async (
   try {
     const { workspaceId } = req.params;
 
-    const invites = await getWorkspaceInvitesFromDb({
+    const invites = await getWorkspaceInvites({
       workspaceId,
       page: req.query.page,
       limit: req.query.limit,
@@ -55,7 +52,7 @@ export const createWorkspaceInviteHandler = async (
     const { workspaceId } = req.params;
     const invitedById = res.locals.userId as string;
 
-    const result = await createWorkspaceInviteInDb({
+    const result = await createWorkspaceInvite({
       workspaceId,
       invitedById,
       email: req.body.email,
@@ -75,20 +72,17 @@ export const createWorkspaceInviteHandler = async (
 
     res.status(201).json({
       success: true,
-        
-      message:
-        'Workspace invite created successfully',
-        
+
+      message: 'Workspace invite created successfully',
+
       data: {
         invite: result.invite,
-      
+
         ...(env.NODE_ENV === 'test'
           ? {
-              token:
-                result.rawToken,
-          
-              invitePath:
-                `/workspace-invites/${result.rawToken}`,
+              token: result.rawToken,
+
+              invitePath: `/workspace-invites/${result.rawToken}`,
             }
           : {}),
       },
@@ -107,7 +101,7 @@ export const deleteWorkspaceInviteHandler = async (
     const { workspaceId, inviteId } = req.params;
     const actorId = res.locals.userId as string;
 
-    const deletedInvite = await deleteWorkspaceInviteInDb({
+    const deletedInvite = await deleteWorkspaceInvite({
       workspaceId,
       inviteId,
       actorId,
@@ -138,7 +132,7 @@ export const acceptWorkspaceInviteHandler = async (
     const { token } = req.params;
     const actorId = res.locals.userId as string;
 
-    const result = await acceptWorkspaceInviteInDb({
+    const result = await acceptWorkspaceInvite({
       token,
       actorId,
     });
@@ -184,7 +178,7 @@ export const declineWorkspaceInviteHandler = async (
     const { token } = req.params;
     const actorId = res.locals.userId as string;
 
-    const result = await declineWorkspaceInviteInDb({
+    const result = await declineWorkspaceInvite({
       token,
       actorId,
     });

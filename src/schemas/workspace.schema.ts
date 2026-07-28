@@ -57,17 +57,14 @@ export const transferWorkspaceOwnerSchema = z.object({
   }),
 });
 
-export type CreateWorkspaceInput =
-  z.infer<typeof createWorkspaceSchema>['body'];
+export type CreateWorkspaceInput = z.infer<typeof createWorkspaceSchema>['body'];
 
-export type UpdateWorkspaceInput =
-  z.infer<typeof updateWorkspaceSchema>['body'];
+export type UpdateWorkspaceInput = z.infer<typeof updateWorkspaceSchema>['body'];
 
-export type DeleteWorkspaceInput =
-  z.infer<typeof deleteWorkspaceSchema>['body'];
+export type DeleteWorkspaceInput = z.infer<typeof deleteWorkspaceSchema>['body'];
 
-export type TransferWorkspaceOwnerInput =
-  z.infer<typeof transferWorkspaceOwnerSchema>['body'];
+export type TransferWorkspaceOwnerInput = z.infer<
+  typeof transferWorkspaceOwnerSchema
+>['body'];
 
-export type WorkspaceParams =
-  z.infer<typeof workspaceIdParamsSchema>;
+export type WorkspaceParams = z.infer<typeof workspaceIdParamsSchema>;

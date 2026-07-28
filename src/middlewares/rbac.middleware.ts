@@ -1,36 +1,16 @@
-import {
-  NextFunction,
-  Request,
-  Response,
-} from 'express';
+import { NextFunction, Request, Response } from 'express';
 
-import {
-  and,
-  eq,
-  isNull,
-} from 'drizzle-orm';
+import { and, eq, isNull } from 'drizzle-orm';
 
 import { db } from '../db/index.js';
 
-import {
-  workspaceMembers,
-} from '../db/schema/workspaces.js';
+import { workspaceMembers } from '../db/schema/workspaces.js';
 
-import {
-  APP_ERROR_CODES,
-} from '../utils/AppError.js';
+import { APP_ERROR_CODES } from '../utils/AppError.js';
 
-type WorkspaceRole =
-  | 'OWNER'
-  | 'ADMIN'
-  | 'MANAGER'
-  | 'MEMBER'
-  | 'VIEWER';
+type WorkspaceRole = 'OWNER' | 'ADMIN' | 'MANAGER' | 'MEMBER' | 'VIEWER';
 
-const ROLE_RANK: Record<
-  WorkspaceRole,
-  number
-> = {
+const ROLE_RANK: Record<WorkspaceRole, number> = {
   VIEWER: 1,
   MEMBER: 2,
   MANAGER: 3,
@@ -42,51 +22,29 @@ const hasMinimumRole = (
   actualRole: WorkspaceRole,
   requiredRole: WorkspaceRole
 ): boolean => {
-  return (
-    ROLE_RANK[actualRole] >=
-    ROLE_RANK[requiredRole]
-  );
+  return ROLE_RANK[actualRole] >= ROLE_RANK[requiredRole];
 };
 
-const getWorkspaceId = (
-  req: Request
-): string | null => {
-  const workspaceId =
-    req.params.workspaceId;
+const getWorkspaceId = (req: Request): string | null => {
+  const workspaceId = req.params.workspaceId;
 
-  return typeof workspaceId ===
-    'string'
-    ? workspaceId
-    : null;
+  return typeof workspaceId === 'string' ? workspaceId : null;
 };
 
-export const requireWorkspaceRole = (
-  requiredRole: WorkspaceRole
-) => {
-  return async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise<void> => {
+export const requireWorkspaceRole = (requiredRole: WorkspaceRole) => {
+  return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const userId =
-        res.locals.userId as
-          | string
-          | undefined;
+      const userId = res.locals.userId as string | undefined;
 
-      const workspaceId =
-        getWorkspaceId(req);
+      const workspaceId = getWorkspaceId(req);
 
       if (!userId) {
         res.status(401).json({
           success: false,
 
-          code:
-            APP_ERROR_CODES
-              .AUTHENTICATION_REQUIRED,
+          code: APP_ERROR_CODES.AUTHENTICATION_REQUIRED,
 
-          message:
-            'Authentication required',
+          message: 'Authentication required',
         });
 
         return;
@@ -96,12 +54,9 @@ export const requireWorkspaceRole = (
         res.status(400).json({
           success: false,
 
-          code:
-            APP_ERROR_CODES
-              .BAD_REQUEST,
+          code: APP_ERROR_CODES.BAD_REQUEST,
 
-          message:
-            'Workspace id is required',
+          message: 'Workspace id is required',
         });
 
         return;
@@ -109,28 +64,18 @@ export const requireWorkspaceRole = (
 
       const [member] = await db
         .select({
-          id:
-            workspaceMembers.id,
+          id: workspaceMembers.id,
 
-          role:
-            workspaceMembers.role,
+          role: workspaceMembers.role,
         })
         .from(workspaceMembers)
         .where(
           and(
-            eq(
-              workspaceMembers.workspaceId,
-              workspaceId
-            ),
+            eq(workspaceMembers.workspaceId, workspaceId),
 
-            eq(
-              workspaceMembers.userId,
-              userId
-            ),
+            eq(workspaceMembers.userId, userId),
 
-            isNull(
-              workspaceMembers.removedAt
-            )
+            isNull(workspaceMembers.removedAt)
           )
         )
         .limit(1);
@@ -139,45 +84,31 @@ export const requireWorkspaceRole = (
         res.status(403).json({
           success: false,
 
-          code:
-            APP_ERROR_CODES
-              .FORBIDDEN,
+          code: APP_ERROR_CODES.FORBIDDEN,
 
-          message:
-            'You are not a member of this workspace',
+          message: 'You are not a member of this workspace',
         });
 
         return;
       }
 
-      if (
-        !hasMinimumRole(
-          member.role,
-          requiredRole
-        )
-      ) {
+      if (!hasMinimumRole(member.role, requiredRole)) {
         res.status(403).json({
           success: false,
 
-          code:
-            APP_ERROR_CODES
-              .FORBIDDEN,
+          code: APP_ERROR_CODES.FORBIDDEN,
 
-          message:
-            'You do not have permission to perform this action',
+          message: 'You do not have permission to perform this action',
         });
 
         return;
       }
 
-      res.locals.workspaceId =
-        workspaceId;
+      res.locals.workspaceId = workspaceId;
 
-      res.locals.workspaceMemberId =
-        member.id;
+      res.locals.workspaceMemberId = member.id;
 
-      res.locals.workspaceRole =
-        member.role;
+      res.locals.workspaceRole = member.role;
 
       next();
     } catch (error) {
@@ -186,17 +117,12 @@ export const requireWorkspaceRole = (
   };
 };
 
-export const requireWorkspaceMember =
-  requireWorkspaceRole('VIEWER');
+export const requireWorkspaceMember = requireWorkspaceRole('VIEWER');
 
-export const requireWorkspaceContributor =
-  requireWorkspaceRole('MEMBER');
+export const requireWorkspaceContributor = requireWorkspaceRole('MEMBER');
 
-export const requireWorkspaceManager =
-  requireWorkspaceRole('MANAGER');
+export const requireWorkspaceManager = requireWorkspaceRole('MANAGER');
 
-export const requireWorkspaceAdmin =
-  requireWorkspaceRole('ADMIN');
+export const requireWorkspaceAdmin = requireWorkspaceRole('ADMIN');
 
-export const requireWorkspaceOwner =
-  requireWorkspaceRole('OWNER');
+export const requireWorkspaceOwner = requireWorkspaceRole('OWNER');

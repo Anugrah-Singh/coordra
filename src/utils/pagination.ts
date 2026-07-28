@@ -10,9 +10,7 @@ export const getPagination = (query: {
   const limitNumber = Number(query.limit ?? DEFAULT_LIMIT);
 
   const page =
-    Number.isFinite(pageNumber) && pageNumber > 0
-      ? Math.floor(pageNumber)
-      : DEFAULT_PAGE;
+    Number.isFinite(pageNumber) && pageNumber > 0 ? Math.floor(pageNumber) : DEFAULT_PAGE;
 
   const limit =
     Number.isFinite(limitNumber) && limitNumber > 0

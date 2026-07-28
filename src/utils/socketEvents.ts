@@ -11,10 +11,7 @@ export const emitWorkspaceEvent = (
     return false;
   }
 
-  io.to(workspaceId).emit(
-    eventName,
-    payload
-  );
+  io.to(workspaceId).emit(eventName, payload);
 
   return true;
 };
@@ -30,11 +27,7 @@ export const emitUserEvent = (
     return false;
   }
 
-  io.to(`user:${userId}`).emit(
-    eventName,
-    payload
-  );
+  io.to(`user:${userId}`).emit(eventName, payload);
 
   return true;
 };
-

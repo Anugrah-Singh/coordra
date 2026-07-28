@@ -1,15 +1,15 @@
 import { Request, Response, NextFunction } from 'express';
 
 import {
-  archiveTaskInDb,
-  assignTaskInDb,
-  createTaskInDb,
-  duplicateTaskInDb,
-  getProjectTasksFromDb,
-  getTaskByIdFromDb,
-  unarchiveTaskInDb,
-  updateTaskInDb,
-  updateTaskStatusInDb,
+  archiveTask,
+  assignTask,
+  createTask,
+  duplicateTask,
+  getProjectTasks,
+  getTaskById,
+  unarchiveTask,
+  updateTask,
+  updateTaskStatus,
 } from '../services/task.service.js';
 
 import {
@@ -22,10 +22,7 @@ import {
   UpdateTaskStatusInput,
 } from '../schemas/task.schema.js';
 
-import {
-    emitUserEvent,
-    emitWorkspaceEvent
-} from '../utils/socketEvents.js';
+import { emitUserEvent, emitWorkspaceEvent } from '../utils/socketEvents.js';
 
 export const createTaskHandler = async (
   req: Request<TaskParams, {}, CreateTaskInput>,
@@ -36,7 +33,7 @@ export const createTaskHandler = async (
     const { workspaceId, projectId } = req.params;
     const createdById = res.locals.userId as string;
 
-    const newTask = await createTaskInDb({
+    const newTask = await createTask({
       workspaceId,
       projectId,
       createdById,
@@ -72,7 +69,7 @@ export const getProjectTasksHandler = async (
   try {
     const { workspaceId, projectId } = req.params;
 
-    const projectTasks = await getProjectTasksFromDb({
+    const projectTasks = await getProjectTasks({
       workspaceId,
       projectId,
       filters: req.query,
@@ -96,7 +93,7 @@ export const getTaskByIdHandler = async (
   try {
     const { workspaceId, projectId, taskId } = req.params;
 
-    const task = await getTaskByIdFromDb(workspaceId, projectId, taskId);
+    const task = await getTaskById(workspaceId, projectId, taskId);
 
     res.status(200).json({
       success: true,
@@ -117,7 +114,7 @@ export const updateTaskHandler = async (
     const { workspaceId, projectId, taskId } = req.params;
     const actorId = res.locals.userId as string;
 
-    const updatedTask = await updateTaskInDb({
+    const updatedTask = await updateTask({
       workspaceId,
       projectId,
       taskId,
@@ -156,7 +153,7 @@ export const updateTaskStatusHandler = async (
     const { workspaceId, projectId, taskId } = req.params;
     const actorId = res.locals.userId as string;
 
-    const updatedTask = await updateTaskStatusInDb({
+    const updatedTask = await updateTaskStatus({
       workspaceId,
       projectId,
       taskId,
@@ -190,7 +187,7 @@ export const assignTaskHandler = async (
     const { workspaceId, projectId, taskId } = req.params;
     const actorId = res.locals.userId as string;
 
-    const result = await assignTaskInDb({
+    const result = await assignTask({
       workspaceId,
       projectId,
       taskId,
@@ -230,7 +227,7 @@ export const archiveTaskHandler = async (
     const { workspaceId, projectId, taskId } = req.params;
     const actorId = res.locals.userId as string;
 
-    const archivedTask = await archiveTaskInDb({
+    const archivedTask = await archiveTask({
       workspaceId,
       projectId,
       taskId,
@@ -263,7 +260,7 @@ export const unarchiveTaskHandler = async (
     const { workspaceId, projectId, taskId } = req.params;
     const actorId = res.locals.userId as string;
 
-    const unarchivedTask = await unarchiveTaskInDb({
+    const unarchivedTask = await unarchiveTask({
       workspaceId,
       projectId,
       taskId,
@@ -296,7 +293,7 @@ export const duplicateTaskHandler = async (
     const { workspaceId, projectId, taskId } = req.params;
     const actorId = res.locals.userId as string;
 
-    const duplicatedTask = await duplicateTaskInDb({
+    const duplicatedTask = await duplicateTask({
       workspaceId,
       projectId,
       taskId,

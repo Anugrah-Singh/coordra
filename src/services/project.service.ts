@@ -27,7 +27,7 @@ const createHttpError = (message: string, status: number) => {
   });
 };
 
-export const createProjectInDb = async (data: CreateProjectData) => {
+export const createProject = async (data: CreateProjectData) => {
   return await db.transaction(async (tx) => {
     const [newProject] = await tx
       .insert(projects)
@@ -59,7 +59,7 @@ export const createProjectInDb = async (data: CreateProjectData) => {
   });
 };
 
-export const getWorkspaceProjectsFromDb = async (data: {
+export const getWorkspaceProjects = async (data: {
   workspaceId: string;
   page?: string | undefined;
   limit?: string | undefined;
@@ -78,19 +78,11 @@ export const getWorkspaceProjectsFromDb = async (data: {
     .offset(pagination.offset);
 };
 
-export const getProjectByIdFromDb = async (
-  workspaceId: string,
-  projectId: string
-) => {
+export const getProjectById = async (workspaceId: string, projectId: string) => {
   const [project] = await db
     .select()
     .from(projects)
-    .where(
-      and(
-        eq(projects.workspaceId, workspaceId),
-        eq(projects.id, projectId)
-      )
-    )
+    .where(and(eq(projects.workspaceId, workspaceId), eq(projects.id, projectId)))
     .limit(1);
 
   if (!project) {
@@ -100,16 +92,13 @@ export const getProjectByIdFromDb = async (
   return project;
 };
 
-export const updateProjectInDb = async (data: UpdateProjectData) => {
+export const updateProject = async (data: UpdateProjectData) => {
   return await db.transaction(async (tx) => {
     const [existingProject] = await tx
       .select()
       .from(projects)
       .where(
-        and(
-          eq(projects.workspaceId, data.workspaceId),
-          eq(projects.id, data.projectId)
-        )
+        and(eq(projects.workspaceId, data.workspaceId), eq(projects.id, data.projectId))
       )
       .limit(1);
 
@@ -122,16 +111,11 @@ export const updateProjectInDb = async (data: UpdateProjectData) => {
       .set({
         name: data.name ?? existingProject.name,
         description:
-          data.description !== undefined
-            ? data.description
-            : existingProject.description,
+          data.description !== undefined ? data.description : existingProject.description,
         updatedAt: new Date(),
       })
       .where(
-        and(
-          eq(projects.workspaceId, data.workspaceId),
-          eq(projects.id, data.projectId)
-        )
+        and(eq(projects.workspaceId, data.workspaceId), eq(projects.id, data.projectId))
       )
       .returning();
 
@@ -159,7 +143,7 @@ export const updateProjectInDb = async (data: UpdateProjectData) => {
   });
 };
 
-export const deleteProjectFromDb = async (data: {
+export const deleteProject = async (data: {
   workspaceId: string;
   projectId: string;
   actorId: string;
@@ -169,10 +153,7 @@ export const deleteProjectFromDb = async (data: {
       .select()
       .from(projects)
       .where(
-        and(
-          eq(projects.workspaceId, data.workspaceId),
-          eq(projects.id, data.projectId)
-        )
+        and(eq(projects.workspaceId, data.workspaceId), eq(projects.id, data.projectId))
       )
       .limit(1);
 
@@ -183,10 +164,7 @@ export const deleteProjectFromDb = async (data: {
     const [deletedProject] = await tx
       .delete(projects)
       .where(
-        and(
-          eq(projects.workspaceId, data.workspaceId),
-          eq(projects.id, data.projectId)
-        )
+        and(eq(projects.workspaceId, data.workspaceId), eq(projects.id, data.projectId))
       )
       .returning();
 

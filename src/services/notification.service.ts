@@ -1,11 +1,4 @@
-import {
-  and,
-  count,
-  desc,
-  eq,
-  isNull,
-  type SQL,
-} from 'drizzle-orm';
+import { and, count, desc, eq, isNull, type SQL } from 'drizzle-orm';
 
 import { db } from '../db/index.js';
 import { notifications } from '../db/schema/notifications.js';
@@ -18,16 +11,14 @@ const createHttpError = (message: string, status: number) => {
   });
 };
 
-export const getUserNotificationsFromDb = async (data: {
+export const getUserNotifications = async (data: {
   userId: string;
   workspaceId?: string | undefined;
   unreadOnly?: 'true' | 'false' | undefined;
   page?: string | undefined;
   limit?: string | undefined;
 }) => {
-  const conditions: SQL[] = [
-    eq(notifications.userId, data.userId),
-  ];
+  const conditions: SQL[] = [eq(notifications.userId, data.userId)];
 
   if (data.workspaceId !== undefined) {
     conditions.push(eq(notifications.workspaceId, data.workspaceId));
@@ -51,7 +42,7 @@ export const getUserNotificationsFromDb = async (data: {
     .offset(pagination.offset);
 };
 
-export const getUnreadNotificationCountFromDb = async (data: {
+export const getUnreadNotificationCount = async (data: {
   userId: string;
   workspaceId?: string | undefined;
 }) => {
@@ -61,12 +52,7 @@ export const getUnreadNotificationCountFromDb = async (data: {
   ];
 
   if (data.workspaceId !== undefined) {
-    conditions.push(
-      eq(
-        notifications.workspaceId,
-        data.workspaceId
-      )
-    );
+    conditions.push(eq(notifications.workspaceId, data.workspaceId));
   }
 
   const [result] = await db
@@ -79,7 +65,7 @@ export const getUnreadNotificationCountFromDb = async (data: {
   return result?.count ?? 0;
 };
 
-export const markNotificationReadInDb = async (data: {
+export const markNotificationRead = async (data: {
   userId: string;
   notificationId: string;
 }) => {
@@ -118,7 +104,7 @@ export const markNotificationReadInDb = async (data: {
   return updatedNotification;
 };
 
-export const markAllNotificationsReadInDb = async (data: {
+export const markAllNotificationsRead = async (data: {
   userId: string;
   workspaceId?: string | undefined;
 }) => {

@@ -7,8 +7,6 @@ import { tasks } from '../db/schema/tasks.js';
 import { workspaceMembers } from '../db/schema/workspaces.js';
 import { getPagination } from '../utils/pagination.js';
 
-
-
 export interface CreateCommentData {
   workspaceId: string;
   projectId: string;
@@ -36,7 +34,7 @@ const canDeleteComment = (data: {
   );
 };
 
-export const createCommentInDb = async (data: CreateCommentData) => {
+export const createComment = async (data: CreateCommentData) => {
   return await db.transaction(async (tx) => {
     const [task] = await tx
       .select({
@@ -87,7 +85,7 @@ export const createCommentInDb = async (data: CreateCommentData) => {
   });
 };
 
-export const getTaskCommentsFromDb = async (data: {
+export const getTaskComments = async (data: {
   workspaceId: string;
   projectId: string;
   taskId: string;
@@ -121,17 +119,14 @@ export const getTaskCommentsFromDb = async (data: {
     .select()
     .from(comments)
     .where(
-      and(
-        eq(comments.workspaceId, data.workspaceId),
-        eq(comments.taskId, data.taskId)
-      )
+      and(eq(comments.workspaceId, data.workspaceId), eq(comments.taskId, data.taskId))
     )
     .orderBy(desc(comments.createdAt), desc(comments.id))
     .limit(pagination.limit)
     .offset(pagination.offset);
 };
 
-export const updateCommentInDb = async (data: {
+export const updateComment = async (data: {
   workspaceId: string;
   projectId: string;
   taskId: string;
@@ -213,7 +208,7 @@ export const updateCommentInDb = async (data: {
   });
 };
 
-export const deleteCommentFromDb = async (data: {
+export const deleteComment = async (data: {
   workspaceId: string;
   projectId: string;
   taskId: string;

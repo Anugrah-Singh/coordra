@@ -2,38 +2,23 @@ import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { createServer } from 'node:http';
 
-import {
-  after,
-  before,
-  describe,
-  it,
-} from 'node:test';
+import { after, before, describe, it } from 'node:test';
 
-import {
-  eq,
-  inArray,
-} from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
 
 import request from 'supertest';
 
-import {
-  io as createSocketClient,
-  type Socket,
-} from 'socket.io-client';
+import { io as createSocketClient, type Socket } from 'socket.io-client';
 
 if (!process.env.DATABASE_URL) {
-  throw new Error(
-    'DATABASE_URL is required for integration tests'
-  );
+  throw new Error('DATABASE_URL is required for integration tests');
 }
 
 process.env.NODE_ENV = 'test';
 
-process.env.JWT_SECRET ??=
-  'integration-test-only-jwt-secret-with-at-least-32-characters';
+process.env.JWT_SECRET ??= 'integration-test-only-jwt-secret-with-at-least-32-characters';
 
-process.env.FRONTEND_URL ??=
-  'http://localhost:3000';
+process.env.FRONTEND_URL ??= 'http://localhost:3000';
 
 process.env.DB_POOL_MAX ??= '2';
 
@@ -41,14 +26,8 @@ process.env.SHUTDOWN_TIMEOUT_MS ??= '1000';
 
 const [
   { createApp },
-  {
-    closeDatabase,
-    db,
-  },
-  {
-    closeSocketServer,
-    initSocket,
-  },
+  { closeDatabase, db },
+  { closeSocketServer, initSocket },
   { users },
   { workspaces },
 ] = await Promise.all([
@@ -64,21 +43,15 @@ const httpServer = createServer(app);
 
 const ownerAgent = request.agent(app);
 
-const runId =
-  `${Date.now().toString(36)}-` +
-  randomUUID().slice(0, 8);
+const runId = `${Date.now().toString(36)}-` + randomUUID().slice(0, 8);
 
-const ownerEmail =
-  `socket-owner-${runId}@example.com`;
+const ownerEmail = `socket-owner-${runId}@example.com`;
 
-const outsiderEmail =
-  `socket-outsider-${runId}@example.com`;
+const outsiderEmail = `socket-outsider-${runId}@example.com`;
 
-const password =
-  'IntegrationPassword123!';
+const password = 'IntegrationPassword123!';
 
-const workspaceName =
-  `Socket Workspace ${runId}`;
+const workspaceName = `Socket Workspace ${runId}`;
 
 let baseUrl = '';
 
@@ -91,12 +64,7 @@ let outsiderCookie = '';
 
 const activeSockets: Socket[] = [];
 
-const extractCookie = (
-  setCookieHeader:
-    | string
-    | string[]
-    | undefined
-): string => {
+const extractCookie = (setCookieHeader: string | string[] | undefined): string => {
   const firstHeader = Array.isArray(setCookieHeader)
     ? setCookieHeader[0]
     : setCookieHeader;
@@ -104,17 +72,13 @@ const extractCookie = (
   const cookie = firstHeader?.split(';')[0];
 
   if (!cookie) {
-    throw new Error(
-      'Login response did not include an auth cookie'
-    );
+    throw new Error('Login response did not include an auth cookie');
   }
 
   return cookie;
 };
 
-const connectAuthenticatedSocket = async (
-  cookie: string
-): Promise<Socket> => {
+const connectAuthenticatedSocket = async (cookie: string): Promise<Socket> => {
   const socket = createSocketClient(baseUrl, {
     autoConnect: false,
     reconnection: false,
@@ -128,11 +92,7 @@ const connectAuthenticatedSocket = async (
 
   await new Promise<void>((resolve, reject) => {
     const timeout = setTimeout(() => {
-      reject(
-        new Error(
-          'Timed out while connecting Socket.IO client'
-        )
-      );
+      reject(new Error('Timed out while connecting Socket.IO client'));
     }, 5_000);
 
     socket.once('connect', () => {
@@ -151,19 +111,12 @@ const connectAuthenticatedSocket = async (
   return socket;
 };
 
-const waitForEvent = <T>(
-  socket: Socket,
-  eventName: string
-): Promise<T> => {
+const waitForEvent = <T>(socket: Socket, eventName: string): Promise<T> => {
   return new Promise<T>((resolve, reject) => {
     const timeout = setTimeout(() => {
       socket.off(eventName, handleEvent);
 
-      reject(
-        new Error(
-          `Timed out waiting for ${eventName}`
-        )
-      );
+      reject(new Error(`Timed out waiting for ${eventName}`));
     }, 5_000);
 
     const handleEvent = (payload: T) => {
@@ -190,88 +143,68 @@ before(async () => {
 
       const address = httpServer.address();
 
-      if (
-        !address ||
-        typeof address === 'string'
-      ) {
-        reject(
-          new Error(
-            'Unable to resolve test server port'
-          )
-        );
+      if (!address || typeof address === 'string') {
+        reject(new Error('Unable to resolve test server port'));
 
         return;
       }
 
-      baseUrl =
-        `http://127.0.0.1:${address.port}`;
+      baseUrl = `http://127.0.0.1:${address.port}`;
 
       resolve();
     });
   });
 
-  const ownerRegistration =
-    await request(app)
-      .post('/api/users')
-      .send({
-        email: ownerEmail,
-        password,
-        fullName: 'Socket Owner',
-      })
-      .expect(201);
+  const ownerRegistration = await request(app)
+    .post('/api/users')
+    .send({
+      email: ownerEmail,
+      password,
+      fullName: 'Socket Owner',
+    })
+    .expect(201);
 
-  ownerUserId =
-    ownerRegistration.body.data.id;
+  ownerUserId = ownerRegistration.body.data.id;
 
-  const ownerLogin =
-    await ownerAgent
-      .post('/api/auth/login')
-      .send({
-        email: ownerEmail,
-        password,
-      })
-      .expect(200);
+  const ownerLogin = await ownerAgent
+    .post('/api/auth/login')
+    .send({
+      email: ownerEmail,
+      password,
+    })
+    .expect(200);
 
-  ownerCookie = extractCookie(
-    ownerLogin.headers['set-cookie']
-  );
+  ownerCookie = extractCookie(ownerLogin.headers['set-cookie']);
 
-  const workspaceCreation =
-    await ownerAgent
-      .post('/api/workspaces')
-      .send({
-        name: workspaceName,
-      })
-      .expect(201);
+  const workspaceCreation = await ownerAgent
+    .post('/api/workspaces')
+    .send({
+      name: workspaceName,
+    })
+    .expect(201);
 
-  workspaceId =
-    workspaceCreation.body.data.id;
+  workspaceId = workspaceCreation.body.data.id;
 
-  const outsiderRegistration =
-    await request(app)
-      .post('/api/users')
-      .send({
-        email: outsiderEmail,
-        password,
-        fullName: 'Socket Outsider',
-      })
-      .expect(201);
+  const outsiderRegistration = await request(app)
+    .post('/api/users')
+    .send({
+      email: outsiderEmail,
+      password,
+      fullName: 'Socket Outsider',
+    })
+    .expect(201);
 
-  outsiderUserId =
-    outsiderRegistration.body.data.id;
+  outsiderUserId = outsiderRegistration.body.data.id;
 
-  const outsiderLogin =
-    await request(app)
-      .post('/api/auth/login')
-      .send({
-        email: outsiderEmail,
-        password,
-      })
-      .expect(200);
+  const outsiderLogin = await request(app)
+    .post('/api/auth/login')
+    .send({
+      email: outsiderEmail,
+      password,
+    })
+    .expect(200);
 
-  outsiderCookie = extractCookie(
-    outsiderLogin.headers['set-cookie']
-  );
+  outsiderCookie = extractCookie(outsiderLogin.headers['set-cookie']);
 });
 
 after(async () => {
@@ -281,27 +214,15 @@ after(async () => {
 
   try {
     if (workspaceId) {
-      await db
-        .delete(workspaces)
-        .where(
-          eq(workspaces.id, workspaceId)
-        );
+      await db.delete(workspaces).where(eq(workspaces.id, workspaceId));
     }
 
-    const userIds = [
-      ownerUserId,
-      outsiderUserId,
-    ].filter(
-      (id): id is string =>
-        id !== undefined
+    const userIds = [ownerUserId, outsiderUserId].filter(
+      (id): id is string => id !== undefined
     );
 
     if (userIds.length > 0) {
-      await db
-        .delete(users)
-        .where(
-          inArray(users.id, userIds)
-        );
+      await db.delete(users).where(inArray(users.id, userIds));
     }
   } finally {
     await closeSocketServer();
@@ -309,213 +230,114 @@ after(async () => {
   }
 });
 
-describe(
-  'Socket.IO integration',
-  () => {
-    it(
-      'rejects unauthenticated connections',
-      async () => {
-        const socket = createSocketClient(
-          baseUrl,
-          {
-            autoConnect: false,
-            reconnection: false,
-          }
-        );
+describe('Socket.IO integration', () => {
+  it('rejects unauthenticated connections', async () => {
+    const socket = createSocketClient(baseUrl, {
+      autoConnect: false,
+      reconnection: false,
+    });
 
-        activeSockets.push(socket);
+    activeSockets.push(socket);
 
-        const error =
-          await new Promise<Error>(
-            (resolve, reject) => {
-              const timeout =
-                setTimeout(() => {
-                  reject(
-                    new Error(
-                      'Expected socket authentication failure'
-                    )
-                  );
-                }, 5_000);
+    const error = await new Promise<Error>((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        reject(new Error('Expected socket authentication failure'));
+      }, 5_000);
 
-              socket.once(
-                'connect_error',
-                (connectionError) => {
-                  clearTimeout(timeout);
-                  resolve(connectionError);
-                }
-              );
+      socket.once('connect_error', (connectionError) => {
+        clearTimeout(timeout);
+        resolve(connectionError);
+      });
 
-              socket.connect();
-            }
-          );
+      socket.connect();
+    });
 
-        assert.equal(
-          error.message,
-          'Authentication required'
-        );
+    assert.equal(error.message, 'Authentication required');
 
-        assert.equal(
-          socket.connected,
-          false
-        );
-      }
-    );
+    assert.equal(socket.connected, false);
+  });
 
-    it(
-      'allows a workspace member to join the workspace room',
-      async () => {
-        assert.ok(workspaceId);
+  it('allows a workspace member to join the workspace room', async () => {
+    assert.ok(workspaceId);
 
-        const socket =
-          await connectAuthenticatedSocket(
-            ownerCookie
-          );
+    const socket = await connectAuthenticatedSocket(ownerCookie);
 
-        const joinedEvent =
-          waitForEvent<{
-            workspaceId: string;
-            role: string;
-          }>(
-            socket,
-            'workspace_joined'
-          );
+    const joinedEvent = waitForEvent<{
+      workspaceId: string;
+      role: string;
+    }>(socket, 'workspace_joined');
 
-        socket.emit(
-          'join_workspace',
-          workspaceId
-        );
+    socket.emit('join_workspace', workspaceId);
 
-        const payload =
-          await joinedEvent;
+    const payload = await joinedEvent;
 
-        assert.deepEqual(payload, {
-          workspaceId,
-          role: 'OWNER',
-        });
-      }
-    );
+    assert.deepEqual(payload, {
+      workspaceId,
+      role: 'OWNER',
+    });
+  });
 
-    it(
-      'denies an authenticated non-member from joining the workspace room',
-      async () => {
-        assert.ok(workspaceId);
+  it('denies an authenticated non-member from joining the workspace room', async () => {
+    assert.ok(workspaceId);
 
-        const socket =
-          await connectAuthenticatedSocket(
-            outsiderCookie
-          );
+    const socket = await connectAuthenticatedSocket(outsiderCookie);
 
-        const errorEvent =
-          waitForEvent<{
-            message: string;
-          }>(
-            socket,
-            'workspace_error'
-          );
+    const errorEvent = waitForEvent<{
+      message: string;
+    }>(socket, 'workspace_error');
 
-        socket.emit(
-          'join_workspace',
-          workspaceId
-        );
+    socket.emit('join_workspace', workspaceId);
 
-        const payload =
-          await errorEvent;
+    const payload = await errorEvent;
 
-        assert.equal(
-          payload.message,
-          'You do not have access to this workspace'
-        );
-      }
-    );
+    assert.equal(payload.message, 'You do not have access to this workspace');
+  });
 
-    it(
-      'delivers task_created events to joined workspace members',
-      async () => {
-        assert.ok(workspaceId);
+  it('delivers task_created events to joined workspace members', async () => {
+    assert.ok(workspaceId);
 
-        const socket =
-          await connectAuthenticatedSocket(
-            ownerCookie
-          );
+    const socket = await connectAuthenticatedSocket(ownerCookie);
 
-        const joinedEvent =
-          waitForEvent(
-            socket,
-            'workspace_joined'
-          );
+    const joinedEvent = waitForEvent(socket, 'workspace_joined');
 
-        socket.emit(
-          'join_workspace',
-          workspaceId
-        );
+    socket.emit('join_workspace', workspaceId);
 
-        await joinedEvent;
+    await joinedEvent;
 
-        const projectCreation =
-          await ownerAgent
-            .post(
-              `/api/workspaces/${workspaceId}/projects`
-            )
-            .send({
-              name:
-                `Socket Project ${runId}`,
-            })
-            .expect(201);
+    const projectCreation = await ownerAgent
+      .post(`/api/workspaces/${workspaceId}/projects`)
+      .send({
+        name: `Socket Project ${runId}`,
+      })
+      .expect(201);
 
-        const projectId =
-          projectCreation.body.data.id as string;
+    const projectId = projectCreation.body.data.id as string;
 
-        const taskEvent =
-          waitForEvent<{
-            workspaceId: string;
-            projectId: string;
-            task: {
-              id: string;
-              title: string;
-            };
-          }>(
-            socket,
-            'task_created'
-          );
+    const taskEvent = waitForEvent<{
+      workspaceId: string;
+      projectId: string;
+      task: {
+        id: string;
+        title: string;
+      };
+    }>(socket, 'task_created');
 
-        const taskCreation =
-          await ownerAgent
-            .post(
-              `/api/workspaces/${workspaceId}` +
-                `/projects/${projectId}/tasks`
-            )
-            .send({
-              title:
-                `Socket Task ${runId}`,
-              priority: 'MEDIUM',
-            })
-            .expect(201);
+    const taskCreation = await ownerAgent
+      .post(`/api/workspaces/${workspaceId}` + `/projects/${projectId}/tasks`)
+      .send({
+        title: `Socket Task ${runId}`,
+        priority: 'MEDIUM',
+      })
+      .expect(201);
 
-        const payload =
-          await taskEvent;
+    const payload = await taskEvent;
 
-        assert.equal(
-          payload.workspaceId,
-          workspaceId
-        );
+    assert.equal(payload.workspaceId, workspaceId);
 
-        assert.equal(
-          payload.projectId,
-          projectId
-        );
+    assert.equal(payload.projectId, projectId);
 
-        assert.equal(
-          payload.task.id,
-          taskCreation.body.data.id
-        );
+    assert.equal(payload.task.id, taskCreation.body.data.id);
 
-        assert.equal(
-          payload.task.title,
-          `Socket Task ${runId}`
-        );
-      }
-    );
-  }
-);
-
-
+    assert.equal(payload.task.title, `Socket Task ${runId}`);
+  });
+});

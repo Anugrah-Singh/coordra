@@ -34,14 +34,14 @@ const daysFromNow = (days: number): Date => {
 const requireSeedConfirmation = (): string => {
   if (process.env.DEMO_SEED_CONFIRM !== REQUIRED_CONFIRMATION) {
     throw new Error(
-      `Demo seeding is intentionally guarded. Set DEMO_SEED_CONFIRM=${REQUIRED_CONFIRMATION} before running it.`,
+      `Demo seeding is intentionally guarded. Set DEMO_SEED_CONFIRM=${REQUIRED_CONFIRMATION} before running it.`
     );
   }
 
   const password = process.env.DEMO_SEED_PASSWORD;
   if (!password || password.length < 12) {
     throw new Error(
-      'Set DEMO_SEED_PASSWORD to a password containing at least 12 characters.',
+      'Set DEMO_SEED_PASSWORD to a password containing at least 12 characters.'
     );
   }
 
@@ -127,7 +127,7 @@ const seedDemo = async (): Promise<void> => {
       .returning();
 
     const projectByName = new Map(
-      createdProjects.map((project) => [project.name, project]),
+      createdProjects.map((project) => [project.name, project])
     );
     const productLaunch = projectByName.get('Product Launch');
     const mobileExperience = projectByName.get('Mobile Experience');
@@ -146,7 +146,8 @@ const seedDemo = async (): Promise<void> => {
           createdById: owner.id,
           assigneeId: admin.id,
           title: 'Finalize launch checklist',
-          description: 'Confirm owners, dependencies, rollback steps, and launch-day communication.',
+          description:
+            'Confirm owners, dependencies, rollback steps, and launch-day communication.',
           status: 'IN_PROGRESS',
           priority: 'URGENT',
           dueDate: daysFromNow(2),
@@ -157,7 +158,8 @@ const seedDemo = async (): Promise<void> => {
           createdById: owner.id,
           assigneeId: member.id,
           title: 'Prepare product screenshots',
-          description: 'Capture the dashboard, Kanban board, task details, and member management.',
+          description:
+            'Capture the dashboard, Kanban board, task details, and member management.',
           status: 'TODO',
           priority: 'HIGH',
           dueDate: daysFromNow(4),
@@ -179,7 +181,8 @@ const seedDemo = async (): Promise<void> => {
           createdById: admin.id,
           assigneeId: member.id,
           title: 'Test tablet navigation',
-          description: 'Validate drawer behavior, board scrolling, and task editing on tablet widths.',
+          description:
+            'Validate drawer behavior, board scrolling, and task editing on tablet widths.',
           status: 'BLOCKED',
           priority: 'HIGH',
           dueDate: daysFromNow(3),
@@ -190,7 +193,8 @@ const seedDemo = async (): Promise<void> => {
           createdById: owner.id,
           assigneeId: member.id,
           title: 'Polish empty states',
-          description: 'Make first-use states clear and useful across projects, tasks, and members.',
+          description:
+            'Make first-use states clear and useful across projects, tasks, and members.',
           status: 'DONE',
           priority: 'LOW',
           dueDate: daysFromNow(-1),
@@ -201,7 +205,8 @@ const seedDemo = async (): Promise<void> => {
           createdById: owner.id,
           assigneeId: admin.id,
           title: 'Instrument invite conversion',
-          description: 'Track invite creation, acceptance, and first meaningful collaboration.',
+          description:
+            'Track invite creation, acceptance, and first meaningful collaboration.',
           status: 'IN_PROGRESS',
           priority: 'MEDIUM',
           dueDate: daysFromNow(6),
@@ -212,7 +217,8 @@ const seedDemo = async (): Promise<void> => {
           createdById: admin.id,
           assigneeId: member.id,
           title: 'Draft onboarding experiment',
-          description: 'Compare a guided workspace setup with the current blank-state experience.',
+          description:
+            'Compare a guided workspace setup with the current blank-state experience.',
           status: 'TODO',
           priority: 'MEDIUM',
           dueDate: daysFromNow(10),
@@ -226,7 +232,12 @@ const seedDemo = async (): Promise<void> => {
     const tabletNavigation = taskByTitle.get('Test tablet navigation');
     const inviteConversion = taskByTitle.get('Instrument invite conversion');
 
-    if (!launchChecklist || !productScreenshots || !tabletNavigation || !inviteConversion) {
+    if (
+      !launchChecklist ||
+      !productScreenshots ||
+      !tabletNavigation ||
+      !inviteConversion
+    ) {
       throw new Error('Failed to create required demo tasks.');
     }
 
@@ -264,13 +275,15 @@ const seedDemo = async (): Promise<void> => {
         workspaceId: workspace.id,
         taskId: launchChecklist.id,
         authorId: owner.id,
-        content: 'The migration and rollback sections are approved. Please verify the live smoke-test steps.',
+        content:
+          'The migration and rollback sections are approved. Please verify the live smoke-test steps.',
       },
       {
         workspaceId: workspace.id,
         taskId: launchChecklist.id,
         authorId: admin.id,
-        content: 'I added ownership for every launch-day check and linked the monitoring dashboard.',
+        content:
+          'I added ownership for every launch-day check and linked the monitoring dashboard.',
       },
       {
         workspaceId: workspace.id,

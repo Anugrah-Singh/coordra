@@ -9,12 +9,12 @@
     /* 2. File Organization */
     "rootDir": "./src",
     "outDir": "./dist",
-    
+
     /* 3. The Safety Net */
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true,
-    
+
     /* 4. Quality of Life */
     "esModuleInterop": true,
     "skipLibCheck": true,

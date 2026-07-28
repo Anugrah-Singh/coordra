@@ -73,9 +73,7 @@ export const openApiDocument = {
     description:
       'Multi-tenant team collaboration API with cookie authentication, workspace RBAC, task management, invitations, notifications, audit logs and Socket.IO events.',
   },
-  servers: [
-    { url: 'http://localhost:8000', description: 'Local development' },
-  ],
+  servers: [{ url: 'http://localhost:8000', description: 'Local development' }],
   tags: [
     { name: 'Health' },
     { name: 'Authentication' },
@@ -112,7 +110,9 @@ export const openApiDocument = {
         summary: 'Readiness and database check',
         responses: {
           '200': { description: 'Application and database are ready' },
-          '503': { description: 'Application is starting, stopping, or database is unavailable' },
+          '503': {
+            description: 'Application is starting, stopping, or database is unavailable',
+          },
         },
       },
     },
@@ -298,7 +298,9 @@ export const openApiDocument = {
           ...json({ $ref: '#/components/schemas/MemberInput' }),
         },
         responses: {
-          '201': success('Member added', { $ref: '#/components/schemas/WorkspaceMember' }),
+          '201': success('Member added', {
+            $ref: '#/components/schemas/WorkspaceMember',
+          }),
           '403': errorResponse,
           '404': errorResponse,
           '409': errorResponse,
@@ -308,7 +310,12 @@ export const openApiDocument = {
     '/api/workspaces/{workspaceId}/members/{memberId}/role': {
       parameters: [
         workspaceId,
-        { name: 'memberId', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
+        {
+          name: 'memberId',
+          in: 'path',
+          required: true,
+          schema: { type: 'string', format: 'uuid' },
+        },
       ],
       patch: {
         tags: ['Members'],
@@ -323,7 +330,9 @@ export const openApiDocument = {
           }),
         },
         responses: {
-          '200': success('Member updated', { $ref: '#/components/schemas/WorkspaceMember' }),
+          '200': success('Member updated', {
+            $ref: '#/components/schemas/WorkspaceMember',
+          }),
           '403': errorResponse,
           '404': errorResponse,
         },
@@ -332,7 +341,12 @@ export const openApiDocument = {
     '/api/workspaces/{workspaceId}/members/{memberId}': {
       parameters: [
         workspaceId,
-        { name: 'memberId', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
+        {
+          name: 'memberId',
+          in: 'path',
+          required: true,
+          schema: { type: 'string', format: 'uuid' },
+        },
       ],
       delete: {
         tags: ['Members'],
@@ -389,7 +403,10 @@ export const openApiDocument = {
         tags: ['Projects'],
         summary: 'Update a project',
         security: secure,
-        requestBody: { required: true, ...json({ $ref: '#/components/schemas/ProjectInput' }) },
+        requestBody: {
+          required: true,
+          ...json({ $ref: '#/components/schemas/ProjectInput' }),
+        },
         responses: {
           '200': success('Project updated', { $ref: '#/components/schemas/Project' }),
           '403': errorResponse,
@@ -415,10 +432,22 @@ export const openApiDocument = {
         security: secure,
         parameters: [
           ...pagination,
-          { name: 'status', in: 'query', schema: { $ref: '#/components/schemas/TaskStatus' } },
-          { name: 'priority', in: 'query', schema: { $ref: '#/components/schemas/TaskPriority' } },
+          {
+            name: 'status',
+            in: 'query',
+            schema: { $ref: '#/components/schemas/TaskStatus' },
+          },
+          {
+            name: 'priority',
+            in: 'query',
+            schema: { $ref: '#/components/schemas/TaskPriority' },
+          },
           { name: 'assigneeId', in: 'query', schema: { type: 'string', format: 'uuid' } },
-          { name: 'includeArchived', in: 'query', schema: { type: 'boolean', default: false } },
+          {
+            name: 'includeArchived',
+            in: 'query',
+            schema: { type: 'boolean', default: false },
+          },
         ],
         responses: {
           '200': success('Task list', {
@@ -432,7 +461,10 @@ export const openApiDocument = {
         tags: ['Tasks'],
         summary: 'Create a task',
         security: secure,
-        requestBody: { required: true, ...json({ $ref: '#/components/schemas/TaskInput' }) },
+        requestBody: {
+          required: true,
+          ...json({ $ref: '#/components/schemas/TaskInput' }),
+        },
         responses: {
           '201': success('Task created', { $ref: '#/components/schemas/Task' }),
           '400': errorResponse,
@@ -456,7 +488,10 @@ export const openApiDocument = {
         tags: ['Tasks'],
         summary: 'Update task fields',
         security: secure,
-        requestBody: { required: true, ...json({ $ref: '#/components/schemas/TaskInput' }) },
+        requestBody: {
+          required: true,
+          ...json({ $ref: '#/components/schemas/TaskInput' }),
+        },
         responses: {
           '200': success('Task updated', { $ref: '#/components/schemas/Task' }),
           '400': errorResponse,
@@ -501,7 +536,9 @@ export const openApiDocument = {
           }),
         },
         responses: {
-          '200': success('Task assignment updated', { $ref: '#/components/schemas/Task' }),
+          '200': success('Task assignment updated', {
+            $ref: '#/components/schemas/Task',
+          }),
           '400': errorResponse,
           '403': errorResponse,
         },
@@ -513,7 +550,9 @@ export const openApiDocument = {
         tags: ['Tasks'],
         summary: 'Archive a task',
         security: secure,
-        responses: { '200': success('Task archived', { $ref: '#/components/schemas/Task' }) },
+        responses: {
+          '200': success('Task archived', { $ref: '#/components/schemas/Task' }),
+        },
       },
     },
     '/api/workspaces/{workspaceId}/projects/{projectId}/tasks/{taskId}/unarchive': {
@@ -522,7 +561,9 @@ export const openApiDocument = {
         tags: ['Tasks'],
         summary: 'Restore an archived task',
         security: secure,
-        responses: { '200': success('Task restored', { $ref: '#/components/schemas/Task' }) },
+        responses: {
+          '200': success('Task restored', { $ref: '#/components/schemas/Task' }),
+        },
       },
     },
     '/api/workspaces/{workspaceId}/projects/{projectId}/tasks/{taskId}/duplicate': {
@@ -531,7 +572,9 @@ export const openApiDocument = {
         tags: ['Tasks'],
         summary: 'Duplicate a task',
         security: secure,
-        responses: { '201': success('Task duplicated', { $ref: '#/components/schemas/Task' }) },
+        responses: {
+          '201': success('Task duplicated', { $ref: '#/components/schemas/Task' }),
+        },
       },
     },
     '/api/workspaces/{workspaceId}/projects/{projectId}/tasks/{taskId}/comments': {
@@ -565,34 +608,44 @@ export const openApiDocument = {
         },
       },
     },
-    '/api/workspaces/{workspaceId}/projects/{projectId}/tasks/{taskId}/comments/{commentId}': {
-      parameters: [
-        workspaceId,
-        projectId,
-        taskId,
-        { name: 'commentId', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
-      ],
-      patch: {
-        tags: ['Comments'],
-        summary: 'Edit a comment',
-        security: secure,
-        requestBody: {
-          required: true,
-          ...json({
-            type: 'object',
-            required: ['content'],
-            properties: { content: { type: 'string', minLength: 1 } },
-          }),
+    '/api/workspaces/{workspaceId}/projects/{projectId}/tasks/{taskId}/comments/{commentId}':
+      {
+        parameters: [
+          workspaceId,
+          projectId,
+          taskId,
+          {
+            name: 'commentId',
+            in: 'path',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
+        patch: {
+          tags: ['Comments'],
+          summary: 'Edit a comment',
+          security: secure,
+          requestBody: {
+            required: true,
+            ...json({
+              type: 'object',
+              required: ['content'],
+              properties: { content: { type: 'string', minLength: 1 } },
+            }),
+          },
+          responses: {
+            '200': success('Comment updated', { $ref: '#/components/schemas/Comment' }),
+          },
         },
-        responses: { '200': success('Comment updated', { $ref: '#/components/schemas/Comment' }) },
+        delete: {
+          tags: ['Comments'],
+          summary: 'Delete a comment',
+          security: secure,
+          responses: {
+            '200': success('Comment deleted', { $ref: '#/components/schemas/Comment' }),
+          },
+        },
       },
-      delete: {
-        tags: ['Comments'],
-        summary: 'Delete a comment',
-        security: secure,
-        responses: { '200': success('Comment deleted', { $ref: '#/components/schemas/Comment' }) },
-      },
-    },
     '/api/workspaces/{workspaceId}/labels': {
       parameters: [workspaceId],
       get: {
@@ -611,27 +664,44 @@ export const openApiDocument = {
         tags: ['Labels'],
         summary: 'Create a label',
         security: secure,
-        requestBody: { required: true, ...json({ $ref: '#/components/schemas/LabelInput' }) },
-        responses: { '201': success('Label created', { $ref: '#/components/schemas/Label' }) },
+        requestBody: {
+          required: true,
+          ...json({ $ref: '#/components/schemas/LabelInput' }),
+        },
+        responses: {
+          '201': success('Label created', { $ref: '#/components/schemas/Label' }),
+        },
       },
     },
     '/api/workspaces/{workspaceId}/labels/{labelId}': {
       parameters: [
         workspaceId,
-        { name: 'labelId', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
+        {
+          name: 'labelId',
+          in: 'path',
+          required: true,
+          schema: { type: 'string', format: 'uuid' },
+        },
       ],
       patch: {
         tags: ['Labels'],
         summary: 'Update a label',
         security: secure,
-        requestBody: { required: true, ...json({ $ref: '#/components/schemas/LabelInput' }) },
-        responses: { '200': success('Label updated', { $ref: '#/components/schemas/Label' }) },
+        requestBody: {
+          required: true,
+          ...json({ $ref: '#/components/schemas/LabelInput' }),
+        },
+        responses: {
+          '200': success('Label updated', { $ref: '#/components/schemas/Label' }),
+        },
       },
       delete: {
         tags: ['Labels'],
         summary: 'Delete a label',
         security: secure,
-        responses: { '200': success('Label deleted', { $ref: '#/components/schemas/Label' }) },
+        responses: {
+          '200': success('Label deleted', { $ref: '#/components/schemas/Label' }),
+        },
       },
     },
     '/api/workspaces/{workspaceId}/projects/{projectId}/tasks/{taskId}/labels': {
@@ -649,26 +719,36 @@ export const openApiDocument = {
         },
       },
     },
-    '/api/workspaces/{workspaceId}/projects/{projectId}/tasks/{taskId}/labels/{labelId}': {
-      parameters: [
-        workspaceId,
-        projectId,
-        taskId,
-        { name: 'labelId', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
-      ],
-      post: {
-        tags: ['Labels'],
-        summary: 'Attach a label to a task',
-        security: secure,
-        responses: { '201': success('Label attached', { $ref: '#/components/schemas/Label' }) },
+    '/api/workspaces/{workspaceId}/projects/{projectId}/tasks/{taskId}/labels/{labelId}':
+      {
+        parameters: [
+          workspaceId,
+          projectId,
+          taskId,
+          {
+            name: 'labelId',
+            in: 'path',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
+        post: {
+          tags: ['Labels'],
+          summary: 'Attach a label to a task',
+          security: secure,
+          responses: {
+            '201': success('Label attached', { $ref: '#/components/schemas/Label' }),
+          },
+        },
+        delete: {
+          tags: ['Labels'],
+          summary: 'Remove a label from a task',
+          security: secure,
+          responses: {
+            '200': success('Label removed', { $ref: '#/components/schemas/Label' }),
+          },
+        },
       },
-      delete: {
-        tags: ['Labels'],
-        summary: 'Remove a label from a task',
-        security: secure,
-        responses: { '200': success('Label removed', { $ref: '#/components/schemas/Label' }) },
-      },
-    },
     '/api/workspaces/{workspaceId}/invites': {
       parameters: [workspaceId],
       get: {
@@ -686,9 +766,13 @@ export const openApiDocument = {
       post: {
         tags: ['Invitations'],
         summary: 'Create a secure workspace invitation',
-        description: 'Raw invitation tokens are returned only in test mode or when DEMO_MODE=true.',
+        description:
+          'Raw invitation tokens are returned only in test mode or when DEMO_MODE=true.',
         security: secure,
-        requestBody: { required: true, ...json({ $ref: '#/components/schemas/MemberInput' }) },
+        requestBody: {
+          required: true,
+          ...json({ $ref: '#/components/schemas/MemberInput' }),
+        },
         responses: {
           '201': success('Invitation created', {
             type: 'object',
@@ -705,35 +789,62 @@ export const openApiDocument = {
     '/api/workspaces/{workspaceId}/invites/{inviteId}': {
       parameters: [
         workspaceId,
-        { name: 'inviteId', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
+        {
+          name: 'inviteId',
+          in: 'path',
+          required: true,
+          schema: { type: 'string', format: 'uuid' },
+        },
       ],
       delete: {
         tags: ['Invitations'],
         summary: 'Revoke an invitation',
         security: secure,
-        responses: { '200': success('Invitation deleted', { $ref: '#/components/schemas/Invitation' }) },
+        responses: {
+          '200': success('Invitation deleted', {
+            $ref: '#/components/schemas/Invitation',
+          }),
+        },
       },
     },
     '/api/workspace-invites/{token}/accept': {
       parameters: [
-        { name: 'token', in: 'path', required: true, schema: { type: 'string', minLength: 32 } },
+        {
+          name: 'token',
+          in: 'path',
+          required: true,
+          schema: { type: 'string', minLength: 32 },
+        },
       ],
       post: {
         tags: ['Invitations'],
         summary: 'Accept an invitation',
         security: secure,
-        responses: { '200': { description: 'Invitation accepted and membership created' }, '400': errorResponse, '403': errorResponse },
+        responses: {
+          '200': { description: 'Invitation accepted and membership created' },
+          '400': errorResponse,
+          '403': errorResponse,
+        },
       },
     },
     '/api/workspace-invites/{token}/decline': {
       parameters: [
-        { name: 'token', in: 'path', required: true, schema: { type: 'string', minLength: 32 } },
+        {
+          name: 'token',
+          in: 'path',
+          required: true,
+          schema: { type: 'string', minLength: 32 },
+        },
       ],
       post: {
         tags: ['Invitations'],
         summary: 'Decline an invitation',
         security: secure,
-        responses: { '200': { description: 'Invitation declined' }, '400': errorResponse, '403': errorResponse },
+        responses: {
+          '200': { description: 'Invitation declined' },
+          '400': errorResponse,
+          '403': errorResponse,
+        },
       },
     },
     '/api/notifications': {
@@ -743,7 +854,11 @@ export const openApiDocument = {
         security: secure,
         parameters: [
           ...pagination,
-          { name: 'workspaceId', in: 'query', schema: { type: 'string', format: 'uuid' } },
+          {
+            name: 'workspaceId',
+            in: 'query',
+            schema: { type: 'string', format: 'uuid' },
+          },
           { name: 'unreadOnly', in: 'query', schema: { type: 'boolean' } },
         ],
         responses: {
@@ -759,7 +874,13 @@ export const openApiDocument = {
         tags: ['Notifications'],
         summary: 'Get unread notification count',
         security: secure,
-        parameters: [{ name: 'workspaceId', in: 'query', schema: { type: 'string', format: 'uuid' } }],
+        parameters: [
+          {
+            name: 'workspaceId',
+            in: 'query',
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
         responses: {
           '200': success('Unread count', {
             type: 'object',
@@ -773,19 +894,35 @@ export const openApiDocument = {
         tags: ['Notifications'],
         summary: 'Mark all notifications as read',
         security: secure,
-        parameters: [{ name: 'workspaceId', in: 'query', schema: { type: 'string', format: 'uuid' } }],
+        parameters: [
+          {
+            name: 'workspaceId',
+            in: 'query',
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
         responses: { '200': { description: 'Notifications marked read' } },
       },
     },
     '/api/notifications/{notificationId}/read': {
       parameters: [
-        { name: 'notificationId', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
+        {
+          name: 'notificationId',
+          in: 'path',
+          required: true,
+          schema: { type: 'string', format: 'uuid' },
+        },
       ],
       patch: {
         tags: ['Notifications'],
         summary: 'Mark one notification as read',
         security: secure,
-        responses: { '200': success('Notification updated', { $ref: '#/components/schemas/Notification' }), '404': errorResponse },
+        responses: {
+          '200': success('Notification updated', {
+            $ref: '#/components/schemas/Notification',
+          }),
+          '404': errorResponse,
+        },
       },
     },
     '/api/workspaces/{workspaceId}/audit-logs': {
@@ -1002,7 +1139,10 @@ export const openApiDocument = {
           workspaceId: { type: 'string', format: 'uuid' },
           email: { type: 'string', format: 'email' },
           role: { $ref: '#/components/schemas/WorkspaceRole' },
-          status: { type: 'string', enum: ['PENDING', 'ACCEPTED', 'DECLINED', 'EXPIRED'] },
+          status: {
+            type: 'string',
+            enum: ['PENDING', 'ACCEPTED', 'DECLINED', 'EXPIRED'],
+          },
           expiresAt: { type: 'string', format: 'date-time' },
           createdAt: { type: 'string', format: 'date-time' },
         },

@@ -2,37 +2,28 @@ export const APP_ERROR_CODES = {
   BAD_REQUEST: 'BAD_REQUEST',
   VALIDATION_ERROR: 'VALIDATION_ERROR',
 
-  AUTHENTICATION_REQUIRED:
-    'AUTHENTICATION_REQUIRED',
+  AUTHENTICATION_REQUIRED: 'AUTHENTICATION_REQUIRED',
 
-  INVALID_CREDENTIALS:
-    'INVALID_CREDENTIALS',
+  INVALID_CREDENTIALS: 'INVALID_CREDENTIALS',
 
-  INVALID_AUTH_TOKEN:
-    'INVALID_AUTH_TOKEN',
+  INVALID_AUTH_TOKEN: 'INVALID_AUTH_TOKEN',
 
   FORBIDDEN: 'FORBIDDEN',
 
-  RESOURCE_NOT_FOUND:
-    'RESOURCE_NOT_FOUND',
+  RESOURCE_NOT_FOUND: 'RESOURCE_NOT_FOUND',
 
-  ROUTE_NOT_FOUND:
-    'ROUTE_NOT_FOUND',
+  ROUTE_NOT_FOUND: 'ROUTE_NOT_FOUND',
 
   CONFLICT: 'CONFLICT',
 
-  RATE_LIMITED:
-    'RATE_LIMITED',
+  RATE_LIMITED: 'RATE_LIMITED',
 
-  PAYLOAD_TOO_LARGE:
-    'PAYLOAD_TOO_LARGE',
+  PAYLOAD_TOO_LARGE: 'PAYLOAD_TOO_LARGE',
 
-  INTERNAL_ERROR:
-    'INTERNAL_ERROR',
+  INTERNAL_ERROR: 'INTERNAL_ERROR',
 } as const;
 
-export type AppErrorCode =
-  (typeof APP_ERROR_CODES)[keyof typeof APP_ERROR_CODES];
+export type AppErrorCode = (typeof APP_ERROR_CODES)[keyof typeof APP_ERROR_CODES];
 
 type AppErrorOptions = {
   statusCode: number;
@@ -46,34 +37,21 @@ export class AppError extends Error {
   readonly code: AppErrorCode;
   readonly details?: unknown;
 
-  constructor(
-    message: string,
-    options: AppErrorOptions
-  ) {
+  constructor(message: string, options: AppErrorOptions) {
     super(message, {
       cause: options.cause,
     });
 
     this.name = 'AppError';
-    this.statusCode =
-      options.statusCode;
+    this.statusCode = options.statusCode;
     this.code = options.code;
 
-    if (
-      options.details !== undefined
-    ) {
-      this.details =
-        options.details;
+    if (options.details !== undefined) {
+      this.details = options.details;
     }
 
-    Object.setPrototypeOf(
-      this,
-      new.target.prototype
-    );
+    Object.setPrototypeOf(this, new.target.prototype);
 
-    Error.captureStackTrace?.(
-      this,
-      AppError
-    );
+    Error.captureStackTrace?.(this, AppError);
   }
 }

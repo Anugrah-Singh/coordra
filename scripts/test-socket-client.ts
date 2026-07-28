@@ -15,7 +15,9 @@ const authTokenLine = cookieJar
   .find((line) => line.includes('\tauth_token\t'));
 
 if (!authTokenLine) {
-  console.error('auth_token not found in cookies.txt. Login first with curl -c cookies.txt.');
+  console.error(
+    'auth_token not found in cookies.txt. Login first with curl -c cookies.txt.'
+  );
   process.exit(1);
 }
 
@@ -165,17 +167,10 @@ socket.on('workspace_invite_declined', (payload) => {
   console.log('❌ workspace_invite_declined:', JSON.stringify(payload, null, 2));
 });
 
-
 socket.on('workspace_updated', (payload) => {
-  console.log(
-    '🏢 workspace_updated:',
-    JSON.stringify(payload, null, 2)
-  );
+  console.log('🏢 workspace_updated:', JSON.stringify(payload, null, 2));
 });
 
 socket.on('workspace_deleted', (payload) => {
-  console.log(
-    '🗑️ workspace_deleted:',
-    JSON.stringify(payload, null, 2)
-  );
+  console.log('🗑️ workspace_deleted:', JSON.stringify(payload, null, 2));
 });

@@ -1,26 +1,21 @@
 import { Request, Response, NextFunction } from 'express';
 
-import { getWorkspaceAuditLogsFromDb } from '../services/auditLog.service.js';
+import { getWorkspaceAuditLogs } from '../services/auditLog.service.js';
 
-import { 
+import {
   GetWorkspaceAuditLogsParams,
   GetWorkspaceAuditLogsQuery,
 } from '../schemas/auditLog.schema.js';
 
 export const getWorkspaceAuditLogsHandler = async (
-  req: Request<
-    GetWorkspaceAuditLogsParams,
-    {},
-    {},
-    GetWorkspaceAuditLogsQuery
-  >,
+  req: Request<GetWorkspaceAuditLogsParams, {}, {}, GetWorkspaceAuditLogsQuery>,
   res: Response,
   next: NextFunction
 ) => {
   try {
     const { workspaceId } = req.params;
 
-    const logs = await getWorkspaceAuditLogsFromDb({
+    const logs = await getWorkspaceAuditLogs({
       workspaceId,
       page: req.query.page,
       limit: req.query.limit,

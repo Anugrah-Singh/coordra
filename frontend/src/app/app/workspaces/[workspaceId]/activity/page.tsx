@@ -1,2 +1,4 @@
-import { AuditLogPage } from "@/views/AuditLogPage";
-export default function Page() { return <AuditLogPage />; }
+import { AuditLogPage } from '@/features/collaboration/AuditLogPage';
+export default function Page() {
+  return <AuditLogPage />;
+}

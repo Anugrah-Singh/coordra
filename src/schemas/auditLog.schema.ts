@@ -1,9 +1,6 @@
 import { z } from 'zod';
 
-import {
-  paginationQuerySchema,
-  PaginationQuery,
-} from './pagination.schema.js';
+import { paginationQuerySchema, PaginationQuery } from './pagination.schema.js';
 
 export const getWorkspaceAuditLogsSchema = z.object({
   params: z.object({
@@ -15,8 +12,11 @@ export const getWorkspaceAuditLogsSchema = z.object({
   }),
 });
 
-export type GetWorkspaceAuditLogsParams =
-  z.infer<typeof getWorkspaceAuditLogsSchema>['params'];
+export type GetWorkspaceAuditLogsParams = z.infer<
+  typeof getWorkspaceAuditLogsSchema
+>['params'];
 
-export type GetWorkspaceAuditLogsQuery =
-  z.infer<typeof getWorkspaceAuditLogsSchema>['query'] & PaginationQuery;
+export type GetWorkspaceAuditLogsQuery = z.infer<
+  typeof getWorkspaceAuditLogsSchema
+>['query'] &
+  PaginationQuery;

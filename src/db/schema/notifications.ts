@@ -1,11 +1,4 @@
-import {
-  pgTable,
-  uuid,
-  text,
-  timestamp,
-  pgEnum,
-  index,
-} from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, timestamp, pgEnum, index } from 'drizzle-orm/pg-core';
 
 import { workspaces } from './workspaces.js';
 import { users } from './users.js';
@@ -15,11 +8,10 @@ export const notificationTypeEnum = pgEnum('notification_type', [
   'COMMENT_MENTION',
   'PROHECT_UPDATE',
 
-  // new values
-    'TASK_STATUS_CHANGED',
-    'COMMENT_ADDED',
-    'MEMBER_INVITED',
-    'PROJECT_UPDATED',
+  'TASK_STATUS_CHANGED',
+  'COMMENT_ADDED',
+  'MEMBER_INVITED',
+  'PROJECT_UPDATED',
 ]);
 
 export const notifications = pgTable(

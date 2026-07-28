@@ -6,33 +6,29 @@ import { Client } from 'pg';
 
 import { env } from '../config/env.js';
 
-async function runDiagnosticMigration() {
-  // Create a direct client connection
+async function runMigrations() {
+  // Production migrations use a direct connection rather than the pooled runtime URL.
   const client = new Client({
     connectionString: env.DATABASE_URL,
   });
 
   try {
-    console.log('🔌 Connecting to Neon database...');
+    console.log('Connecting to database...');
     await client.connect();
     const db = drizzle(client);
-    
-    console.log('🚀 Executing schema migrations...');
-    // This points to the folder containing your generated SQL
+
+    console.log('Applying schema migrations...');
     await migrate(db, { migrationsFolder: './drizzle' });
-    
-    console.log('✅ Migrations applied successfully!');
+
+    console.log('Migrations applied successfully.');
     process.exit(0);
-    
   } catch (error) {
-    console.error('\n🚨 FATAL DATABASE ERROR REVEALED 🚨');
-    console.error('======================================');
+    console.error('Database migration failed.');
     console.error(error);
-    console.error('======================================\n');
     process.exit(1);
   } finally {
     await client.end();
   }
 }
 
-runDiagnosticMigration();
+runMigrations();

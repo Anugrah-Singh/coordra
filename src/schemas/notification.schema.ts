@@ -1,7 +1,6 @@
 import { z } from 'zod';
 import { paginationQuerySchema, PaginationQuery } from './pagination.schema.js';
 
-
 export const getNotificationsSchema = z.object({
   query: z.object({
     ...paginationQuerySchema,
@@ -22,11 +21,11 @@ export const readAllNotificationsSchema = z.object({
   }),
 });
 
-export type GetNotificationsQuery =
-  z.infer<typeof getNotificationsSchema>['query'] & PaginationQuery;
+export type GetNotificationsQuery = z.infer<typeof getNotificationsSchema>['query'] &
+  PaginationQuery;
 
-export type NotificationParams =
-  z.infer<typeof notificationParamsSchema>['params'];
+export type NotificationParams = z.infer<typeof notificationParamsSchema>['params'];
 
-export type ReadAllNotificationsQuery =
-  z.infer<typeof readAllNotificationsSchema>['query'];
+export type ReadAllNotificationsQuery = z.infer<
+  typeof readAllNotificationsSchema
+>['query'];

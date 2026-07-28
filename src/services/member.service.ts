@@ -15,7 +15,7 @@ const createHttpError = (message: string, status: number) => {
   });
 };
 
-export const getWorkspaceMembersFromDb = async (data: {
+export const getWorkspaceMembers = async (data: {
   workspaceId: string;
   page?: string | undefined;
   limit?: string | undefined;
@@ -42,10 +42,7 @@ export const getWorkspaceMembersFromDb = async (data: {
         isNull(workspaceMembers.removedAt)
       )
     )
-    .orderBy(
-      desc(workspaceMembers.joinedAt),
-      desc(workspaceMembers.id)
-    )
+    .orderBy(desc(workspaceMembers.joinedAt), desc(workspaceMembers.id))
     .limit(pagination.limit)
     .offset(pagination.offset);
 };
@@ -79,10 +76,7 @@ export const addWorkspaceMemberByEmail = async (data: {
       .limit(1);
 
     if (existingMembership && existingMembership.removedAt === null) {
-      throw createHttpError(
-        'User is already an active member of this workspace',
-        409
-      );
+      throw createHttpError('User is already an active member of this workspace', 409);
     }
 
     if (existingMembership && existingMembership.removedAt !== null) {
@@ -157,7 +151,7 @@ export const addWorkspaceMemberByEmail = async (data: {
   });
 };
 
-export const updateWorkspaceMemberRoleInDb = async (data: {
+export const updateWorkspaceMemberRole = async (data: {
   workspaceId: string;
   actorId: string;
   memberId: string;
@@ -181,10 +175,7 @@ export const updateWorkspaceMemberRoleInDb = async (data: {
     }
 
     if (targetMember.role === 'OWNER') {
-      throw createHttpError(
-        'Owner role cannot be changed from member settings',
-        400
-      );
+      throw createHttpError('Owner role cannot be changed from member settings', 400);
     }
 
     const [updatedMember] = await tx
@@ -217,7 +208,7 @@ export const updateWorkspaceMemberRoleInDb = async (data: {
   });
 };
 
-export const softRemoveWorkspaceMemberInDb = async (data: {
+export const removeWorkspaceMember = async (data: {
   workspaceId: string;
   actorId: string;
   memberId: string;

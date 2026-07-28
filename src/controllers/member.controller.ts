@@ -3,10 +3,10 @@ import { Request, Response, NextFunction } from 'express';
 import { emitWorkspaceEvent } from '../utils/socketEvents.js';
 
 import {
-  getWorkspaceMembersFromDb,
+  getWorkspaceMembers,
   addWorkspaceMemberByEmail,
-  updateWorkspaceMemberRoleInDb,
-  softRemoveWorkspaceMemberInDb,
+  updateWorkspaceMemberRole,
+  removeWorkspaceMember,
 } from '../services/member.service.js';
 
 import {
@@ -27,7 +27,6 @@ export const addMemberHandler = async (
     const { email, role } = req.body;
     const actorId = res.locals.userId as string;
 
-
     const result = await addWorkspaceMemberByEmail({
       workspaceId,
       actorId,
@@ -36,8 +35,8 @@ export const addMemberHandler = async (
     });
 
     emitWorkspaceEvent(workspaceId, 'member_added', {
-        workspaceId,
-        member: {
+      workspaceId,
+      member: {
         membershipId: result.membership?.id,
         userId: result.user.id,
         email: result.user.email,
@@ -70,7 +69,7 @@ export const getWorkspaceMembersHandler = async (
   try {
     const { workspaceId } = req.params;
 
-    const members = await getWorkspaceMembersFromDb({
+    const members = await getWorkspaceMembers({
       workspaceId,
       page: req.query.page,
       limit: req.query.limit,
@@ -96,8 +95,7 @@ export const updateMemberRoleHandler = async (
     const { role } = req.body;
     const actorId = res.locals.userId as string;
 
-
-    const updatedMember = await updateWorkspaceMemberRoleInDb({
+    const updatedMember = await updateWorkspaceMemberRole({
       workspaceId,
       actorId,
       memberId,
@@ -105,9 +103,9 @@ export const updateMemberRoleHandler = async (
     });
 
     emitWorkspaceEvent(workspaceId, 'member_role_updated', {
-        workspaceId,
-        memberId,
-        member: updatedMember,
+      workspaceId,
+      memberId,
+      member: updatedMember,
     });
 
     res.status(200).json({
@@ -129,8 +127,7 @@ export const removeMemberHandler = async (
     const { workspaceId, memberId } = req.params;
     const actorId = res.locals.userId as string;
 
-
-    const removedMember = await softRemoveWorkspaceMemberInDb({
+    const removedMember = await removeWorkspaceMember({
       workspaceId,
       actorId,
       memberId,

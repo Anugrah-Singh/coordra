@@ -1,132 +1,127 @@
-# WorkspaceOS — SaaS Team Workspace
+# WorkspaceOS
 
-A recruiter-ready, multi-tenant team collaboration platform built with React, Express, TypeScript, PostgreSQL, Drizzle ORM, Neon, and Socket.IO.
+WorkspaceOS is a multi-tenant team workspace with secure authentication, hierarchical
+RBAC, project boards, comments, labels, invitations, notifications, audit history, and
+real-time collaboration.
 
-WorkspaceOS combines a polished project-management interface with backend engineering features that are typically hidden in portfolio projects: tenant-isolated queries, hierarchical RBAC, secure cookie authentication, audit logging, authenticated real-time rooms, production-safe migrations, and ephemeral preview databases in CI.
+**Project links:** [Frontend](http://localhost:3000) ·
+[API](http://localhost:8000) · [API documentation](http://localhost:8000/api-docs) ·
+[OpenAPI JSON](http://localhost:8000/api-docs.json)
 
-> **Repository status:** the backend API, React frontend, Swagger documentation, demo seed, CI workflows, and deployment templates are included. Live URLs and screenshots should be added after deploying your own fork.
+These links target the local environment. Production URLs are deployment-specific; the
+[Vercel + Render + Neon guide](docs/DEPLOYMENT.md) keeps their configuration explicit
+instead of publishing unverified placeholders.
 
-## Product tour
+## The 60-second overview
 
-A user can:
+Next.js renders the interface. Feature modules call a shared Axios client. Express
+validates and authorizes requests, controllers coordinate them, services contain business
+logic, Drizzle persists data in PostgreSQL, and Socket.IO triggers React Query refreshes.
 
-- register, sign in, and restore a cookie-backed session
-- create and switch between isolated workspaces
-- create projects and manage tasks on a five-column Kanban board
-- drag tasks between Backlog, To do, In progress, Blocked, and Done
-- assign tasks, set priorities and due dates, archive, unarchive, and duplicate work
-- add comments and workspace labels
-- invite teammates and manage hierarchical roles
-- view notifications and workspace audit activity
-- see collaboration updates through Socket.IO without refreshing
-
-## Engineering highlights
-
-- **Multi-tenant isolation:** workspace IDs are enforced throughout routes, RBAC middleware, and database queries.
-- **Hierarchical authorization:** `OWNER → ADMIN → MANAGER → MEMBER → VIEWER`.
-- **Secure authentication:** bcrypt passwords, JWT in an HttpOnly cookie, secure production cookie settings, credentialed CORS, and Origin/Referer validation.
-- **Database integrity:** required project-task relationships, cascading cleanup, transactional workspace ownership, and audit records.
-- **Real-time collaboration:** authenticated Socket.IO connections, user rooms, workspace rooms, and cache invalidation on live events.
-- **Production migration workflow:** direct Neon connections for migrations and pooled connections for the running API.
-- **Preview databases:** pull requests can create isolated Neon branches, apply Drizzle migrations, run integration tests, and clean up afterward.
-- **Recruiter-friendly API inspection:** Swagger UI at `/api-docs` and raw OpenAPI JSON at `/api-docs.json`.
-
-## Architecture
-
-```text
-Browser
-  ├─ Next.js App Router + React 19 + TypeScript
-  ├─ TanStack Query + Axios
-  ├─ Tailwind CSS + shadcn/ui
-  ├─ dnd-kit Kanban interactions
-  └─ Socket.IO Client
-          │ HTTPS / WebSocket (HttpOnly auth cookie)
-          ▼
-Express 5 + Socket.IO
-  ├─ security / authentication / validation
-  ├─ workspace RBAC and tenant checks
-  ├─ controllers
-  ├─ transactional services
-  └─ Drizzle ORM
-          │
-          ▼
-Neon PostgreSQL
+```mermaid
+flowchart LR
+  UI["Next.js feature modules"] --> AX["Shared Axios client"]
+  AX --> MW["Express middleware<br/>auth · validation · RBAC"]
+  MW --> CT["Controllers"]
+  CT --> SV["Domain services"]
+  SV --> DB["Drizzle ORM"]
+  DB --> PG[("PostgreSQL")]
+  SV --> IO["Socket.IO events"]
+  IO --> RQ["React Query invalidation"]
+  RQ --> UI
 ```
 
-### CI/CD database strategy
+The important architectural rule is tenant scope: workspace IDs are checked through
+middleware and preserved in service queries, while PostgreSQL transactions protect
+ownership changes, cascading operations, and audit records.
 
-```text
-Pull request
-  → GitHub Actions
-  → Neon ephemeral branch
-  → Drizzle migrations over direct connection
-  → authenticated integration tests
-  → merge or branch cleanup
+## What the product demonstrates
 
-Runtime API → pooled Neon connection
-Migrations  → direct/unpooled Neon connection
-```
+- Cookie-backed registration, login, session restoration, and logout
+- Isolated workspaces with `OWNER → ADMIN → MANAGER → MEMBER → VIEWER` authorization
+- Project CRUD and a five-column drag-and-drop Kanban board
+- Task assignment, priority, due dates, archive, unarchive, duplicate, labels, and comments
+- Secure, expiring workspace invitations and member administration
+- Notifications, transactional audit history, and authenticated Socket.IO rooms
+- Production health checks, graceful shutdown, Drizzle migrations, and Neon preview CI
 
-## Technology stack
+## Where to start reading
 
-### Frontend
+1. `frontend/src/app` shows the thin Next.js route entry points.
+2. `frontend/src/features/projects/ProjectBoardPage.tsx` shows React Query and optimistic
+   Kanban updates.
+3. `frontend/src/lib/api-client.ts` shows the shared credentialed Axios client and normalized
+   errors.
+4. `src/routes/task.route.ts` shows middleware composition.
+5. `src/controllers/task.controller.ts` shows HTTP coordination.
+6. `src/services/task.service.ts` shows tenant-scoped business logic and Drizzle access.
+7. `src/socket.ts` and `frontend/src/features/collaboration/useWorkspaceSocket.ts` show the
+   realtime refresh path.
 
-- React 19 and TypeScript
-- Next.js App Router
-- Tailwind CSS and shadcn/ui
-- TanStack Query
-- Axios
-- React Hook Form and Zod
-- dnd-kit
-- Socket.IO Client
-- Lucide icons and Sonner toasts
+## Five-minute demo
 
-### Backend
+1. Register and create a workspace.
+2. Create a project and open its board.
+3. Create a task, assign it, add a due date, label, and comment.
+4. Drag the task to another column and open the same workspace in a second browser.
+5. Invite a teammate, change a role, then review notifications and audit activity.
 
-- Node.js 24 LTS and TypeScript
-- Express 5
-- PostgreSQL and Neon
-- Drizzle ORM
-- Zod
-- Socket.IO
-- JWT, bcrypt, Helmet, CORS, and express-rate-limit
-- Supertest and the Node test runner through `tsx`
+Deep links such as
+`/app/workspaces/:workspaceId/projects/:projectId?task=:taskId` remain directly
+refreshable.
 
 ## Repository structure
 
 ```text
 .
-├── frontend/                 # React application
-├── src/                      # Express and Socket.IO backend
-│   ├── config/
-│   ├── controllers/
-│   ├── db/schema/
+├── frontend/
+│   └── src/
+│       ├── app/                     # thin Next.js App Router entries
+│       ├── components/
+│       │   ├── app-shell/           # authenticated application shell
+│       │   ├── shared/              # named application-level UI
+│       │   └── ui/                  # consumed shadcn primitives only
+│       ├── features/
+│       │   ├── auth/                # sessions, login, registration, invitations
+│       │   ├── workspaces/          # workspace context, dashboard, settings
+│       │   ├── projects/            # projects, tasks, Kanban, labels, comments
+│       │   └── collaboration/       # members, activity, notifications, realtime
+│       ├── lib/                     # Axios client and shared utilities
+│       └── types/
+├── src/
+│   ├── controllers/                 # request/response coordination
+│   ├── middlewares/                 # auth, CSRF, validation, RBAC, errors
+│   ├── routes/                      # endpoint composition
+│   ├── schemas/                     # Zod request schemas
+│   ├── services/                    # business logic and Drizzle queries
+│   ├── db/schema/                   # PostgreSQL schema
 │   ├── docs/openapi.ts
-│   ├── middlewares/
-│   ├── routes/
-│   ├── schemas/
-│   ├── services/
-│   └── utils/
-├── drizzle/                  # immutable migration history
+│   └── socket.ts
+├── drizzle/                         # immutable migration history
+├── tests/integration/
 ├── scripts/
-│   ├── seed-demo.ts
-│   └── smoke-test.ts
-├── tests/
-│   └── integration/
-├── .github/workflows/
 ├── docs/DEPLOYMENT.md
 └── render.yaml
 ```
+
+## Stack
+
+The frontend uses Next.js, React, TypeScript, Tailwind CSS, shadcn/ui, TanStack Query,
+Axios, React Hook Form, Zod, dnd-kit, Socket.IO Client, Lucide, and Sonner.
+
+The backend uses Node.js, Express, TypeScript, PostgreSQL, Neon, Drizzle ORM, Zod,
+Socket.IO, JWT, bcrypt, Helmet, CORS, express-rate-limit, Supertest, and the Node test
+runner.
 
 ## Local setup
 
 ### Prerequisites
 
 - Node.js `24.18.0` (`.nvmrc` is included)
-- a Neon PostgreSQL database
-- pooled and direct Neon connection strings
+- PostgreSQL or a Neon database
+- Pooled and direct database connection strings for production workflows
 
-### 1. Install dependencies
+Install dependencies:
 
 ```bash
 nvm use
@@ -134,24 +129,22 @@ npm ci
 npm --prefix frontend ci
 ```
 
-### 2. Configure the backend
+Configure the backend:
 
 ```bash
 cp .env.example .env
 ```
 
-Set at least:
-
 ```env
 NODE_ENV=development
 PORT=8000
-DATABASE_URL=<pooled-neon-runtime-url>
+DATABASE_URL=<postgresql-url>
 JWT_SECRET=<random-value-at-least-32-characters>
 FRONTEND_URL=http://localhost:3000
 TRUST_PROXY_HOPS=0
 ```
 
-### 3. Configure the frontend
+Configure the frontend:
 
 ```bash
 cp frontend/.env.example frontend/.env
@@ -161,41 +154,26 @@ cp frontend/.env.example frontend/.env
 NEXT_PUBLIC_API_URL=http://localhost:8000
 ```
 
-The browser never stores the JWT. Axios and Socket.IO send the backend’s HttpOnly cookie with credentials.
-
-### 4. Apply migrations
-
-Use the **direct/unpooled** Neon connection temporarily as `DATABASE_URL` for migration execution:
+Apply migrations, then start both applications:
 
 ```bash
 npm run db:migrate
-```
-
-Do not modify an already-applied migration. After changing a Drizzle schema, create a new migration with:
-
-```bash
-npm run db:generate
-```
-
-### 5. Start both applications
-
-Terminal one:
-
-```bash
 npm run dev
 ```
 
-Terminal two:
+In a second terminal:
 
 ```bash
 npm run frontend:dev
 ```
 
-Open `http://localhost:3000`.
+The browser never stores the JWT. Axios and Socket.IO send the backend's HttpOnly cookie
+with credentials.
 
 ## Demo data
 
-The seed is idempotent and intentionally guarded. It deletes and recreates only the workspace with slug `workspaceos-demo`; unrelated records are not touched.
+The seed is idempotent and only replaces the workspace with slug `workspaceos-demo`.
+Unrelated records are not touched.
 
 ```bash
 DEMO_SEED_CONFIRM=workspaceos-demo \
@@ -203,7 +181,7 @@ DEMO_SEED_PASSWORD='Use-A-Strong-Demo-Password' \
 npm run db:seed:demo
 ```
 
-Demo accounts:
+The generated accounts are:
 
 ```text
 owner@taskspace.demo
@@ -212,45 +190,40 @@ member@taskspace.demo
 viewer@taskspace.demo
 ```
 
-All four use the value supplied through `DEMO_SEED_PASSWORD`.
+All four use `DEMO_SEED_PASSWORD`. `DEMO_MODE=true` may be enabled for an authorized
+portfolio deployment when invite links should be copyable from the UI.
 
-Set `DEMO_MODE=true` only in the portfolio/demo deployment when authorized users should receive a copyable invitation link after creating an invite. Keep it `false` for a normal production environment.
-
-## Commands
+## Verification
 
 ```bash
-# Backend
-npm run typecheck
-npm run test:typecheck
-npm test
-npm run test:integration
-npm run test:coverage
-npm run build
-npm run backend:verify
-
-# Frontend
-npm run frontend:typecheck
-npm run frontend:lint
-npm run frontend:build
-
-# Both
 npm run verify
 ```
 
-Integration tests require a migrated test/preview database. Database-independent backend verification and the frontend build run without one.
+The verification pipeline checks formatting, backend source and test types, unit tests,
+the backend build, the production dependency audit, frontend types, ESLint, and the
+production Next.js build.
 
-## API documentation
+Integration tests require a migrated test database:
 
-With the backend running:
-
-```text
-Swagger UI:  http://localhost:8000/api-docs
-OpenAPI JSON: http://localhost:8000/api-docs.json
+```bash
+npm run test:integration
 ```
 
-Documented areas include authentication, users, workspaces, members, ownership transfer, projects, tasks, comments, labels, invitations, notifications, and audit logs.
+Other useful commands:
 
-The stable error envelope is:
+```bash
+npm run format
+npm run format:check
+npm run test:coverage
+npm run test:smoke
+```
+
+## Stable interfaces
+
+The public routes include `/`, `/login`, `/register`, `/invite/:token`, `/app`, and the
+workspace, project, member, activity, and settings routes below `/app/workspaces/:id`.
+
+The backend documents 51 operations in Swagger. Errors retain this envelope:
 
 ```json
 {
@@ -261,73 +234,17 @@ The stable error envelope is:
 }
 ```
 
-## Main routes
-
-```text
-/
-/login
-/register
-/invite/:token
-/app
-/app/workspaces/:workspaceId
-/app/workspaces/:workspaceId/projects
-/app/workspaces/:workspaceId/projects/:projectId
-/app/workspaces/:workspaceId/members
-/app/workspaces/:workspaceId/activity
-/app/workspaces/:workspaceId/settings
-```
-
-## Security controls
-
-- HttpOnly JWT authentication cookie
-- `Secure` cookie in production
-- `SameSite` policy
-- credentialed CORS allowlist
-- Origin/Referer CSRF validation
-- Helmet security headers
-- login, registration, and global API rate limiting
-- 100 KB request-body limit
-- Zod input validation and unknown-field stripping
-- hierarchical workspace RBAC
-- workspace-scoped resource queries
-- hashed invitation tokens
-- stable API error codes
-- hidden production stack traces
-- readiness and liveness probes
-- graceful server and database shutdown
+Security controls include HttpOnly production cookies, credentialed CORS, Origin/Referer
+CSRF validation, rate limiting, Helmet headers, Zod validation, tenant-scoped queries,
+hierarchical RBAC, hashed invitation tokens, bounded request bodies, stable error codes,
+health probes, and graceful shutdown.
 
 ## Deployment
 
-A concrete Vercel + Render + Neon guide is included in [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
-
-Included deployment assets:
-
-- `render.yaml` for the Express API
-- `frontend/vercel.json` for native Next.js detection and legacy output reset
-- frontend production environment example
-- production smoke-test command
-- frontend and backend GitHub Actions verification
-- existing Neon migration and preview-environment workflows
-
-## Portfolio finishing checklist
-
-After deployment, add these repository-only assets:
-
-1. live frontend and API documentation URLs
-2. demo password used by the deployed seed
-3. six polished screenshots
-4. a 60–90 second two-browser collaboration demo
-5. repository social preview image
-6. final measured endpoint, test, and real-time event counts
-
-Do not invent those values before the live deployment is verified.
-
-## Resume bullets
-
-- Built a multi-tenant collaboration platform using React, Express 5, TypeScript, PostgreSQL, Drizzle ORM, and Socket.IO, with hierarchical workspace RBAC and tenant-isolated data access.
-- Designed a GitHub Actions pipeline that provisions isolated Neon database branches for pull requests, applies migrations, and runs authenticated integration tests before merge.
-- Implemented secure cookie authentication, origin validation, rate limiting, audit logging, real-time workspace rooms, task workflows, invitations, notifications, and production health checks.
+[`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) covers the included Vercel frontend, Render API,
+and Neon PostgreSQL workflow. `render.yaml`, `frontend/vercel.json`, and the GitHub Actions
+workflows remain the deployment sources of truth.
 
 ## Author
 
-**Anugrah Singh**
+Anugrah Singh

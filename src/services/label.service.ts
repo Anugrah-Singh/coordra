@@ -13,7 +13,7 @@ const createHttpError = (message: string, status: number) => {
   });
 };
 
-export const getWorkspaceLabelsFromDb = async (data: {
+export const getWorkspaceLabels = async (data: {
   workspaceId: string;
   page?: string | undefined;
   limit?: string | undefined;
@@ -32,7 +32,7 @@ export const getWorkspaceLabelsFromDb = async (data: {
     .offset(pagination.offset);
 };
 
-export const createLabelInDb = async (data: {
+export const createLabel = async (data: {
   workspaceId: string;
   actorId: string;
   name: string;
@@ -69,7 +69,7 @@ export const createLabelInDb = async (data: {
   });
 };
 
-export const updateLabelInDb = async (data: {
+export const updateLabel = async (data: {
   workspaceId: string;
   labelId: string;
   actorId: string;
@@ -80,12 +80,7 @@ export const updateLabelInDb = async (data: {
     const [existingLabel] = await tx
       .select()
       .from(labels)
-      .where(
-        and(
-          eq(labels.id, data.labelId),
-          eq(labels.workspaceId, data.workspaceId)
-        )
-      )
+      .where(and(eq(labels.id, data.labelId), eq(labels.workspaceId, data.workspaceId)))
       .limit(1);
 
     if (!existingLabel) {
@@ -105,12 +100,7 @@ export const updateLabelInDb = async (data: {
     const [updatedLabel] = await tx
       .update(labels)
       .set(updateData)
-      .where(
-        and(
-          eq(labels.id, data.labelId),
-          eq(labels.workspaceId, data.workspaceId)
-        )
-      )
+      .where(and(eq(labels.id, data.labelId), eq(labels.workspaceId, data.workspaceId)))
       .returning();
 
     if (!updatedLabel) {
@@ -137,7 +127,7 @@ export const updateLabelInDb = async (data: {
   });
 };
 
-export const deleteLabelInDb = async (data: {
+export const deleteLabel = async (data: {
   workspaceId: string;
   labelId: string;
   actorId: string;
@@ -146,12 +136,7 @@ export const deleteLabelInDb = async (data: {
     const [existingLabel] = await tx
       .select()
       .from(labels)
-      .where(
-        and(
-          eq(labels.id, data.labelId),
-          eq(labels.workspaceId, data.workspaceId)
-        )
-      )
+      .where(and(eq(labels.id, data.labelId), eq(labels.workspaceId, data.workspaceId)))
       .limit(1);
 
     if (!existingLabel) {
@@ -160,12 +145,7 @@ export const deleteLabelInDb = async (data: {
 
     const [deletedLabel] = await tx
       .delete(labels)
-      .where(
-        and(
-          eq(labels.id, data.labelId),
-          eq(labels.workspaceId, data.workspaceId)
-        )
-      )
+      .where(and(eq(labels.id, data.labelId), eq(labels.workspaceId, data.workspaceId)))
       .returning();
 
     if (!deletedLabel) {
@@ -219,12 +199,7 @@ const getTaskAndLabelForWorkspace = async (
   const [label] = await tx
     .select()
     .from(labels)
-    .where(
-      and(
-        eq(labels.id, data.labelId),
-        eq(labels.workspaceId, data.workspaceId)
-      )
-    )
+    .where(and(eq(labels.id, data.labelId), eq(labels.workspaceId, data.workspaceId)))
     .limit(1);
 
   if (!label) {
@@ -237,7 +212,7 @@ const getTaskAndLabelForWorkspace = async (
   };
 };
 
-export const getTaskLabelsFromDb = async (data: {
+export const getTaskLabels = async (data: {
   workspaceId: string;
   projectId: string;
   taskId: string;
@@ -283,7 +258,7 @@ export const getTaskLabelsFromDb = async (data: {
     .offset(pagination.offset);
 };
 
-export const addLabelToTaskInDb = async (data: {
+export const addLabelToTask = async (data: {
   workspaceId: string;
   projectId: string;
   taskId: string;
@@ -297,10 +272,7 @@ export const addLabelToTaskInDb = async (data: {
       .select()
       .from(taskLabels)
       .where(
-        and(
-          eq(taskLabels.taskId, data.taskId),
-          eq(taskLabels.labelId, data.labelId)
-        )
+        and(eq(taskLabels.taskId, data.taskId), eq(taskLabels.labelId, data.labelId))
       )
       .limit(1);
 
@@ -330,7 +302,7 @@ export const addLabelToTaskInDb = async (data: {
   });
 };
 
-export const removeLabelFromTaskInDb = async (data: {
+export const removeLabelFromTask = async (data: {
   workspaceId: string;
   projectId: string;
   taskId: string;
@@ -344,10 +316,7 @@ export const removeLabelFromTaskInDb = async (data: {
       .select()
       .from(taskLabels)
       .where(
-        and(
-          eq(taskLabels.taskId, data.taskId),
-          eq(taskLabels.labelId, data.labelId)
-        )
+        and(eq(taskLabels.taskId, data.taskId), eq(taskLabels.labelId, data.labelId))
       )
       .limit(1);
 
@@ -358,10 +327,7 @@ export const removeLabelFromTaskInDb = async (data: {
     await tx
       .delete(taskLabels)
       .where(
-        and(
-          eq(taskLabels.taskId, data.taskId),
-          eq(taskLabels.labelId, data.labelId)
-        )
+        and(eq(taskLabels.taskId, data.taskId), eq(taskLabels.labelId, data.labelId))
       );
 
     await tx.insert(auditLogs).values({

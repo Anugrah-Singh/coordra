@@ -1,2 +1,4 @@
-import { PageSpinner } from "@/components/ui";
-export default function Loading() { return <PageSpinner label="Loading WorkspaceOS" />; }
+import { LoadingState } from '@/components/shared/LoadingState';
+export default function Loading() {
+  return <LoadingState label="Loading WorkspaceOS" page />;
+}

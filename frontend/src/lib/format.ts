@@ -39,11 +39,7 @@ export const humanize = (value: string) =>
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
 
 export const isOverdue = (dueDate: string | null, status?: string) =>
-  Boolean(
-    dueDate &&
-      status !== 'DONE' &&
-      new Date(dueDate).getTime() < Date.now()
-  );
+  Boolean(dueDate && status !== 'DONE' && new Date(dueDate).getTime() < Date.now());
 
 export const toDateTimeLocal = (value: string | null | undefined) => {
   if (!value) {
@@ -52,7 +48,5 @@ export const toDateTimeLocal = (value: string | null | undefined) => {
 
   const date = new Date(value);
   const offset = date.getTimezoneOffset();
-  return new Date(date.getTime() - offset * 60_000)
-    .toISOString()
-    .slice(0, 16);
+  return new Date(date.getTime() - offset * 60_000).toISOString().slice(0, 16);
 };

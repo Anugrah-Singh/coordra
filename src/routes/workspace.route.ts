@@ -13,7 +13,7 @@ import {
   getWorkspaceByIdHandler,
   transferWorkspaceOwnerHandler,
   updateWorkspaceHandler,
-} from '../controllers/workspace.controllers.js';
+} from '../controllers/workspace.controller.js';
 
 import { requireAuth } from '../middlewares/auth.middleware.js';
 
@@ -35,18 +35,9 @@ import {
 
 const router = Router();
 
-router.post(
-  '/',
-  requireAuth,
-  validate(createWorkspaceSchema),
-  createWorkspaceHandler
-);
+router.post('/', requireAuth, validate(createWorkspaceSchema), createWorkspaceHandler);
 
-router.get(
-  '/',
-  requireAuth,
-  getUserWorkspacesHandler
-);
+router.get('/', requireAuth, getUserWorkspacesHandler);
 
 router.get(
   '/:workspaceId',
@@ -80,29 +71,14 @@ router.delete(
   deleteWorkspaceHandler
 );
 
-router.use(
-  '/:workspaceId/audit-logs',
-  auditLogRoutes
-);
+router.use('/:workspaceId/audit-logs', auditLogRoutes);
 
-router.use(
-  '/:workspaceId/labels',
-  labelRoutes
-);
+router.use('/:workspaceId/labels', labelRoutes);
 
-router.use(
-  '/:workspaceId/invites',
-  inviteRoutes
-);
+router.use('/:workspaceId/invites', inviteRoutes);
 
-router.use(
-  '/:workspaceId/members',
-  memberRoutes
-);
+router.use('/:workspaceId/members', memberRoutes);
 
-router.use(
-  '/:workspaceId/projects',
-  projectRoutes
-);
+router.use('/:workspaceId/projects', projectRoutes);
 
 export default router;

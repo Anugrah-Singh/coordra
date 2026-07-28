@@ -19,34 +19,25 @@ type AuthTokenPayload = JwtPayload & {
 const uuidRegex =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-const parseCookies = (
-  cookieHeader?: string
-): Record<string, string> => {
+const parseCookies = (cookieHeader?: string): Record<string, string> => {
   if (!cookieHeader) {
     return {};
   }
 
-  return cookieHeader
-    .split(';')
-    .reduce<Record<string, string>>((cookies, item) => {
-      const [rawName, ...rawValueParts] = item.trim().split('=');
+  return cookieHeader.split(';').reduce<Record<string, string>>((cookies, item) => {
+    const [rawName, ...rawValueParts] = item.trim().split('=');
 
-      if (!rawName) {
-        return cookies;
-      }
-
-      cookies[rawName] = decodeURIComponent(
-        rawValueParts.join('=')
-      );
-
+    if (!rawName) {
       return cookies;
-    }, {});
+    }
+
+    cookies[rawName] = decodeURIComponent(rawValueParts.join('='));
+
+    return cookies;
+  }, {});
 };
 
-const getWorkspaceMembership = async (
-  workspaceId: string,
-  userId: string
-) => {
+const getWorkspaceMembership = async (workspaceId: string, userId: string) => {
   const [membership] = await db
     .select({
       id: workspaceMembers.id,
@@ -78,9 +69,7 @@ export const initSocket = (server: HttpServer): Server => {
 
   socketServer.use((socket, next) => {
     try {
-      const cookies = parseCookies(
-        socket.handshake.headers.cookie
-      );
+      const cookies = parseCookies(socket.handshake.headers.cookie);
 
       const token = cookies[AUTH_COOKIE_NAME];
 
@@ -89,10 +78,7 @@ export const initSocket = (server: HttpServer): Server => {
         return;
       }
 
-      const decoded = jwt.verify(
-        token,
-        env.JWT_SECRET
-      ) as AuthTokenPayload;
+      const decoded = jwt.verify(token, env.JWT_SECRET) as AuthTokenPayload;
 
       if (!decoded.userId) {
         next(new Error('Invalid authentication token'));
@@ -114,65 +100,12 @@ export const initSocket = (server: HttpServer): Server => {
 
     socket.join(userRoom);
 
-    console.log(
-      `Authenticated socket connected: ${socket.id}`
-    );
+    console.log(`Authenticated socket connected: ${socket.id}`);
 
-    console.log(
-      `User ${userId} joined notification room: ${userRoom}`
-    );
+    console.log(`User ${userId} joined notification room: ${userRoom}`);
 
-    socket.on(
-      'join_workspace',
-      async (workspaceId: string) => {
-        try {
-          if (!uuidRegex.test(workspaceId)) {
-            socket.emit('workspace_error', {
-              message: 'Invalid workspace ID',
-            });
-            return;
-          }
-
-          const membership =
-            await getWorkspaceMembership(
-              workspaceId,
-              userId
-            );
-
-          if (!membership) {
-            socket.emit('workspace_error', {
-              message:
-                'You do not have access to this workspace',
-            });
-            return;
-          }
-
-          socket.join(workspaceId);
-
-          socket.emit('workspace_joined', {
-            workspaceId,
-            role: membership.role,
-          });
-
-          console.log(
-            `User ${userId} joined workspace room ${workspaceId}`
-          );
-        } catch (error) {
-          console.error(
-            '[Socket join_workspace error]:',
-            error
-          );
-
-          socket.emit('workspace_error', {
-            message: 'Failed to join workspace',
-          });
-        }
-      }
-    );
-
-    socket.on(
-      'leave_workspace',
-      (workspaceId: string) => {
+    socket.on('join_workspace', async (workspaceId: string) => {
+      try {
         if (!uuidRegex.test(workspaceId)) {
           socket.emit('workspace_error', {
             message: 'Invalid workspace ID',
@@ -180,22 +113,51 @@ export const initSocket = (server: HttpServer): Server => {
           return;
         }
 
-        socket.leave(workspaceId);
+        const membership = await getWorkspaceMembership(workspaceId, userId);
 
-        socket.emit('workspace_left', {
+        if (!membership) {
+          socket.emit('workspace_error', {
+            message: 'You do not have access to this workspace',
+          });
+          return;
+        }
+
+        socket.join(workspaceId);
+
+        socket.emit('workspace_joined', {
           workspaceId,
+          role: membership.role,
         });
 
-        console.log(
-          `User ${userId} left workspace room ${workspaceId}`
-        );
+        console.log(`User ${userId} joined workspace room ${workspaceId}`);
+      } catch (error) {
+        console.error('[Socket join_workspace error]:', error);
+
+        socket.emit('workspace_error', {
+          message: 'Failed to join workspace',
+        });
       }
-    );
+    });
+
+    socket.on('leave_workspace', (workspaceId: string) => {
+      if (!uuidRegex.test(workspaceId)) {
+        socket.emit('workspace_error', {
+          message: 'Invalid workspace ID',
+        });
+        return;
+      }
+
+      socket.leave(workspaceId);
+
+      socket.emit('workspace_left', {
+        workspaceId,
+      });
+
+      console.log(`User ${userId} left workspace room ${workspaceId}`);
+    });
 
     socket.on('disconnect', (reason) => {
-      console.log(
-        `Socket disconnected: ${socket.id}; reason: ${reason}`
-      );
+      console.log(`Socket disconnected: ${socket.id}; reason: ${reason}`);
     });
   });
 
@@ -210,23 +172,21 @@ export const getIo = (): Server => {
   return io;
 };
 
-export const getIoIfInitialized =
-  (): Server | undefined => {
-    return io;
-  };
+export const getIoIfInitialized = (): Server | undefined => {
+  return io;
+};
 
-export const closeSocketServer =
-  async (): Promise<void> => {
-    if (!io) {
-      return;
-    }
+export const closeSocketServer = async (): Promise<void> => {
+  if (!io) {
+    return;
+  }
 
-    const socketServer = io;
-    io = undefined;
+  const socketServer = io;
+  io = undefined;
 
-    await new Promise<void>((resolve) => {
-      socketServer.close(() => {
-        resolve();
-      });
+  await new Promise<void>((resolve) => {
+    socketServer.close(() => {
+      resolve();
     });
-  };
+  });
+};

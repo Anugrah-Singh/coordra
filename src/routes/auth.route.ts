@@ -1,9 +1,9 @@
 import { Router } from 'express';
 
 import {
-  getMe,
-  login,
-  logout,
+  getMeHandler,
+  loginHandler,
+  logoutHandler,
 } from '../controllers/auth.controller.js';
 
 import { requireAuth } from '../middlewares/auth.middleware.js';
@@ -16,22 +16,10 @@ import { loginSchema } from '../schemas/auth.schema.js';
 
 const router = Router();
 
-router.post(
-  '/login',
-  loginRateLimiter,
-  validate(loginSchema),
-  login
-);
+router.post('/login', loginRateLimiter, validate(loginSchema), loginHandler);
 
-router.post(
-  '/logout',
-  logout
-);
+router.post('/logout', logoutHandler);
 
-router.get(
-  '/me',
-  requireAuth,
-  getMe
-);
+router.get('/me', requireAuth, getMeHandler);
 
 export default router;

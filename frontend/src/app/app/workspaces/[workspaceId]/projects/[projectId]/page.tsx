@@ -1,2 +1,4 @@
-import { ProjectBoardPage } from "@/views/ProjectBoardPage";
-export default function Page() { return <ProjectBoardPage />; }
+import { ProjectBoardPage } from '@/features/projects/ProjectBoardPage';
+export default function Page() {
+  return <ProjectBoardPage />;
+}

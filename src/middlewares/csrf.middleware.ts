@@ -1,20 +1,10 @@
-import {
-  NextFunction,
-  Request,
-  Response,
-} from 'express';
+import { NextFunction, Request, Response } from 'express';
 
 import { env } from '../config/env.js';
 
-import {
-  APP_ERROR_CODES,
-} from '../utils/AppError.js';
+import { APP_ERROR_CODES } from '../utils/AppError.js';
 
-const SAFE_METHODS = new Set([
-  'GET',
-  'HEAD',
-  'OPTIONS',
-]);
+const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 
 type RequestOriginResult =
   | {
@@ -28,9 +18,7 @@ type RequestOriginResult =
       status: 'invalid';
     };
 
-const getRequestOrigin = (
-  req: Request
-): RequestOriginResult => {
+const getRequestOrigin = (req: Request): RequestOriginResult => {
   const origin = req.get('origin');
 
   if (origin) {
@@ -66,10 +54,7 @@ const getRequestOrigin = (
   }
 };
 
-const sendOriginError = (
-  res: Response,
-  message: string
-): void => {
+const sendOriginError = (res: Response, message: string): void => {
   res.status(403).json({
     success: false,
     code: APP_ERROR_CODES.FORBIDDEN,
@@ -87,51 +72,29 @@ export const requireTrustedOrigin = (
     return;
   }
 
-  const requestOrigin =
-    getRequestOrigin(req);
+  const requestOrigin = getRequestOrigin(req);
 
-  if (
-    requestOrigin.status === 'invalid'
-  ) {
-    sendOriginError(
-      res,
-      'Request origin could not be verified'
-    );
+  if (requestOrigin.status === 'invalid') {
+    sendOriginError(res, 'Request origin could not be verified');
 
     return;
   }
 
-  if (
-    requestOrigin.status === 'missing'
-  ) {
-    if (
-      env.NODE_ENV !== 'production'
-    ) {
+  if (requestOrigin.status === 'missing') {
+    if (env.NODE_ENV !== 'production') {
       next();
       return;
     }
 
-    sendOriginError(
-      res,
-      'Request origin could not be verified'
-    );
+    sendOriginError(res, 'Request origin could not be verified');
 
     return;
   }
 
-  const trustedOrigin =
-    new URL(
-      env.FRONTEND_URL
-    ).origin;
+  const trustedOrigin = new URL(env.FRONTEND_URL).origin;
 
-  if (
-    requestOrigin.value !==
-    trustedOrigin
-  ) {
-    sendOriginError(
-      res,
-      'Request origin is not allowed'
-    );
+  if (requestOrigin.value !== trustedOrigin) {
+    sendOriginError(res, 'Request origin is not allowed');
 
     return;
   }

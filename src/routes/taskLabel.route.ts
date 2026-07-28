@@ -9,10 +9,7 @@ import {
 
 import { validate } from '../middlewares/validate.middleware.js';
 
-import {
-  taskLabelParamsSchema,
-  taskLabelsListSchema,
-} from '../schemas/label.schema.js';
+import { taskLabelParamsSchema, taskLabelsListSchema } from '../schemas/label.schema.js';
 
 import {
   addLabelToTaskHandler,

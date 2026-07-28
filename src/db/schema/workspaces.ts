@@ -1,20 +1,13 @@
-import {
-  pgTable,
-  uuid,
-  text,
-  timestamp,
-  pgEnum,
-  uniqueIndex,
-} from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, timestamp, pgEnum, uniqueIndex } from 'drizzle-orm/pg-core';
 
 import { users } from './users.js';
 
 export const roleEnum = pgEnum('workspace_role', [
-    'OWNER',
-    'ADMIN',
-    'MANAGER',
-    'MEMBER',
-    'VIEWER',
+  'OWNER',
+  'ADMIN',
+  'MANAGER',
+  'MEMBER',
+  'VIEWER',
 ]);
 
 export const workspaces = pgTable('workspaces', {
@@ -24,9 +17,11 @@ export const workspaces = pgTable('workspaces', {
 
   slug: text('slug').notNull().unique(),
 
-  ownerId: uuid('owner_id').references(() => users.id, {
-    onDelete: 'restrict',
-  }).notNull(),
+  ownerId: uuid('owner_id')
+    .references(() => users.id, {
+      onDelete: 'restrict',
+    })
+    .notNull(),
 
   createdAt: timestamp('created_at').defaultNow().notNull(),
 
@@ -57,9 +52,6 @@ export const workspaceMembers = pgTable(
     removedAt: timestamp('removed_at'),
   },
   (table) => [
-    uniqueIndex('workspace_user_unique_idx').on(
-      table.workspaceId,
-      table.userId
-    ),
+    uniqueIndex('workspace_user_unique_idx').on(table.workspaceId, table.userId),
   ]
 );

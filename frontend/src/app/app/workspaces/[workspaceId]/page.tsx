@@ -1,2 +1,4 @@
-import { WorkspaceDashboardPage } from "@/views/WorkspaceDashboardPage";
-export default function Page() { return <WorkspaceDashboardPage />; }
+import { WorkspaceDashboardPage } from '@/features/workspaces/WorkspaceDashboardPage';
+export default function Page() {
+  return <WorkspaceDashboardPage />;
+}
