@@ -303,7 +303,7 @@ A concrete Vercel + Render + Neon guide is included in [`docs/DEPLOYMENT.md`](do
 Included deployment assets:
 
 - `render.yaml` for the Express API
-- native Vercel Next.js routing from the `frontend/` root
+- `frontend/vercel.json` for native Next.js detection and legacy output reset
 - frontend production environment example
 - production smoke-test command
 - frontend and backend GitHub Actions verification

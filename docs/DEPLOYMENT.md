@@ -37,8 +37,9 @@ Set:
 NEXT_PUBLIC_API_URL=https://<api-host>
 ```
 
-No `vercel.json` rewrite is required. Vercel detects the Next.js App Router
-from `frontend/` and serves static and dynamic routes natively.
+The included `frontend/vercel.json` explicitly selects the Next.js framework
+and clears any legacy Vite `dist` output override. It contains no SPA rewrites;
+Vercel serves App Router routes natively.
 
 ## 3. Cookie and cross-origin checks
 
