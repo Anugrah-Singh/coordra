@@ -15,6 +15,13 @@
       "when": 1785681971813,
       "tag": "0001_ai_action_proposals",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1785702100710,
+      "tag": "0002_converge_workspace_ownership",
+      "breakpoints": true
     }
   ]
 }
