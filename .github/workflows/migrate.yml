@@ -1,11 +1,13 @@
 name: Production Database Migration
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
     paths:
       - 'src/db/schema/**'
+      - 'src/db/migrate.ts'
       - 'drizzle/**'
 
 jobs:
