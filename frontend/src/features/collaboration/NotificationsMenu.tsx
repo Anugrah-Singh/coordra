@@ -23,12 +23,6 @@ export const NotificationsMenu = ({
     queryFn: () => notificationApi.list(workspaceId),
   });
 
-  const countQuery = useQuery({
-    queryKey: ['notifications', 'unread-count', workspaceId ?? 'all'],
-    queryFn: () => notificationApi.unreadCount(workspaceId),
-    refetchInterval: 60_000,
-  });
-
   const markReadMutation = useMutation({
     mutationFn: notificationApi.markRead,
     onSuccess: () => {
@@ -52,9 +46,11 @@ export const NotificationsMenu = ({
           aria-label="Notifications"
         >
           <Bell size={19} />
-          {(countQuery.data?.count ?? 0) > 0 ? (
+          {(notificationsQuery.data?.unreadCount ?? 0) > 0 ? (
             <span className="absolute -right-0.5 -top-0.5 grid min-w-4 place-items-center rounded-full bg-destructive px-1 font-mono text-[9px] text-destructive-foreground">
-              {(countQuery.data?.count ?? 0) > 9 ? '9+' : countQuery.data?.count}
+              {(notificationsQuery.data?.unreadCount ?? 0) > 9
+                ? '9+'
+                : notificationsQuery.data?.unreadCount}
             </span>
           ) : null}
         </button>
@@ -66,12 +62,12 @@ export const NotificationsMenu = ({
         <header className="flex items-start justify-between gap-3 border-b p-4 [&_h3]:font-heading [&_h3]:font-semibold [&_p]:text-xs [&_p]:text-muted-foreground">
           <div>
             <h3>Notifications</h3>
-            <p>{countQuery.data?.count ?? 0} unread</p>
+            <p>{notificationsQuery.data?.unreadCount ?? 0} unread</p>
           </div>
           <LoadingButton
             variant="ghost"
             size="sm"
-            disabled={(countQuery.data?.count ?? 0) === 0}
+            disabled={(notificationsQuery.data?.unreadCount ?? 0) === 0}
             isLoading={markAllMutation.isPending}
             onClick={() => markAllMutation.mutate()}
           >
@@ -83,7 +79,7 @@ export const NotificationsMenu = ({
           {notificationsQuery.isLoading ? (
             <Spinner label="Loading notifications" />
           ) : null}
-          {notificationsQuery.data?.map((notification) => (
+          {notificationsQuery.data?.notifications.map((notification) => (
             <button
               key={notification.id}
               className={cn(
@@ -102,7 +98,8 @@ export const NotificationsMenu = ({
               </span>
             </button>
           ))}
-          {!notificationsQuery.isLoading && notificationsQuery.data?.length === 0 ? (
+          {!notificationsQuery.isLoading &&
+          notificationsQuery.data?.notifications.length === 0 ? (
             <EmptyState
               title="All caught up"
               description="New workspace activity will appear here."

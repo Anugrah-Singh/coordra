@@ -15,18 +15,11 @@ import { db } from './db/index.js';
 import { requireTrustedOrigin } from './middlewares/csrf.middleware.js';
 
 import { globalErrorHandler } from './middlewares/error.middleware.js';
+import { enforceApiEnvelope } from './middlewares/envelope.middleware.js';
 
 import { apiRateLimiter } from './middlewares/rateLimit.middleware.js';
 
-import authRoutes from './routes/auth.route.js';
-
-import inviteTokenRoutes from './routes/inviteToken.route.js';
-
-import notificationRoutes from './routes/notification.route.js';
-
-import userRoutes from './routes/user.route.js';
-
-import workspaceRoutes from './routes/workspace.route.js';
+import { apiRouter } from './domains/api.js';
 
 import { APP_ERROR_CODES } from './utils/AppError.js';
 
@@ -59,7 +52,7 @@ export const createApp = (readinessState: AppReadinessState = defaultReadinessSt
     '/api-docs',
     swaggerUi.serve,
     swaggerUi.setup(openApiDocument, {
-      customSiteTitle: 'SaaS Team Workspace API',
+      customSiteTitle: 'Coordra API',
     })
   );
 
@@ -74,6 +67,8 @@ export const createApp = (readinessState: AppReadinessState = defaultReadinessSt
   );
 
   app.use(cookieParser());
+
+  app.use('/api', enforceApiEnvelope);
 
   app.use('/api', requireTrustedOrigin);
 
@@ -141,15 +136,7 @@ export const createApp = (readinessState: AppReadinessState = defaultReadinessSt
     });
   });
 
-  app.use('/api/auth', authRoutes);
-
-  app.use('/api/users', userRoutes);
-
-  app.use('/api/notifications', notificationRoutes);
-
-  app.use('/api/workspace-invites', inviteTokenRoutes);
-
-  app.use('/api/workspaces', workspaceRoutes);
+  app.use('/api', apiRouter);
 
   app.use((req: Request, res: Response) => {
     res.status(404).json({

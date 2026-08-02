@@ -75,7 +75,7 @@ after(async () => {
 describe('Workspace HTTP integration', () => {
   it('enforces membership, authorization, removal, and owner-only deletion', async () => {
     const ownerRegistration = await request(app)
-      .post('/api/users')
+      .post('/api/auth/register')
       .send({
         email: ownerEmail,
         password,
@@ -113,7 +113,7 @@ describe('Workspace HTTP integration', () => {
     assert.equal(ownerWorkspaceRead.body.data.id, workspaceId);
 
     const memberRegistration = await request(app)
-      .post('/api/users')
+      .post('/api/auth/register')
       .send({
         email: memberEmail,
         password,

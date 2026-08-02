@@ -14,7 +14,7 @@ export const authApi = {
   register: (input: { email: string; password: string; fullName: string }) =>
     request<User>({
       method: 'POST',
-      url: '/api/users',
+      url: '/api/auth/register',
       data: input,
     }),
 

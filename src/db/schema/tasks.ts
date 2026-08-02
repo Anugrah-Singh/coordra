@@ -56,8 +56,6 @@ export const tasks = pgTable(
 
     archivedAt: timestamp('archived_at'),
 
-    duplicatedFromTaskId: uuid('duplicated_from_task_id'),
-
     createdAt: timestamp('created_at').defaultNow().notNull(),
 
     updatedAt: timestamp('updated_at').defaultNow().notNull(),

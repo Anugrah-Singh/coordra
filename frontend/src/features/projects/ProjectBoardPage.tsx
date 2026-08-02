@@ -82,7 +82,7 @@ export const ProjectBoardPage = () => {
 
   const statusMutation = useMutation({
     mutationFn: ({ task, status }: { task: Task; status: TaskStatus }) =>
-      taskApi.updateStatus(workspaceId, projectId, task.id, status),
+      taskApi.update(workspaceId, projectId, task.id, { status }),
     onMutate: async ({ task, status }) => {
       await queryClient.cancelQueries({ queryKey: ['tasks', workspaceId, projectId] });
       const snapshots = queryClient.getQueriesData<Task[]>({

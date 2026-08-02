@@ -33,6 +33,21 @@ export const conflict = (message: string): AppError =>
     code: APP_ERROR_CODES.CONFLICT,
   });
 
+export const gone = (message: string): AppError =>
+  new AppError(message, {
+    statusCode: 410,
+    code: APP_ERROR_CODES.GONE,
+  });
+
+export const serviceUnavailable = (
+  message: string,
+  code: typeof APP_ERROR_CODES.AI_DISABLED | typeof APP_ERROR_CODES.AI_PROVIDER_ERROR
+): AppError =>
+  new AppError(message, {
+    statusCode: 503,
+    code,
+  });
+
 export const internalError = (
   message = 'Internal server error',
   cause?: unknown

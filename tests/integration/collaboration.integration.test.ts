@@ -69,7 +69,7 @@ after(async () => {
 describe('Project and task collaboration integration', () => {
   it('covers projects, tasks, labels, comments, notifications, and RBAC', async () => {
     const ownerRegistration = await request(app)
-      .post('/api/users')
+      .post('/api/auth/register')
       .send({
         email: ownerEmail,
         password,
@@ -99,7 +99,7 @@ describe('Project and task collaboration integration', () => {
     assert.ok(workspaceId);
 
     const memberRegistration = await request(app)
-      .post('/api/users')
+      .post('/api/auth/register')
       .send({
         email: memberEmail,
         password,
@@ -160,9 +160,7 @@ describe('Project and task collaboration integration', () => {
     // TASK_ASSIGNED notification.
     await ownerAgent
       .patch(
-        `/api/workspaces/${workspaceId}` +
-          `/projects/${projectId}` +
-          `/tasks/${taskId}/assign`
+        `/api/workspaces/${workspaceId}` + `/projects/${projectId}` + `/tasks/${taskId}`
       )
       .send({
         assigneeId: memberUserId,
@@ -170,13 +168,13 @@ describe('Project and task collaboration integration', () => {
       .expect(200);
 
     const unreadCount = await memberAgent
-      .get('/api/notifications/unread-count')
+      .get('/api/notifications')
       .query({
         workspaceId,
       })
       .expect(200);
 
-    assert.equal(unreadCount.body.data.count, 1);
+    assert.equal(unreadCount.body.data.unreadCount, 1);
 
     const notificationList = await memberAgent
       .get('/api/notifications')
@@ -188,9 +186,9 @@ describe('Project and task collaboration integration', () => {
       })
       .expect(200);
 
-    assert.ok(Array.isArray(notificationList.body.data));
+    assert.ok(Array.isArray(notificationList.body.data.notifications));
 
-    const assignmentNotification = notificationList.body.data.find(
+    const assignmentNotification = notificationList.body.data.notifications.find(
       (notification: { id: string; type: string; resourceId: string | null }) =>
         notification.type === 'TASK_ASSIGNED' && notification.resourceId === taskId
     );
@@ -202,19 +200,17 @@ describe('Project and task collaboration integration', () => {
       .expect(200);
 
     const countAfterRead = await memberAgent
-      .get('/api/notifications/unread-count')
+      .get('/api/notifications')
       .query({
         workspaceId,
       })
       .expect(200);
 
-    assert.equal(countAfterRead.body.data.count, 0);
+    assert.equal(countAfterRead.body.data.unreadCount, 0);
 
     const statusUpdate = await memberAgent
       .patch(
-        `/api/workspaces/${workspaceId}` +
-          `/projects/${projectId}` +
-          `/tasks/${taskId}/status`
+        `/api/workspaces/${workspaceId}` + `/projects/${projectId}` + `/tasks/${taskId}`
       )
       .send({
         status: 'IN_PROGRESS',
@@ -234,13 +230,13 @@ describe('Project and task collaboration integration', () => {
     const labelId = labelCreation.body.data.id as string;
 
     await memberAgent
-      .post(
+      .put(
         `/api/workspaces/${workspaceId}` +
           `/projects/${projectId}` +
-          `/tasks/${taskId}` +
-          `/labels/${labelId}`
+          `/tasks/${taskId}/labels`
       )
-      .expect(201);
+      .send({ labelIds: [labelId] })
+      .expect(200);
 
     const taskLabels = await memberAgent
       .get(
@@ -298,10 +294,9 @@ describe('Project and task collaboration integration', () => {
 
     await memberAgent
       .patch(
-        `/api/workspaces/${workspaceId}` +
-          `/projects/${projectId}` +
-          `/tasks/${taskId}/archive`
+        `/api/workspaces/${workspaceId}` + `/projects/${projectId}` + `/tasks/${taskId}`
       )
+      .send({ archived: true })
       .expect(200);
 
     const activeTaskList = await memberAgent
@@ -333,10 +328,9 @@ describe('Project and task collaboration integration', () => {
 
     await memberAgent
       .patch(
-        `/api/workspaces/${workspaceId}` +
-          `/projects/${projectId}` +
-          `/tasks/${taskId}/unarchive`
+        `/api/workspaces/${workspaceId}` + `/projects/${projectId}` + `/tasks/${taskId}`
       )
+      .send({ archived: false })
       .expect(200);
 
     const duplication = await ownerAgent
@@ -347,9 +341,8 @@ describe('Project and task collaboration integration', () => {
       )
       .expect(201);
 
-    assert.equal(duplication.body.data.duplicatedFromTaskId, taskId);
-
     assert.equal(duplication.body.data.status, 'BACKLOG');
+    assert.match(duplication.body.data.title, /\(Copy\)$/);
 
     // Project deletion requires MANAGER or above.
     await memberAgent

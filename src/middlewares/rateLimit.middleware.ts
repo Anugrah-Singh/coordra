@@ -1,4 +1,4 @@
-import { rateLimit } from 'express-rate-limit';
+import { ipKeyGenerator, rateLimit } from 'express-rate-limit';
 
 import { APP_ERROR_CODES } from '../utils/AppError.js';
 
@@ -79,4 +79,36 @@ export const inviteCreationRateLimiter = createRateLimiter({
   identifier: 'workspace-invites',
 
   message: 'Too many workspace invites created. Please try again later.',
+});
+
+export const assistantUserRateLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  limit: 20,
+  standardHeaders: 'draft-8',
+  legacyHeaders: false,
+  identifier: 'pulse-user',
+  keyGenerator: (req) =>
+    (req as typeof req & { authenticatedUserId?: string }).authenticatedUserId ??
+    ipKeyGenerator(req.ip ?? 'unknown'),
+  statusCode: 429,
+  message: {
+    success: false,
+    code: APP_ERROR_CODES.RATE_LIMITED,
+    message: 'Pulse has reached the hourly limit for this account.',
+  },
+});
+
+export const assistantIpRateLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  limit: 100,
+  standardHeaders: 'draft-8',
+  legacyHeaders: false,
+  identifier: 'pulse-ip',
+  keyGenerator: (req) => ipKeyGenerator(req.ip ?? 'unknown'),
+  statusCode: 429,
+  message: {
+    success: false,
+    code: APP_ERROR_CODES.RATE_LIMITED,
+    message: 'Pulse has reached the hourly network limit.',
+  },
 });

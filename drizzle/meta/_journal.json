@@ -5,36 +5,15 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1783005711931,
-      "tag": "0000_cooing_jigsaw",
+      "when": 1785672614430,
+      "tag": "0000_initial",
       "breakpoints": true
     },
     {
       "idx": 1,
       "version": "7",
-      "when": 1783468510993,
-      "tag": "0001_overrated_wild_pack",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1783468793733,
-      "tag": "0002_backfill-workspace-owner-id",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1783516990469,
-      "tag": "0003_many_bill_hollister",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1783951190989,
-      "tag": "0004_flaky_corsair",
+      "when": 1785681971813,
+      "tag": "0001_ai_action_proposals",
       "breakpoints": true
     }
   ]

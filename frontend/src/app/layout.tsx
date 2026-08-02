@@ -14,11 +14,11 @@ const mono = IBM_Plex_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: 'WorkspaceOS — Calm operations for focused teams',
-    template: '%s · WorkspaceOS',
+    default: 'Coordra — Coordinate projects, people and priorities',
+    template: '%s · Coordra',
   },
   description:
-    'Plan projects, coordinate live work, and keep team operations accountable in one workspace.',
+    'An AI-assisted workspace for coordinating projects, people, and priorities.',
 };
 
 export default function RootLayout({

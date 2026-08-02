@@ -1,6 +1,6 @@
 {
-  "id": "c3d1564d-d557-4409-82c5-beee57a0e4be",
-  "prevId": "5f9d0019-4fa6-491c-8ca2-ab6ca03b1f11",
+  "id": "dd605091-bf84-4706-ba3f-ba2b7b879e3f",
+  "prevId": "cefcacce-8e0d-460a-a52c-df2b4f804f6f",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -101,12 +101,6 @@
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
-        },
-        "removed_at": {
-          "name": "removed_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": false
         }
       },
       "indexes": {
@@ -127,6 +121,22 @@
             }
           ],
           "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "workspace_single_owner_idx": {
+          "name": "workspace_single_owner_idx",
+          "columns": [
+            {
+              "expression": "workspace_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"workspace_members\".\"role\" = 'OWNER'",
           "concurrently": false,
           "method": "btree",
           "with": {}
@@ -189,12 +199,6 @@
           "primaryKey": false,
           "notNull": true
         },
-        "owner_id": {
-          "name": "owner_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp",
@@ -211,21 +215,7 @@
         }
       },
       "indexes": {},
-      "foreignKeys": {
-        "workspaces_owner_id_users_id_fk": {
-          "name": "workspaces_owner_id_users_id_fk",
-          "tableFrom": "workspaces",
-          "tableTo": "users",
-          "columnsFrom": [
-            "owner_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "restrict",
-          "onUpdate": "no action"
-        }
-      },
+      "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "workspaces_slug_unique": {
@@ -327,7 +317,7 @@
           "name": "project_id",
           "type": "uuid",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "assignee_id": {
           "name": "assignee_id",
@@ -378,12 +368,6 @@
         "archived_at": {
           "name": "archived_at",
           "type": "timestamp",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "duplicated_from_task_id": {
-          "name": "duplicated_from_task_id",
-          "type": "uuid",
           "primaryKey": false,
           "notNull": false
         },
@@ -503,7 +487,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "set null",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         },
         "tasks_assignee_id_users_id_fk": {
@@ -1310,6 +1294,166 @@
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
+    },
+    "public.ai_action_proposals": {
+      "name": "ai_action_proposals",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "workspace_id": {
+          "name": "workspace_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "requester_id": {
+          "name": "requester_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "action_type": {
+          "name": "action_type",
+          "type": "ai_action_type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "payload": {
+          "name": "payload",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "ai_action_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'PENDING'"
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "executed_at": {
+          "name": "executed_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "ai_action_proposals_workspace_idx": {
+          "name": "ai_action_proposals_workspace_idx",
+          "columns": [
+            {
+              "expression": "workspace_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "ai_action_proposals_requester_idx": {
+          "name": "ai_action_proposals_requester_idx",
+          "columns": [
+            {
+              "expression": "requester_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "ai_action_proposals_status_idx": {
+          "name": "ai_action_proposals_status_idx",
+          "columns": [
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "ai_action_proposals_expiry_idx": {
+          "name": "ai_action_proposals_expiry_idx",
+          "columns": [
+            {
+              "expression": "expires_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "ai_action_proposals_workspace_id_workspaces_id_fk": {
+          "name": "ai_action_proposals_workspace_id_workspaces_id_fk",
+          "tableFrom": "ai_action_proposals",
+          "tableTo": "workspaces",
+          "columnsFrom": [
+            "workspace_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "ai_action_proposals_requester_id_users_id_fk": {
+          "name": "ai_action_proposals_requester_id_users_id_fk",
+          "tableFrom": "ai_action_proposals",
+          "tableTo": "users",
+          "columnsFrom": [
+            "requester_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
     }
   },
   "enums": {
@@ -1351,7 +1495,6 @@
       "values": [
         "TASK_ASSIGNED",
         "COMMENT_MENTION",
-        "PROHECT_UPDATE",
         "TASK_STATUS_CHANGED",
         "COMMENT_ADDED",
         "MEMBER_INVITED",
@@ -1366,6 +1509,27 @@
         "ACCEPTED",
         "DECLINED",
         "EXPIRED"
+      ]
+    },
+    "public.ai_action_status": {
+      "name": "ai_action_status",
+      "schema": "public",
+      "values": [
+        "PENDING",
+        "APPROVED",
+        "REJECTED",
+        "EXPIRED",
+        "EXECUTED",
+        "FAILED"
+      ]
+    },
+    "public.ai_action_type": {
+      "name": "ai_action_type",
+      "schema": "public",
+      "values": [
+        "CREATE_TASK",
+        "UPDATE_TASK",
+        "ADD_COMMENT"
       ]
     }
   },

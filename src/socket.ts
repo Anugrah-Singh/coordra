@@ -1,6 +1,6 @@
 import { Server as HttpServer } from 'node:http';
 
-import { and, eq, isNull } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import { Server, Socket } from 'socket.io';
 
@@ -47,8 +47,7 @@ const getWorkspaceMembership = async (workspaceId: string, userId: string) => {
     .where(
       and(
         eq(workspaceMembers.workspaceId, workspaceId),
-        eq(workspaceMembers.userId, userId),
-        isNull(workspaceMembers.removedAt)
+        eq(workspaceMembers.userId, userId)
       )
     )
     .limit(1);
@@ -104,10 +103,10 @@ export const initSocket = (server: HttpServer): Server => {
 
     console.log(`User ${userId} joined notification room: ${userRoom}`);
 
-    socket.on('join_workspace', async (workspaceId: string) => {
+    socket.on('workspace:join', async (workspaceId: string) => {
       try {
         if (!uuidRegex.test(workspaceId)) {
-          socket.emit('workspace_error', {
+          socket.emit('workspace:error', {
             message: 'Invalid workspace ID',
           });
           return;
@@ -116,7 +115,7 @@ export const initSocket = (server: HttpServer): Server => {
         const membership = await getWorkspaceMembership(workspaceId, userId);
 
         if (!membership) {
-          socket.emit('workspace_error', {
+          socket.emit('workspace:error', {
             message: 'You do not have access to this workspace',
           });
           return;
@@ -124,24 +123,24 @@ export const initSocket = (server: HttpServer): Server => {
 
         socket.join(workspaceId);
 
-        socket.emit('workspace_joined', {
+        socket.emit('workspace:joined', {
           workspaceId,
           role: membership.role,
         });
 
         console.log(`User ${userId} joined workspace room ${workspaceId}`);
       } catch (error) {
-        console.error('[Socket join_workspace error]:', error);
+        console.error('[Socket workspace:join error]:', error);
 
-        socket.emit('workspace_error', {
+        socket.emit('workspace:error', {
           message: 'Failed to join workspace',
         });
       }
     });
 
-    socket.on('leave_workspace', (workspaceId: string) => {
+    socket.on('workspace:leave', (workspaceId: string) => {
       if (!uuidRegex.test(workspaceId)) {
-        socket.emit('workspace_error', {
+        socket.emit('workspace:error', {
           message: 'Invalid workspace ID',
         });
         return;
@@ -149,7 +148,7 @@ export const initSocket = (server: HttpServer): Server => {
 
       socket.leave(workspaceId);
 
-      socket.emit('workspace_left', {
+      socket.emit('workspace:left', {
         workspaceId,
       });
 

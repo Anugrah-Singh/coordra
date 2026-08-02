@@ -68,7 +68,7 @@ const registerAndLogin = async (
   }
 ): Promise<string> => {
   const registration = await request(app)
-    .post('/api/users')
+    .post('/api/auth/register')
     .send({
       email: data.email,
       password,
@@ -226,7 +226,6 @@ describe('Workspace invite integration', () => {
     const [membership] = await db
       .select({
         role: workspaceMembers.role,
-        removedAt: workspaceMembers.removedAt,
       })
       .from(workspaceMembers)
       .where(
@@ -238,8 +237,6 @@ describe('Workspace invite integration', () => {
       .limit(1);
 
     assert.equal(membership?.role, 'MANAGER');
-
-    assert.equal(membership?.removedAt, null);
 
     const [storedInvite] = await db
       .select({
@@ -253,7 +250,7 @@ describe('Workspace invite integration', () => {
     assert.equal(storedInvite?.status, 'ACCEPTED');
   });
 
-  it('reactivates a previously removed member', async () => {
+  it('allows a previously removed member to rejoin', async () => {
     assert.ok(workspaceId);
 
     const [membership] = await db
@@ -284,11 +281,9 @@ describe('Workspace invite integration', () => {
       .post(`/api/workspace-invites/${token}/accept`)
       .expect(200);
 
-    assert.equal(acceptance.body.data.membership.id, membership.id);
+    assert.notEqual(acceptance.body.data.membership.id, membership.id);
 
     assert.equal(acceptance.body.data.membership.role, 'VIEWER');
-
-    assert.equal(acceptance.body.data.membership.removedAt, null);
   });
 
   it('persists the EXPIRED status for an expired invite', async () => {

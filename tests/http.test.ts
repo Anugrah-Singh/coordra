@@ -1,310 +1,117 @@
 import assert from 'node:assert/strict';
-
 import { describe, it } from 'node:test';
-
 import request from 'supertest';
 
 process.env.NODE_ENV = 'test';
-
 process.env.DATABASE_URL = 'postgresql://test:test@127.0.0.1:5432/test';
-
 process.env.JWT_SECRET = 'test-only-jwt-secret-that-is-at-least-32-characters';
-
-const frontendOrigin = 'http://localhost:3000';
-
-process.env.FRONTEND_URL = `${frontendOrigin}/`;
-
+process.env.FRONTEND_URL = 'http://localhost:3000';
 process.env.DB_POOL_MAX = '1';
-
 process.env.SHUTDOWN_TIMEOUT_MS = '1000';
 
 const { APP_ERROR_CODES } = await import('../src/utils/AppError.js');
-
 const { createApp } = await import('../src/app.js');
-
 const app = createApp();
 
-describe('Backend HTTP foundation', () => {
-  it('returns a successful liveness response', async () => {
-    const response = await request(app)
-      .get('/health/live')
-      .expect('Content-Type', /json/)
-      .expect(200);
+const expectError = (body: unknown, code: string, message?: string): void => {
+  assert.equal(typeof body, 'object');
+  const envelope = body as {
+    error: { code: string; message: string; fields: Record<string, string> };
+  };
+  assert.equal(envelope.error.code, code);
+  if (message) assert.equal(envelope.error.message, message);
+  assert.equal(typeof envelope.error.fields, 'object');
+};
 
-    assert.equal(response.body.status, 'alive');
+describe('HTTP foundation', () => {
+  it('reports liveness and startup readiness', async () => {
+    const live = await request(app).get('/health/live').expect(200);
+    assert.equal(live.body.status, 'alive');
+    assert.equal(typeof live.body.uptimeSeconds, 'number');
 
-    assert.equal(typeof response.body.timestamp, 'string');
-
-    assert.equal(typeof response.body.uptimeSeconds, 'number');
+    const ready = await request(app).get('/health/ready').expect(503);
+    assert.equal(ready.body.status, 'not-ready');
+    assert.equal(ready.body.reason, 'Server is starting');
   });
 
-  it('reports not-ready before server startup', async () => {
-    const response = await request(app)
-      .get('/health/ready')
-      .expect('Content-Type', /json/)
-      .expect(503);
-
-    assert.deepEqual(
-      {
-        status: response.body.status,
-
-        reason: response.body.reason,
-      },
-      {
-        status: 'not-ready',
-
-        reason: 'Server is starting',
-      }
+  it('uses the standard authentication error envelope', async () => {
+    const response = await request(app).get('/api/workspaces').expect(401);
+    expectError(
+      response.body,
+      APP_ERROR_CODES.AUTHENTICATION_REQUIRED,
+      'Authentication required'
     );
   });
 
-  it('supports the backwards-compatible health endpoint', async () => {
-    const response = await request(app)
-      .get('/health')
-      .expect('Content-Type', /json/)
-      .expect(200);
-
-    assert.equal(response.body.status, 'ok');
-  });
-
-  it('rejects protected routes without authentication', async () => {
-    const response = await request(app)
-      .get('/api/workspaces')
-      .expect('Content-Type', /json/)
-      .expect(401);
-
-    assert.deepEqual(response.body, {
-      success: false,
-
-      code: APP_ERROR_CODES.AUTHENTICATION_REQUIRED,
-
-      message: 'Authentication required',
-    });
-  });
-
-  it('rejects malformed login requests', async () => {
-    const response = await request(app)
+  it('validates login and registration with field errors', async () => {
+    const login = await request(app)
       .post('/api/auth/login')
-      .send({
-        email: 'not-an-email',
-
-        password: '',
-      })
-      .expect('Content-Type', /json/)
+      .send({ email: 'not-an-email', password: '' })
       .expect(400);
+    expectError(login.body, APP_ERROR_CODES.VALIDATION_ERROR, 'Validation failed');
+    assert.ok(Object.keys(login.body.error.fields).length > 0);
 
-    assert.equal(response.body.success, false);
-
-    assert.equal(response.body.code, APP_ERROR_CODES.VALIDATION_ERROR);
-
-    assert.equal(response.body.message, 'Validation failed');
-
-    assert.ok(Array.isArray(response.body.errors));
+    const registration = await request(app)
+      .post('/api/auth/register')
+      .send({ email: 'not-an-email', password: '123', fullName: '' })
+      .expect(400);
+    expectError(registration.body, APP_ERROR_CODES.VALIDATION_ERROR);
+    assert.ok(Object.keys(registration.body.error.fields).length > 0);
   });
 
-  it('rejects invalid user registration input', async () => {
+  it('rejects oversized request bodies', async () => {
     const response = await request(app)
-      .post('/api/users')
-      .send({
-        email: 'not-an-email',
-
-        password: '123',
-
-        fullName: '',
-      })
-      .expect('Content-Type', /json/)
-      .expect(400);
-
-    assert.equal(response.body.success, false);
-
-    assert.equal(response.body.code, APP_ERROR_CODES.VALIDATION_ERROR);
-
-    assert.equal(response.body.message, 'Validation failed');
-
-    assert.ok(Array.isArray(response.body.errors));
-  });
-
-  it('rejects JSON bodies larger than 100kb', async () => {
-    const response = await request(app)
-      .post('/api/users')
-      .send({
-        payload: 'x'.repeat(110 * 1024),
-      })
-      .expect('Content-Type', /json/)
+      .post('/api/auth/register')
+      .send({ payload: 'x'.repeat(110 * 1024) })
       .expect(413);
-
-    assert.deepEqual(response.body, {
-      success: false,
-
-      code: APP_ERROR_CODES.PAYLOAD_TOO_LARGE,
-
-      message: 'Request body is too large.',
-    });
+    expectError(response.body, APP_ERROR_CODES.PAYLOAD_TOO_LARGE);
   });
 
-  it('returns a JSON response for unknown routes', async () => {
-    const response = await request(app)
-      .get('/api/does-not-exist')
-      .expect('Content-Type', /json/)
-      .expect(404);
-
-    assert.deepEqual(response.body, {
-      success: false,
-
-      code: APP_ERROR_CODES.ROUTE_NOT_FOUND,
-
-      message: 'Route not found: ' + 'GET /api/does-not-exist',
-    });
+  it('returns the standard route-not-found envelope', async () => {
+    const response = await request(app).get('/api/does-not-exist').expect(404);
+    expectError(response.body, APP_ERROR_CODES.ROUTE_NOT_FOUND);
   });
 
-  it('allows safe API methods without an Origin header', async () => {
+  it('allows safe requests without Origin and trusted unsafe requests', async () => {
+    await request(app).get('/api/workspaces').expect(401);
     const response = await request(app)
-      .get('/api/workspaces')
-      .expect('Content-Type', /json/)
-      .expect(401);
-
-    assert.equal(response.body.code, APP_ERROR_CODES.AUTHENTICATION_REQUIRED);
-  });
-
-  it('allows state-changing requests from the configured frontend origin', async () => {
-    const response = await request(app)
-      .post('/api/users')
-      .set('Origin', frontendOrigin)
-      .send({
-        email: 'invalid-email',
-
-        password: '123',
-
-        fullName: '',
-      })
-      .expect('Content-Type', /json/)
+      .post('/api/auth/register')
+      .set('Origin', 'http://localhost:3000')
+      .send({ email: 'bad', password: '123', fullName: '' })
       .expect(400);
-
-    assert.equal(response.body.code, APP_ERROR_CODES.VALIDATION_ERROR);
+    expectError(response.body, APP_ERROR_CODES.VALIDATION_ERROR);
   });
 
-  it('rejects state-changing requests from an untrusted origin', async () => {
-    const response = await request(app)
-      .post('/api/users')
+  it('rejects untrusted or malformed origins', async () => {
+    const attacker = await request(app)
+      .post('/api/auth/register')
       .set('Origin', 'https://attacker.example')
       .send({
         email: 'user@example.com',
-
         password: 'safe-test-password',
-
-        fullName: 'Test User',
+        fullName: 'User',
       })
-      .expect('Content-Type', /json/)
       .expect(403);
+    expectError(attacker.body, APP_ERROR_CODES.FORBIDDEN);
 
-    assert.deepEqual(response.body, {
-      success: false,
-      code: APP_ERROR_CODES.FORBIDDEN,
-      message: 'Request origin is not allowed',
-    });
-  });
-
-  it('accepts the configured frontend through the Referer fallback', async () => {
-    const response = await request(app)
-      .post('/api/users')
-      .set('Referer', `${frontendOrigin}/register`)
-      .send({
-        email: 'invalid-email',
-
-        password: '123',
-
-        fullName: '',
-      })
-      .expect('Content-Type', /json/)
-      .expect(400);
-
-    assert.equal(response.body.code, APP_ERROR_CODES.VALIDATION_ERROR);
-  });
-
-  it('rejects an invalid Referer on a state-changing request', async () => {
-    const response = await request(app)
-      .post('/api/users')
+    const malformed = await request(app)
+      .post('/api/auth/register')
       .set('Referer', 'not-a-valid-url')
       .send({
         email: 'user@example.com',
-
         password: 'safe-test-password',
-
-        fullName: 'Test User',
+        fullName: 'User',
       })
-      .expect('Content-Type', /json/)
       .expect(403);
-
-    assert.deepEqual(response.body, {
-      success: false,
-      code: APP_ERROR_CODES.FORBIDDEN,
-      message: 'Request origin could not be verified',
-    });
+    expectError(malformed.body, APP_ERROR_CODES.FORBIDDEN);
   });
 
-  it('does not expose JWT verification errors', async () => {
+  it('does not expose JWT verification internals', async () => {
     const response = await request(app)
       .get('/api/workspaces')
       .set('Cookie', 'auth_token=definitely-not-a-valid-jwt')
-      .expect('Content-Type', /json/)
       .expect(401);
-
-    assert.deepEqual(response.body, {
-      success: false,
-
-      code: APP_ERROR_CODES.INVALID_AUTH_TOKEN,
-
-      message: 'Invalid or expired token',
-    });
-
-    assert.equal('real_reason' in response.body, false);
-
-    assert.equal('stack' in response.body, false);
-  });
-
-  it('rejects registration passwords shorter than 12 characters', async () => {
-    const response = await request(app)
-      .post('/api/users')
-      .set('Origin', frontendOrigin)
-      .send({
-        email: 'user@example.com',
-
-        password: 'short123',
-
-        fullName: 'Test User',
-      })
-      .expect('Content-Type', /json/)
-      .expect(400);
-
-    assert.ok(
-      response.body.errors.some(
-        (error: { field: string; message: string }) =>
-          error.field === 'body.password' &&
-          error.message.includes('at least 12 characters')
-      )
-    );
-  });
-
-  it('rejects excessively long registration passwords', async () => {
-    const response = await request(app)
-      .post('/api/users')
-      .set('Origin', frontendOrigin)
-      .send({
-        email: 'user@example.com',
-
-        password: 'x'.repeat(129),
-
-        fullName: 'Test User',
-      })
-      .expect('Content-Type', /json/)
-      .expect(400);
-
-    assert.ok(
-      response.body.errors.some(
-        (error: { field: string; message: string }) =>
-          error.field === 'body.password' &&
-          error.message.includes('cannot exceed 128 characters')
-      )
-    );
+    expectError(response.body, APP_ERROR_CODES.INVALID_AUTH_TOKEN);
+    assert.equal('real_reason' in response.body.error, false);
   });
 });

@@ -17,6 +17,16 @@ const projectPath = (workspaceId: string, projectId: string) =>
 const taskPath = (workspaceId: string, projectId: string, taskId: string) =>
   `${projectPath(workspaceId, projectId)}/tasks/${taskId}`;
 
+export const projectKeys = {
+  all: ['projects'] as const,
+  list: (workspaceId: string) => ['projects', workspaceId] as const,
+  detail: (workspaceId: string, projectId: string) =>
+    ['project', workspaceId, projectId] as const,
+  tasks: (workspaceId: string, projectId: string) =>
+    ['tasks', workspaceId, projectId] as const,
+  labels: (workspaceId: string) => ['labels', workspaceId] as const,
+};
+
 const toSearch = (params: Record<string, string | boolean | undefined>) => {
   const search = new URLSearchParams();
 
@@ -116,36 +126,13 @@ export const taskApi = {
       priority?: TaskPriority;
       assigneeId?: string | null;
       dueDate?: string | null;
+      archived?: boolean;
     }
   ) =>
     request<Task>({
       method: 'PATCH',
       url: taskPath(workspaceId, projectId, taskId),
       data: input,
-    }),
-
-  updateStatus: (
-    workspaceId: string,
-    projectId: string,
-    taskId: string,
-    status: TaskStatus
-  ) =>
-    request<Task>({
-      method: 'PATCH',
-      url: `${taskPath(workspaceId, projectId, taskId)}/status`,
-      data: { status },
-    }),
-
-  archive: (workspaceId: string, projectId: string, taskId: string) =>
-    request<Task>({
-      method: 'PATCH',
-      url: `${taskPath(workspaceId, projectId, taskId)}/archive`,
-    }),
-
-  unarchive: (workspaceId: string, projectId: string, taskId: string) =>
-    request<Task>({
-      method: 'PATCH',
-      url: `${taskPath(workspaceId, projectId, taskId)}/unarchive`,
     }),
 
   duplicate: (workspaceId: string, projectId: string, taskId: string) =>
@@ -192,21 +179,16 @@ export const labelApi = {
       url: `${taskPath(workspaceId, projectId, taskId)}/labels?limit=100`,
     }),
 
-  addToTask: (workspaceId: string, projectId: string, taskId: string, labelId: string) =>
-    request<Label>({
-      method: 'POST',
-      url: `${taskPath(workspaceId, projectId, taskId)}/labels/${labelId}`,
-    }),
-
-  removeFromTask: (
+  replaceForTask: (
     workspaceId: string,
     projectId: string,
     taskId: string,
-    labelId: string
+    labelIds: string[]
   ) =>
-    request<Label>({
-      method: 'DELETE',
-      url: `${taskPath(workspaceId, projectId, taskId)}/labels/${labelId}`,
+    request<Label[]>({
+      method: 'PUT',
+      url: `${taskPath(workspaceId, projectId, taskId)}/labels`,
+      data: { labelIds },
     }),
 };
 

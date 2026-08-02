@@ -1,17 +1,7 @@
-import axios, { AxiosError, type AxiosRequestConfig } from 'axios';
 import type { ApiEnvelope, ApiErrorPayload } from '@/types/api';
 
 const apiBaseUrl =
   process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') ?? 'http://localhost:8000';
-
-export const apiClient = axios.create({
-  baseURL: apiBaseUrl,
-  withCredentials: true,
-  timeout: 15_000,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
 
 export class ApiError extends Error {
   readonly status: number;
@@ -21,10 +11,7 @@ export class ApiError extends Error {
   constructor(
     message: string,
     status: number,
-    options?: {
-      code?: string;
-      fields?: Record<string, string>;
-    }
+    options?: { code?: string; fields?: Record<string, string> }
   ) {
     super(message);
     this.name = 'ApiError';
@@ -34,38 +21,63 @@ export class ApiError extends Error {
   }
 }
 
-const toApiError = (error: unknown): ApiError => {
-  if (!(error instanceof AxiosError)) {
-    return new ApiError(
-      error instanceof Error ? error.message : 'Something went wrong',
-      0
-    );
-  }
-
-  const payload = error.response?.data as ApiErrorPayload | undefined;
-  const fields = Object.fromEntries(
-    (payload?.errors ?? []).map((item) => [item.field, item.message])
-  );
-
-  return new ApiError(
-    payload?.message ??
-      (error.code === 'ECONNABORTED'
-        ? 'The server took too long to respond'
-        : 'Unable to reach the server'),
-    error.response?.status ?? 0,
-    {
-      ...(payload?.code ? { code: payload.code } : {}),
-      fields,
-    }
-  );
+type RequestOptions = Omit<RequestInit, 'body'> & {
+  url: string;
+  data?: unknown;
+  timeoutMs?: number;
 };
 
-export const request = async <T>(config: AxiosRequestConfig): Promise<T> => {
+export const request = async <T>({
+  url,
+  data,
+  timeoutMs = 15_000,
+  headers,
+  ...init
+}: RequestOptions): Promise<T> => {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
   try {
-    const response = await apiClient.request<ApiEnvelope<T>>(config);
-    return response.data.data;
+    const response = await fetch(`${apiBaseUrl}${url}`, {
+      ...init,
+      credentials: 'include',
+      signal: controller.signal,
+      headers: {
+        Accept: 'application/json',
+        ...(data === undefined ? {} : { 'Content-Type': 'application/json' }),
+        ...headers,
+      },
+      ...(data === undefined ? {} : { body: JSON.stringify(data) }),
+    });
+    const payload = (await response.json().catch(() => undefined)) as
+      ApiEnvelope<T> | ApiErrorPayload | undefined;
+
+    if (!response.ok) {
+      const apiError = payload && 'error' in payload ? payload.error : undefined;
+      throw new ApiError(
+        apiError?.message ?? `Request failed (${response.status})`,
+        response.status,
+        {
+          ...(apiError?.code ? { code: apiError.code } : {}),
+          fields: apiError?.fields ?? {},
+        }
+      );
+    }
+    if (!payload || !('data' in payload)) {
+      throw new ApiError('The server returned an invalid response', response.status);
+    }
+    return payload.data;
   } catch (error) {
-    throw toApiError(error);
+    if (error instanceof ApiError) throw error;
+    if (error instanceof DOMException && error.name === 'AbortError') {
+      throw new ApiError('The server took too long to respond', 0);
+    }
+    throw new ApiError(
+      error instanceof Error ? error.message : 'Unable to reach the server',
+      0
+    );
+  } finally {
+    clearTimeout(timeout);
   }
 };
 

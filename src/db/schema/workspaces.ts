@@ -1,4 +1,5 @@
 import { pgTable, uuid, text, timestamp, pgEnum, uniqueIndex } from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
 
 import { users } from './users.js';
 
@@ -16,12 +17,6 @@ export const workspaces = pgTable('workspaces', {
   name: text('name').notNull(),
 
   slug: text('slug').notNull().unique(),
-
-  ownerId: uuid('owner_id')
-    .references(() => users.id, {
-      onDelete: 'restrict',
-    })
-    .notNull(),
 
   createdAt: timestamp('created_at').defaultNow().notNull(),
 
@@ -48,10 +43,11 @@ export const workspaceMembers = pgTable(
     role: roleEnum('role').default('MEMBER').notNull(),
 
     joinedAt: timestamp('joined_at').defaultNow().notNull(),
-
-    removedAt: timestamp('removed_at'),
   },
   (table) => [
     uniqueIndex('workspace_user_unique_idx').on(table.workspaceId, table.userId),
+    uniqueIndex('workspace_single_owner_idx')
+      .on(table.workspaceId)
+      .where(sql`${table.role} = 'OWNER'`),
   ]
 );

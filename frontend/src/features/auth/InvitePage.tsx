@@ -45,7 +45,7 @@ export const InvitePage = () => {
           <span className="grid size-9 place-items-center rounded-xl bg-primary text-primary-foreground shadow-sm">
             <Layers3 size={20} />
           </span>
-          <span>WorkspaceOS</span>
+          <span>Coordra</span>
         </Link>
         <div className="mx-auto grid size-14 place-items-center rounded-full bg-secondary text-secondary-foreground">
           <Check size={28} />

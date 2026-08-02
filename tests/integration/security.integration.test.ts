@@ -58,7 +58,7 @@ const registerAndLogin = async (
   fullName: string
 ): Promise<string> => {
   const registration = await request(app)
-    .post('/api/users')
+    .post('/api/auth/register')
     .send({
       email,
       password,
@@ -141,11 +141,8 @@ describe('Cross-workspace security', () => {
       })
       .expect(404);
 
-    assert.equal(response.body.success, false);
-
-    assert.equal(response.body.code, 'RESOURCE_NOT_FOUND');
-
-    assert.equal(response.body.message, 'Project not found in this workspace');
+    assert.equal(response.body.error.code, 'RESOURCE_NOT_FOUND');
+    assert.equal(response.body.error.message, 'Project not found in this workspace');
   });
 
   it('allows duplicate workspace names by generating unique slugs', async () => {
