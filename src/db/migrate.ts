@@ -3,13 +3,27 @@ import 'dotenv/config';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import { Client } from 'pg';
+import { z } from 'zod';
 
-import { env } from '../config/env.js';
+const databaseUrl = z
+  .url({ message: 'DATABASE_URL must be a valid PostgreSQL URL' })
+  .refine((value) => ['postgres:', 'postgresql:'].includes(new URL(value).protocol), {
+    message: 'DATABASE_URL must use the postgres:// or postgresql:// protocol',
+  })
+  .transform((value) => {
+    const url = new URL(value);
+    const sslMode = url.searchParams.get('sslmode');
+    if (sslMode === 'prefer' || sslMode === 'require' || sslMode === 'verify-ca') {
+      url.searchParams.set('sslmode', 'verify-full');
+    }
+    return url.toString();
+  })
+  .parse(process.env.DATABASE_URL);
 
 async function runMigrations() {
   // Production migrations use a direct connection rather than the pooled runtime URL.
   const client = new Client({
-    connectionString: env.DATABASE_URL,
+    connectionString: databaseUrl,
   });
 
   try {
