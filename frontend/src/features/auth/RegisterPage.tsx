@@ -73,7 +73,7 @@ export const RegisterPage = () => {
           <span className="grid size-9 place-items-center rounded-xl bg-primary text-primary-foreground shadow-sm">
             <Layers3 size={21} />
           </span>
-          <span>WorkspaceOS</span>
+          <span>Coordra</span>
         </Link>
         <div className="relative z-10 my-auto max-w-xl [&_h1]:mt-4 [&_h1]:font-heading [&_h1]:text-5xl [&_h1]:font-semibold [&_h1]:leading-[1.02] [&_p]:mt-5 [&_p]:text-lg [&_p]:text-background/60">
           <span className="font-mono text-[10px] font-medium uppercase tracking-[.16em] text-background/60">

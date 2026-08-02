@@ -59,18 +59,12 @@ export const memberApi = {
 
 export const notificationApi = {
   list: (workspaceId?: string) =>
-    request<Notification[]>({
+    request<{ notifications: Notification[]; unreadCount: number }>({
       method: 'GET',
       url: `/api/notifications${toSearch({
         workspaceId,
         limit: '50',
       })}`,
-    }),
-
-  unreadCount: (workspaceId?: string) =>
-    request<{ count: number }>({
-      method: 'GET',
-      url: `/api/notifications/unread-count${toSearch({ workspaceId })}`,
     }),
 
   markRead: (notificationId: string) =>

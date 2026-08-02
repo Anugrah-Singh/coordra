@@ -156,7 +156,7 @@ before(async () => {
   });
 
   const ownerRegistration = await request(app)
-    .post('/api/users')
+    .post('/api/auth/register')
     .send({
       email: ownerEmail,
       password,
@@ -186,7 +186,7 @@ before(async () => {
   workspaceId = workspaceCreation.body.data.id;
 
   const outsiderRegistration = await request(app)
-    .post('/api/users')
+    .post('/api/auth/register')
     .send({
       email: outsiderEmail,
       password,
@@ -265,9 +265,9 @@ describe('Socket.IO integration', () => {
     const joinedEvent = waitForEvent<{
       workspaceId: string;
       role: string;
-    }>(socket, 'workspace_joined');
+    }>(socket, 'workspace:joined');
 
-    socket.emit('join_workspace', workspaceId);
+    socket.emit('workspace:join', workspaceId);
 
     const payload = await joinedEvent;
 
@@ -284,23 +284,23 @@ describe('Socket.IO integration', () => {
 
     const errorEvent = waitForEvent<{
       message: string;
-    }>(socket, 'workspace_error');
+    }>(socket, 'workspace:error');
 
-    socket.emit('join_workspace', workspaceId);
+    socket.emit('workspace:join', workspaceId);
 
     const payload = await errorEvent;
 
     assert.equal(payload.message, 'You do not have access to this workspace');
   });
 
-  it('delivers task_created events to joined workspace members', async () => {
+  it('delivers workspace change events to joined workspace members', async () => {
     assert.ok(workspaceId);
 
     const socket = await connectAuthenticatedSocket(ownerCookie);
 
-    const joinedEvent = waitForEvent(socket, 'workspace_joined');
+    const joinedEvent = waitForEvent(socket, 'workspace:joined');
 
-    socket.emit('join_workspace', workspaceId);
+    socket.emit('workspace:join', workspaceId);
 
     await joinedEvent;
 
@@ -320,7 +320,7 @@ describe('Socket.IO integration', () => {
         id: string;
         title: string;
       };
-    }>(socket, 'task_created');
+    }>(socket, 'workspace:changed');
 
     const taskCreation = await ownerAgent
       .post(`/api/workspaces/${workspaceId}` + `/projects/${projectId}/tasks`)

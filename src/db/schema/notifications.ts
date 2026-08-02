@@ -6,8 +6,6 @@ import { users } from './users.js';
 export const notificationTypeEnum = pgEnum('notification_type', [
   'TASK_ASSIGNED',
   'COMMENT_MENTION',
-  'PROHECT_UPDATE',
-
   'TASK_STATUS_CHANGED',
   'COMMENT_ADDED',
   'MEMBER_INVITED',

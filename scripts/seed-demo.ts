@@ -15,13 +15,13 @@ import {
   workspaces,
 } from '../src/db/schema/index.js';
 
-const DEMO_SLUG = 'workspaceos-demo';
-const REQUIRED_CONFIRMATION = 'workspaceos-demo';
+const DEMO_SLUG = 'coordra-demo';
+const DEMO_WORKSPACE_ID = '00000000-0000-4000-8000-000000000001';
+const REQUIRED_CONFIRMATION = 'coordra-demo';
 const DEMO_EMAILS = {
-  owner: 'owner@taskspace.demo',
-  admin: 'admin@taskspace.demo',
-  member: 'member@taskspace.demo',
-  viewer: 'viewer@taskspace.demo',
+  owner: 'owner@coordra.demo',
+  member: 'member@coordra.demo',
+  viewer: 'viewer@coordra.demo',
 } as const;
 
 const daysFromNow = (days: number): Date => {
@@ -78,19 +78,17 @@ const seedDemo = async (): Promise<void> => {
       return user;
     };
 
-    const [owner, admin, member, viewer] = await Promise.all([
-      upsertDemoUser(DEMO_EMAILS.owner, 'Olivia Owner'),
-      upsertDemoUser(DEMO_EMAILS.admin, 'Arjun Admin'),
-      upsertDemoUser(DEMO_EMAILS.member, 'Maya Member'),
-      upsertDemoUser(DEMO_EMAILS.viewer, 'Victor Viewer'),
-    ]);
+    // A node-postgres transaction uses one client, so keep its queries sequential.
+    const owner = await upsertDemoUser(DEMO_EMAILS.owner, 'Olivia Owner');
+    const member = await upsertDemoUser(DEMO_EMAILS.member, 'Maya Member');
+    const viewer = await upsertDemoUser(DEMO_EMAILS.viewer, 'Victor Viewer');
 
     const [workspace] = await tx
       .insert(workspaces)
       .values({
-        name: 'WorkspaceOS Demo',
+        id: DEMO_WORKSPACE_ID,
+        name: 'Coordra Demo',
         slug: DEMO_SLUG,
-        ownerId: owner.id,
       })
       .returning();
 
@@ -100,7 +98,6 @@ const seedDemo = async (): Promise<void> => {
 
     await tx.insert(workspaceMembers).values([
       { workspaceId: workspace.id, userId: owner.id, role: 'OWNER' },
-      { workspaceId: workspace.id, userId: admin.id, role: 'ADMIN' },
       { workspaceId: workspace.id, userId: member.id, role: 'MEMBER' },
       { workspaceId: workspace.id, userId: viewer.id, role: 'VIEWER' },
     ]);
@@ -144,7 +141,7 @@ const seedDemo = async (): Promise<void> => {
           workspaceId: workspace.id,
           projectId: productLaunch.id,
           createdById: owner.id,
-          assigneeId: admin.id,
+          assigneeId: owner.id,
           title: 'Finalize launch checklist',
           description:
             'Confirm owners, dependencies, rollback steps, and launch-day communication.',
@@ -167,8 +164,8 @@ const seedDemo = async (): Promise<void> => {
         {
           workspaceId: workspace.id,
           projectId: productLaunch.id,
-          createdById: admin.id,
-          assigneeId: admin.id,
+          createdById: member.id,
+          assigneeId: owner.id,
           title: 'Publish release notes',
           description: 'Summarize the launch features and technical highlights.',
           status: 'BACKLOG',
@@ -178,7 +175,7 @@ const seedDemo = async (): Promise<void> => {
         {
           workspaceId: workspace.id,
           projectId: mobileExperience.id,
-          createdById: admin.id,
+          createdById: member.id,
           assigneeId: member.id,
           title: 'Test tablet navigation',
           description:
@@ -203,7 +200,7 @@ const seedDemo = async (): Promise<void> => {
           workspaceId: workspace.id,
           projectId: growthExperiments.id,
           createdById: owner.id,
-          assigneeId: admin.id,
+          assigneeId: owner.id,
           title: 'Instrument invite conversion',
           description:
             'Track invite creation, acceptance, and first meaningful collaboration.',
@@ -214,7 +211,7 @@ const seedDemo = async (): Promise<void> => {
         {
           workspaceId: workspace.id,
           projectId: growthExperiments.id,
-          createdById: admin.id,
+          createdById: member.id,
           assigneeId: member.id,
           title: 'Draft onboarding experiment',
           description:
@@ -281,7 +278,7 @@ const seedDemo = async (): Promise<void> => {
       {
         workspaceId: workspace.id,
         taskId: launchChecklist.id,
-        authorId: admin.id,
+        authorId: member.id,
         content:
           'I added ownership for every launch-day check and linked the monitoring dashboard.',
       },
@@ -296,7 +293,7 @@ const seedDemo = async (): Promise<void> => {
     await tx.insert(notifications).values([
       {
         workspaceId: workspace.id,
-        userId: admin.id,
+        userId: owner.id,
         type: 'TASK_ASSIGNED',
         message: 'You were assigned “Finalize launch checklist”.',
         resourceType: 'TASK',
@@ -340,7 +337,7 @@ const seedDemo = async (): Promise<void> => {
       })),
       {
         workspaceId: workspace.id,
-        actorId: admin.id,
+        actorId: member.id,
         action: 'TASK_STATUS_CHANGED',
         entityType: 'TASK',
         entityId: launchChecklist.id,

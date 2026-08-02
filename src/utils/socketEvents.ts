@@ -11,7 +11,19 @@ export const emitWorkspaceEvent = (
     return false;
   }
 
-  io.to(workspaceId).emit(eventName, payload);
+  const eventPayload = payload as Record<string, unknown>;
+  const [resource, ...actionParts] = eventName.split('_');
+  io.to(workspaceId).emit(
+    'workspace:changed',
+    eventName === 'workspace:changed'
+      ? payload
+      : {
+          resource,
+          action: actionParts.join('-') || 'changed',
+          workspaceId,
+          ...eventPayload,
+        }
+  );
 
   return true;
 };
@@ -27,7 +39,12 @@ export const emitUserEvent = (
     return false;
   }
 
-  io.to(`user:${userId}`).emit(eventName, payload);
+  io.to(`user:${userId}`).emit(
+    'notifications:changed',
+    eventName === 'notifications:changed'
+      ? payload
+      : { action: eventName.replace(/^notification(s)?_/, ''), ...(payload as object) }
+  );
 
   return true;
 };

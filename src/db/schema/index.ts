@@ -7,3 +7,4 @@ export * from './labels.js';
 export * from './notifications.js';
 export * from './auditLogs.js';
 export * from './invites.js';
+export * from './aiActionProposals.js';

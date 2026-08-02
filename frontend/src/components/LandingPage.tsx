@@ -1,183 +1,156 @@
 import {
+  Activity,
   ArrowRight,
-  CheckCircle2,
   GitFork,
+  KanbanSquare,
   Layers3,
-  LockKeyhole,
-  Radio,
-  Workflow,
+  MessageSquareText,
+  ShieldCheck,
+  Sparkles,
+  Users,
 } from 'lucide-react';
 import Link from 'next/link';
 import { LandingCta } from '@/components/LandingCta';
 import { Button } from '@/components/ui/button';
 
-export const LandingPage = () => {
-  return (
-    <main className="min-h-screen bg-background">
-      <header className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-6 px-5 [&>nav]:hidden [&>nav]:items-center [&>nav]:gap-6 [&>nav]:text-sm [&>nav]:text-muted-foreground md:[&>nav]:flex [&>nav_a]:inline-flex [&>nav_a]:items-center [&>nav_a]:gap-1.5 [&>nav_a]:hover:text-foreground">
-        <Link
-          className="inline-flex items-center gap-2.5 font-heading text-base font-bold tracking-tight"
-          href="/"
+const capabilities = [
+  {
+    icon: KanbanSquare,
+    title: 'Projects and priorities',
+    copy: 'Plan work on live Kanban boards with owners, due dates, labels, and clear delivery states.',
+  },
+  {
+    icon: Users,
+    title: 'People and permissions',
+    copy: 'Coordinate workspace access with a server-enforced role model and tenant-isolated data.',
+  },
+  {
+    icon: MessageSquareText,
+    title: 'Context where work happens',
+    copy: 'Keep comments, invitations, and notifications attached to the work they explain.',
+  },
+  {
+    icon: Activity,
+    title: 'Live accountability',
+    copy: 'See real-time changes across browsers and inspect a transactional audit history.',
+  },
+  {
+    icon: Sparkles,
+    title: 'Pulse coordination',
+    copy: 'Ask about workload and risk, then review structured proposals before any change is made.',
+  },
+];
+
+export const LandingPage = () => (
+  <main className="min-h-screen bg-background">
+    <header className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-6 px-5">
+      <Link
+        className="inline-flex items-center gap-2.5 font-heading text-base font-bold tracking-tight"
+        href="/"
+      >
+        <span className="grid size-9 place-items-center rounded-xl bg-primary text-primary-foreground shadow-sm">
+          <Layers3 aria-hidden="true" size={21} />
+        </span>
+        <span>Coordra</span>
+      </Link>
+      <nav className="hidden items-center gap-6 text-sm text-muted-foreground md:flex">
+        <a className="hover:text-foreground" href="#capabilities">
+          Capabilities
+        </a>
+        <a
+          className="inline-flex items-center gap-1.5 hover:text-foreground"
+          href="https://github.com/Anugrah-Singh/coordra"
+          target="_blank"
+          rel="noreferrer"
         >
-          <span className="grid size-9 place-items-center rounded-xl bg-primary text-primary-foreground shadow-sm">
-            <Layers3 size={21} />
-          </span>
-          <span>WorkspaceOS</span>
-        </Link>
-        <nav>
-          <a href="#features">Features</a>
-          <a href="#engineering">Engineering</a>
-          <a
-            href="https://github.com/Anugrah-Singh/SAAS-Team-Workspace"
-            target="_blank"
-            rel="noreferrer"
-          >
-            <GitFork size={17} /> GitHub
-          </a>
-        </nav>
-        <LandingCta />
-      </header>
+          <GitFork aria-hidden="true" size={17} /> GitHub
+        </a>
+      </nav>
+      <LandingCta />
+    </header>
 
-      <section className="mx-auto grid min-h-[calc(100vh-5rem)] max-w-7xl items-center gap-12 px-5 py-16 lg:grid-cols-[.9fr_1.1fr]">
-        <div className="[&_h1]:mt-5 [&_h1]:font-heading [&_h1]:text-5xl [&_h1]:font-semibold [&_h1]:leading-[.96] [&_h1]:tracking-tight sm:[&_h1]:text-6xl [&_p]:mt-6 [&_p]:max-w-xl [&_p]:text-lg [&_p]:leading-relaxed [&_p]:text-muted-foreground">
-          <span className="font-mono text-[10px] font-medium uppercase tracking-[.16em] text-primary">
-            Real-time team collaboration
-          </span>
-          <h1>One operating system for the work your team ships.</h1>
-          <p>
-            WorkspaceOS combines multi-tenant project management, a live Kanban board,
-            hierarchical RBAC, notifications, and transactional audit history.
-          </p>
-          <div className="flex flex-wrap items-center gap-2">
-            <LandingCta prominent />
-            <Button asChild size="lg" variant="ghost">
-              <a
-                href="https://github.com/Anugrah-Singh/SAAS-Team-Workspace"
-                target="_blank"
-                rel="noreferrer"
-              >
-                <GitFork size={17} /> View source
-              </a>
-            </Button>
-          </div>
-          <div className="mt-8 flex flex-wrap gap-x-5 gap-y-2 [&>span]:inline-flex [&>span]:items-center [&>span]:gap-1.5 [&>span]:text-xs [&>span]:text-muted-foreground">
-            <span>
-              <CheckCircle2 size={16} /> Secure cookie auth
-            </span>
-            <span>
-              <CheckCircle2 size={16} /> Tenant-isolated data
-            </span>
-            <span>
-              <CheckCircle2 size={16} /> Neon preview CI
-            </span>
-          </div>
+    <section className="mx-auto grid min-h-[calc(100vh-5rem)] max-w-7xl items-center gap-12 px-5 py-16 lg:grid-cols-[.88fr_1.12fr]">
+      <div>
+        <span className="font-mono text-[10px] font-medium uppercase tracking-[.16em] text-primary">
+          Projects · people · priorities
+        </span>
+        <h1 className="mt-5 max-w-3xl font-heading text-5xl font-semibold leading-[.96] tracking-tight text-balance sm:text-6xl">
+          Keep the work moving, with every decision in view.
+        </h1>
+        <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted-foreground">
+          Coordra is an AI-assisted workspace for coordinating projects, people, and
+          priorities. Pulse finds risks and prepares changes without acting on its own.
+        </p>
+        <div className="mt-7 flex flex-wrap items-center gap-2">
+          <LandingCta prominent />
+          <Button asChild size="lg" variant="ghost">
+            <a
+              href="https://github.com/Anugrah-Singh/coordra"
+              target="_blank"
+              rel="noreferrer"
+            >
+              <GitFork aria-hidden="true" size={17} /> View source
+            </a>
+          </Button>
         </div>
-        <div className="overflow-hidden rounded-2xl border bg-foreground text-background shadow-2xl">
-          <div className="flex items-center gap-2 border-b border-background/10 px-5 py-4 [&>span]:size-2 [&>span]:rounded-full [&>span]:bg-background/20 [&>strong]:ml-auto [&>strong]:font-mono [&>strong]:text-[10px] [&>strong]:uppercase [&>strong]:tracking-wider [&>strong]:text-background/45">
-            <span />
-            <span />
-            <span />
-            <strong>Launch workspace</strong>
-          </div>
-          <div className="grid gap-2 p-3 sm:grid-cols-3">
-            {['BACKLOG', 'IN PROGRESS', 'DONE'].map((column, columnIndex) => (
-              <div
-                className="rounded-xl bg-background/5 p-2 [&>header]:flex [&>header]:items-center [&>header]:gap-2 [&>header]:p-2 [&>header]:font-mono [&>header]:text-[9px] [&>header]:tracking-wider [&>header]:text-background/50 [&>header>span]:size-1.5 [&>header>span]:rounded-full [&>header>span]:bg-primary [&>header>b]:ml-auto [&>article]:mt-2 [&>article]:rounded-lg [&>article]:bg-background [&>article]:p-3 [&>article]:text-foreground [&_small]:font-mono [&_small]:text-[8px] [&_small]:text-amber-700 [&_strong]:mt-2 [&_strong]:block [&_strong]:text-xs [&_p]:mt-1 [&_p]:text-[10px] [&_p]:text-muted-foreground [&_footer]:mt-3 [&_footer]:flex [&_footer]:items-center [&_footer]:justify-between [&_footer>i]:h-1 [&_footer>i]:w-10 [&_footer>i]:rounded-full [&_footer>i]:bg-secondary [&_footer>span]:grid [&_footer>span]:size-6 [&_footer>span]:place-items-center [&_footer>span]:rounded-full [&_footer>span]:bg-primary [&_footer>span]:text-[8px] [&_footer>span]:text-primary-foreground"
-                key={column}
-              >
-                <header>
-                  <span />
-                  {column}
-                  <b>{columnIndex + 2}</b>
-                </header>
-                {Array.from({ length: columnIndex === 1 ? 3 : 2 }).map((_, index) => (
-                  <article key={index}>
-                    <small>{index === 0 ? 'HIGH' : 'MEDIUM'}</small>
-                    <strong>
-                      {
-                        [
-                          'Polish onboarding flow',
-                          'Create release dashboard',
-                          'Verify workspace roles',
-                        ][Math.min(index + columnIndex, 2)]
-                      }
-                    </strong>
-                    <p>Clear task context and shared ownership.</p>
-                    <footer>
-                      <i /> <span>AS</span>
-                    </footer>
-                  </article>
-                ))}
-              </div>
-            ))}
-          </div>
+        <div className="mt-8 flex items-center gap-2 text-xs text-muted-foreground">
+          <ShieldCheck aria-hidden="true" className="text-primary" size={17} />
+          Pulse writes only after a member reviews and approves a stored proposal.
         </div>
-      </section>
+      </div>
 
-      <section
-        className="mx-auto max-w-7xl px-5 py-24 [&>div:first-child]:max-w-2xl [&_h2]:mt-3 [&_h2]:font-heading [&_h2]:text-4xl [&_h2]:font-semibold"
-        id="features"
-      >
-        <div>
-          <span className="font-mono text-[10px] font-medium uppercase tracking-[.16em] text-primary">
-            Product capabilities
+      <div className="overflow-hidden rounded-2xl border bg-foreground text-background shadow-2xl">
+        <div className="flex items-center gap-2 border-b border-background/10 px-5 py-4">
+          <span className="grid size-8 place-items-center rounded-lg bg-primary text-primary-foreground">
+            <Sparkles aria-hidden="true" size={16} />
           </span>
-          <h2>Everything needed for a convincing full-stack collaboration demo.</h2>
+          <div>
+            <strong className="block text-sm">Pulse</strong>
+            <small className="text-background/50">Product Launch · Workspace facts</small>
+          </div>
         </div>
-        <div className="mt-10 grid gap-px overflow-hidden rounded-2xl border bg-border md:grid-cols-3 [&>article]:bg-background [&>article]:p-7 [&>article>svg]:text-primary [&_h3]:mt-8 [&_h3]:font-heading [&_h3]:text-xl [&_h3]:font-semibold [&_p]:mt-2 [&_p]:text-sm [&_p]:leading-relaxed [&_p]:text-muted-foreground">
-          <article>
-            <Workflow size={23} />
-            <h3>Kanban delivery</h3>
-            <p>
-              Create, filter, assign, drag, archive, and duplicate tasks across five
-              delivery states.
+        <div className="space-y-3 p-5 text-sm">
+          <div className="ml-14 rounded-2xl rounded-br-md bg-primary px-4 py-3 text-primary-foreground">
+            What needs attention before launch?
+          </div>
+          <div className="mr-8 rounded-2xl rounded-bl-md bg-background/8 px-4 py-4">
+            <p className="leading-relaxed text-background/85">
+              Two conditions may need attention: one launch task is blocked, and an urgent
+              task has no owner. Assigning an owner and recording the unblock step would
+              reduce immediate delivery risk.
             </p>
-          </article>
-          <article>
-            <LockKeyhole size={23} />
-            <h3>Workspace RBAC</h3>
-            <p>
-              Owner, admin, manager, member, and viewer permissions are enforced on the
-              backend.
-            </p>
-          </article>
-          <article>
-            <Radio size={23} />
-            <h3>Live collaboration</h3>
-            <p>
-              Socket.IO updates task boards, comments, members, invitations, and
-              notifications without refreshes.
-            </p>
-          </article>
+            <div className="mt-4 rounded-xl border border-primary/40 bg-primary/10 p-3">
+              <small className="font-mono text-[9px] uppercase tracking-wider text-primary">
+                Proposal · awaiting approval
+              </small>
+              <strong className="mt-1 block">Assign “Finalize launch checklist”</strong>
+              <span className="mt-3 inline-flex items-center gap-1 rounded-lg bg-primary px-3 py-2 text-xs text-primary-foreground">
+                Review proposal <ArrowRight aria-hidden="true" size={14} />
+              </span>
+            </div>
+          </div>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <section
-        className="grid gap-10 bg-foreground px-[max(1.25rem,calc((100vw-80rem)/2))] py-24 text-background lg:grid-cols-[.7fr_1.3fr] lg:items-end [&_h2]:mt-3 [&_h2]:font-heading [&_h2]:text-4xl [&_h2]:font-semibold [&_p]:mt-4 [&_p]:text-background/55"
-        id="engineering"
-      >
-        <div>
-          <span className="font-mono text-[10px] font-medium uppercase tracking-[.16em] text-primary">
-            Engineering depth
-          </span>
-          <h2>Built beyond the happy path.</h2>
-          <p>
-            Pull requests provision isolated Neon branches, apply Drizzle migrations, and
-            run authenticated integration tests before merge.
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-3 [&>span]:rounded-lg [&>span]:border [&>span]:border-background/15 [&>span]:px-3 [&>span]:py-2 [&>span]:font-mono [&>span]:text-[10px] [&>span]:uppercase [&>svg]:text-primary">
-          <span>GitHub PR</span>
-          <ArrowRight />
-          <span>Neon branch</span>
-          <ArrowRight />
-          <span>Migration</span>
-          <ArrowRight />
-          <span>Integration tests</span>
-          <ArrowRight />
-          <span>Cleanup</span>
-        </div>
-      </section>
-    </main>
-  );
-};
+    <section className="mx-auto max-w-7xl px-5 py-24" id="capabilities">
+      <div className="max-w-2xl">
+        <span className="font-mono text-[10px] font-medium uppercase tracking-[.16em] text-primary">
+          Five connected capabilities
+        </span>
+        <h2 className="mt-3 font-heading text-4xl font-semibold">
+          Coordination that stays grounded in the workspace.
+        </h2>
+      </div>
+      <div className="mt-10 grid gap-px overflow-hidden rounded-2xl border bg-border md:grid-cols-2 lg:grid-cols-5">
+        {capabilities.map(({ icon: Icon, title, copy }) => (
+          <article className="bg-background p-6" key={title}>
+            <Icon aria-hidden="true" className="text-primary" size={22} />
+            <h3 className="mt-8 font-heading text-lg font-semibold">{title}</h3>
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{copy}</p>
+          </article>
+        ))}
+      </div>
+    </section>
+  </main>
+);

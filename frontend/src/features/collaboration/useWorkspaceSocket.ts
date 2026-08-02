@@ -8,57 +8,20 @@ import { getApiBaseUrl } from '@/lib/api-client';
 
 let socket: Socket | null = null;
 
-const workspaceEvents = [
-  'workspace_updated',
-  'owner_transferred',
-  'project_created',
-  'project_updated',
-  'project_deleted',
-  'task_created',
-  'task_updated',
-  'task_status_changed',
-  'task_assigned',
-  'task_archived',
-  'task_unarchived',
-  'task_duplicated',
-  'comment_created',
-  'comment_updated',
-  'comment_deleted',
-  'label_created',
-  'label_updated',
-  'label_deleted',
-  'task_label_added',
-  'task_label_removed',
-  'member_added',
-  'member_role_updated',
-  'member_removed',
-  'workspace_invite_created',
-  'workspace_invite_deleted',
-  'workspace_invite_accepted',
-  'workspace_invite_declined',
-] as const;
-
-const userEvents = [
-  'notification_created',
-  'notification_read',
-  'notifications_read_all',
-] as const;
-
 const getSocket = () => {
   socket ??= io(getApiBaseUrl(), {
     withCredentials: true,
     autoConnect: false,
     transports: ['websocket', 'polling'],
   });
-
   return socket;
 };
 
 export const useWorkspaceSocket = (workspaceId?: string) => {
   const queryClient = useQueryClient();
+
   useEffect(() => {
     const currentSocket = getSocket();
-
     const invalidateWorkspace = () => {
       void queryClient.invalidateQueries({ queryKey: ['workspaces'] });
       if (workspaceId) {
@@ -67,44 +30,22 @@ export const useWorkspaceSocket = (workspaceId?: string) => {
         });
       }
     };
-
-    const invalidateNotifications = () => {
+    const invalidateNotifications = () =>
       void queryClient.invalidateQueries({ queryKey: ['notifications'] });
-    };
-
-    const onWorkspaceError = (payload: { message?: string }) => {
+    const onWorkspaceError = (payload: { message?: string }) =>
       toast.error(payload.message ?? 'Real-time workspace connection failed');
-    };
 
-    workspaceEvents.forEach((event) => {
-      currentSocket.on(event, invalidateWorkspace);
-    });
-
-    userEvents.forEach((event) => {
-      currentSocket.on(event, invalidateNotifications);
-    });
-
-    currentSocket.on('workspace_error', onWorkspaceError);
+    currentSocket.on('workspace:changed', invalidateWorkspace);
+    currentSocket.on('notifications:changed', invalidateNotifications);
+    currentSocket.on('workspace:error', onWorkspaceError);
     currentSocket.connect();
-
-    if (workspaceId) {
-      currentSocket.emit('join_workspace', workspaceId);
-    }
+    if (workspaceId) currentSocket.emit('workspace:join', workspaceId);
 
     return () => {
-      if (workspaceId) {
-        currentSocket.emit('leave_workspace', workspaceId);
-      }
-
-      workspaceEvents.forEach((event) => {
-        currentSocket.off(event, invalidateWorkspace);
-      });
-
-      userEvents.forEach((event) => {
-        currentSocket.off(event, invalidateNotifications);
-      });
-
-      currentSocket.off('workspace_error', onWorkspaceError);
+      if (workspaceId) currentSocket.emit('workspace:leave', workspaceId);
+      currentSocket.off('workspace:changed', invalidateWorkspace);
+      currentSocket.off('notifications:changed', invalidateNotifications);
+      currentSocket.off('workspace:error', onWorkspaceError);
     };
   }, [queryClient, workspaceId]);
 };

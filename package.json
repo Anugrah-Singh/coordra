@@ -1,11 +1,11 @@
 {
-  "name": "saas-team-workspace",
+  "name": "coordra-api",
   "version": "1.0.0",
   "private": true,
   "engines": {
     "node": ">=24.18.0 <25"
   },
-  "description": "Multi-tenant SaaS team workspace backend with real-time collaboration, RBAC, PostgreSQL and automated Neon preview environments.",
+  "description": "Coordra API for tenant-safe project coordination, realtime collaboration, and approval-gated Pulse actions.",
   "main": "dist/server.js",
   "type": "module",
   "scripts": {
@@ -28,8 +28,9 @@
     "frontend:dev": "npm --prefix frontend run dev",
     "frontend:typecheck": "npm --prefix frontend run typecheck",
     "frontend:lint": "npm --prefix frontend run lint",
+    "frontend:test": "npm --prefix frontend test",
     "frontend:build": "npm --prefix frontend run build",
-    "verify": "npm run format:check && npm run backend:verify && npm run frontend:typecheck && npm run frontend:lint && npm run frontend:build"
+    "verify": "npm run format:check && npm run typecheck && npm run test:typecheck && npm test && npm run test:integration && npm audit --omit=dev && npm run frontend:typecheck && npm run frontend:lint && npm run frontend:test && npm run build && npm run frontend:build"
   },
   "keywords": [
     "nodejs",
@@ -45,6 +46,8 @@
   "author": "Anugrah Singh",
   "license": "ISC",
   "dependencies": {
+    "@ai-sdk/groq": "^4.0.19",
+    "ai": "^7.0.48",
     "bcrypt": "^6.0.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
@@ -57,7 +60,8 @@
     "pg": "^8.22.0",
     "socket.io": "^4.8.3",
     "swagger-ui-express": "^5.0.1",
-    "zod": "^4.4.3"
+    "zod": "^4.4.3",
+    "zod-openapi": "^6.0.0"
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",

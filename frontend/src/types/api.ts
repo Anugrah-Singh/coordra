@@ -43,7 +43,6 @@ export type Task = {
   priority: TaskPriority;
   dueDate: string | null;
   archivedAt: string | null;
-  duplicatedFromTaskId: string | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -116,19 +115,15 @@ export type AuditLog = {
 };
 
 export type ApiEnvelope<T> = {
-  success: boolean;
-  message?: string;
   data: T;
 };
 
 export type ApiErrorPayload = {
-  success?: false;
-  code?: string;
-  message?: string;
-  errors?: Array<{
-    field: string;
+  error: {
+    code: string;
     message: string;
-  }>;
+    fields: Record<string, string>;
+  };
 };
 
 export type TaskFilters = {
@@ -136,4 +131,37 @@ export type TaskFilters = {
   priority?: TaskPriority;
   assigneeId?: string;
   includeArchived?: boolean;
+};
+
+export type PulseHistoryMessage = {
+  role: 'user' | 'assistant';
+  content: string;
+};
+
+export type PulseProposal = {
+  id: string;
+  actionType: 'CREATE_TASK' | 'UPDATE_TASK' | 'ADD_COMMENT';
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'EXPIRED' | 'EXECUTED' | 'FAILED';
+  payload: {
+    projectId: string;
+    projectName: string;
+    taskId?: string;
+    taskTitle?: string;
+    title?: string;
+    description?: string | null;
+    status?: TaskStatus;
+    priority?: TaskPriority;
+    assigneeId?: string | null;
+    assigneeName?: string | null;
+    dueDate?: string | null;
+    content?: string;
+  };
+  expiresAt: string;
+  createdAt: string;
+};
+
+export type PulseResponse = {
+  message: string;
+  activities: string[];
+  proposal?: PulseProposal;
 };

@@ -57,6 +57,8 @@ const getErrorCodeForStatus = (statusCode: number): AppErrorCode => {
 
     409: APP_ERROR_CODES.CONFLICT,
 
+    410: APP_ERROR_CODES.GONE,
+
     413: APP_ERROR_CODES.PAYLOAD_TOO_LARGE,
 
     429: APP_ERROR_CODES.RATE_LIMITED,

@@ -2,10 +2,9 @@
 
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Copy, MailPlus, MoreHorizontal, Trash2, UserPlus, Users } from 'lucide-react';
+import { Copy, MailPlus, MoreHorizontal, Trash2, UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
 import { AppDialog as Modal } from '@/components/shared/AppDialog';
-import { EmptyState } from '@/components/shared/EmptyState';
 import { LoadingButton } from '@/components/shared/LoadingButton';
 import { LoadingState as Spinner } from '@/components/shared/LoadingState';
 import { StatusBadge as Badge } from '@/components/shared/StatusBadge';
@@ -13,6 +12,7 @@ import { UserAvatar as Avatar } from '@/components/shared/UserAvatar';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { inviteApi, memberApi } from '@/features/collaboration/collaboration.api';
+import { InvitationsPanel } from './InvitationsPanel';
 import { useWorkspace } from '@/features/workspaces/WorkspaceProvider';
 import { formatDate, humanize } from '@/lib/format';
 import type { WorkspaceMember, WorkspaceRole } from '@/types/api';
@@ -220,56 +220,17 @@ export const MembersPage = () => {
       </Card>
 
       {canAdmin ? (
-        <section className="flex flex-col gap-4">
-          <header className="flex items-end justify-between [&_h2]:font-heading [&_h2]:text-xl [&_h2]:font-semibold [&_p]:text-sm [&_p]:text-muted-foreground">
-            <div>
-              <h2>Pending invitations</h2>
-              <p>Invitations expire automatically after seven days.</p>
-            </div>
-          </header>
-          {(invitesQuery.data?.filter((invite) => invite.status === 'PENDING').length ??
-            0) === 0 ? (
-            <EmptyState
-              icon={<Users size={25} />}
-              title="No pending invitations"
-              description="Invite a teammate when you are ready to collaborate."
-            />
-          ) : (
-            <div className="grid gap-4 sm:grid-cols-2">
-              {invitesQuery.data
-                ?.filter((invite) => invite.status === 'PENDING')
-                .map((invite) => (
-                  <Card
-                    className="flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-muted/30 p-4"
-                    key={invite.id}
-                  >
-                    <div>
-                      <strong>{invite.email}</strong>
-                      <span>
-                        <Badge tone={roleTone(invite.role)}>{invite.role}</Badge> Expires{' '}
-                        {formatDate(invite.expiresAt)}
-                      </span>
-                    </div>
-                    <button
-                      className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
-                      type="button"
-                      onClick={() => deleteInviteMutation.mutate(invite.id)}
-                      aria-label="Revoke invite"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </Card>
-                ))}
-            </div>
-          )}
-        </section>
+        <InvitationsPanel
+          invites={invitesQuery.data ?? []}
+          onRevoke={(inviteId) => deleteInviteMutation.mutate(inviteId)}
+        />
       ) : null}
 
       <Modal
         open={addOpen}
         onClose={() => setAddOpen(false)}
         title="Add an existing user"
-        description="The user must already have a WorkspaceOS account."
+        description="The user must already have a Coordra account."
         size="sm"
       >
         <MemberForm

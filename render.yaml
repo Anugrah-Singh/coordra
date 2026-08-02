@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: saas-team-workspace-api
+    name: coordra-api
     runtime: node
     plan: free
     buildCommand: npm ci --include=dev && npm run build && npm prune --omit=dev
@@ -25,3 +25,13 @@ services:
         value: "1"
       - key: SHUTDOWN_TIMEOUT_MS
         value: "10000"
+      - key: AI_ENABLED
+        value: "false"
+      - key: AI_PROVIDER
+        value: groq
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GROQ_MODEL
+        value: openai/gpt-oss-20b
+      - key: AI_MAX_STEPS
+        value: "4"

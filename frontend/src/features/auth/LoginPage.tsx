@@ -61,7 +61,7 @@ export const LoginPage = () => {
           <span className="grid size-9 place-items-center rounded-xl bg-primary text-primary-foreground shadow-sm">
             <Layers3 size={21} />
           </span>
-          <span>WorkspaceOS</span>
+          <span>Coordra</span>
         </Link>
         <div className="relative z-10 my-auto max-w-xl [&_h1]:mt-4 [&_h1]:font-heading [&_h1]:text-5xl [&_h1]:font-semibold [&_h1]:leading-[1.02] [&_p]:mt-5 [&_p]:text-lg [&_p]:text-background/60">
           <span className="font-mono text-[10px] font-medium uppercase tracking-[.16em] text-background/60">
@@ -136,7 +136,7 @@ export const LoginPage = () => {
           </form>
 
           <p className="mt-6 text-center text-sm text-muted-foreground [&_a]:font-medium [&_a]:text-primary">
-            New to WorkspaceOS? <Link href="/register">Create an account</Link>
+            New to Coordra? <Link href="/register">Create an account</Link>
           </p>
         </div>
       </section>

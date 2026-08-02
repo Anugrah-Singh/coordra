@@ -44,6 +44,9 @@ export const requireAuth = (req: Request, res: Response, next: NextFunction): vo
 
     res.locals.userId = decoded.userId;
 
+    (req as Request & { authenticatedUserId?: string }).authenticatedUserId =
+      decoded.userId;
+
     next();
   } catch {
     res.status(401).json({

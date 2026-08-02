@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 
-import { and, eq, isNull } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 
 import { db } from '../db/index.js';
 
@@ -73,9 +73,7 @@ export const requireWorkspaceRole = (requiredRole: WorkspaceRole) => {
           and(
             eq(workspaceMembers.workspaceId, workspaceId),
 
-            eq(workspaceMembers.userId, userId),
-
-            isNull(workspaceMembers.removedAt)
+            eq(workspaceMembers.userId, userId)
           )
         )
         .limit(1);
