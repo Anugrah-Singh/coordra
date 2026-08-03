@@ -60,3 +60,30 @@ export const restoreSession = async (userId: string) => {
   if (!user) throw unauthorized('User account no longer exists');
   return user;
 };
+
+export const guestDemoLogin = async () => {
+  const demoEmail = 'guest.evaluator@coordra.app';
+  let [account] = await db
+    .select()
+    .from(users)
+    .where(eq(users.email, demoEmail))
+    .limit(1);
+
+  if (!account) {
+    const passwordHash = await bcrypt.hash('GuestDemoPassword123!', 10);
+    const [newUser] = await db
+      .insert(users)
+      .values({ email: demoEmail, fullName: 'Guest Evaluator', passwordHash })
+      .returning();
+    if (!newUser) throw internalError('Failed to initialize demo guest user');
+    account = newUser;
+  }
+
+  const token = jwt.sign({ userId: account.id, email: account.email }, env.JWT_SECRET, {
+    expiresIn: '7d',
+  });
+  return {
+    token,
+    user: { id: account.id, email: account.email, fullName: account.fullName },
+  };
+};

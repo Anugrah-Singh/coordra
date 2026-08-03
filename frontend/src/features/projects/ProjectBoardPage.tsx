@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Archive, Filter, Plus, Settings2, Tag } from 'lucide-react';
+import { Archive, Download, Filter, Plus, Settings2, Tag } from 'lucide-react';
 import { useParams, usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { AppDialog as Modal } from '@/components/shared/AppDialog';
@@ -152,6 +152,36 @@ export const ProjectBoardPage = () => {
           </p>
         </div>
         <div className="grid grid-cols-2 gap-2 sm:flex sm:shrink-0">
+          <Button
+            variant="outline"
+            onClick={() => {
+              const tasks = tasksQuery.data ?? [];
+              if (tasks.length === 0) {
+                toast.error('No tasks available to export');
+                return;
+              }
+              const headers = ['Task ID', 'Title', 'Status', 'Priority', 'Due Date'];
+              const rows = tasks.map((t) => [
+                t.id,
+                `"${t.title.replaceAll('"', '""')}"`,
+                t.status,
+                t.priority,
+                t.dueDate ? new Date(t.dueDate).toISOString().slice(0, 10) : 'None',
+              ]);
+              const csvContent = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+              const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+              const url = URL.createObjectURL(blob);
+              const link = document.createElement('a');
+              link.setAttribute('href', url);
+              link.setAttribute('download', `${(projectQuery.data?.name || 'project').toLowerCase().replaceAll(/\s+/g, '-')}-tasks.csv`);
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+              toast.success('Tasks exported to CSV');
+            }}
+          >
+            <Download size={16} /> Export CSV
+          </Button>
           {canEdit ? (
             <Button variant="secondary" onClick={() => setLabelOpen(true)}>
               <Tag size={16} /> New label

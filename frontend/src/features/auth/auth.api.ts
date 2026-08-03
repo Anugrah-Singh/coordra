@@ -19,4 +19,6 @@ export const authApi = {
     }),
 
   logout: () => request<void>({ method: 'POST', url: '/api/auth/logout' }),
+
+  demo: () => request<{ user: User }>({ method: 'POST', url: '/api/auth/demo' }),
 };
