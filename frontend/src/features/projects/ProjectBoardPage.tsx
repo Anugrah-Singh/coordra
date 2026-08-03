@@ -151,9 +151,10 @@ export const ProjectBoardPage = () => {
               'Plan, assign, and move delivery work in real time.'}
           </p>
         </div>
-        <div className="grid grid-cols-2 gap-2 sm:flex sm:shrink-0">
+        <div className="flex flex-wrap items-center gap-2 sm:shrink-0">
           <Button
             variant="outline"
+            className="flex-1 sm:flex-none justify-center"
             onClick={() => {
               const tasks = tasksQuery.data ?? [];
               if (tasks.length === 0) {
@@ -189,12 +190,19 @@ export const ProjectBoardPage = () => {
             <Download size={16} /> Export CSV
           </Button>
           {canEdit ? (
-            <Button variant="secondary" onClick={() => setLabelOpen(true)}>
+            <Button
+              variant="secondary"
+              className="flex-1 sm:flex-none justify-center"
+              onClick={() => setLabelOpen(true)}
+            >
               <Tag size={16} /> New label
             </Button>
           ) : null}
           {canEdit ? (
-            <Button onClick={() => setCreateOpen(true)}>
+            <Button
+              className="flex-1 sm:flex-none justify-center"
+              onClick={() => setCreateOpen(true)}
+            >
               <Plus size={17} /> Create task
             </Button>
           ) : null}
