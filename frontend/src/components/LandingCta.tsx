@@ -1,13 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
-import { ArrowRight, Play, Sparkles } from 'lucide-react';
+import { ArrowRight, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { authApi } from '@/features/auth/auth.api';
 import { useAuth } from '@/features/auth/AuthProvider';
 
 export function LandingCta({ prominent = false }: { prominent?: boolean }) {
