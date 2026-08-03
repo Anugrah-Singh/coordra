@@ -44,11 +44,11 @@ export const createApp = (readinessState: AppReadinessState = defaultReadinessSt
     app.set('trust proxy', env.TRUST_PROXY_HOPS);
   }
 
-  app.use(
-    helmet({
-      contentSecurityPolicy: env.NODE_ENV === 'development' ? false : undefined,
-    })
-  );
+  if (env.NODE_ENV === 'development') {
+    app.use(helmet({ contentSecurityPolicy: false }));
+  } else {
+    app.use(helmet());
+  }
 
   app.get('/api-docs.json', (_req: Request, res: Response) => {
     res.status(200).json(openApiDocument);
