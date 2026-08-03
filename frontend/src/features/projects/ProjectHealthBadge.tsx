@@ -49,10 +49,7 @@ export const ProjectHealthBadge = ({ tasks }: { tasks: Task[] }) => {
         className="inline-flex items-center gap-1.5 border-amber-500/30 bg-amber-500/10 text-amber-600 px-2.5 py-1 text-xs font-medium"
       >
         <AlertTriangle size={13} className="text-amber-500" />
-        <span>
-          {health.totalRisks} Condition{health.totalRisks > 1 ? 's' : ''} Needing
-          Attention
-        </span>
+        <span>{`${health.totalRisks} Condition${health.totalRisks > 1 ? 's' : ''} Needing Attention`}</span>
       </Badge>
     );
   }

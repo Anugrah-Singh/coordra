@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import {
   Activity,
   ChevronDown,
@@ -61,6 +61,18 @@ export function AppSidebar({
   const { user, logout } = useAuth();
   const workspace = useWorkspace();
   const router = useRouter();
+
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [open]);
+
   const { workspaceId } = workspace;
   const navItems = useMemo(
     () =>

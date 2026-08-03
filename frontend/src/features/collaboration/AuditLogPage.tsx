@@ -76,9 +76,23 @@ export const AuditLogPage = () => {
                   {log.oldValue || log.newValue ? (
                     <details>
                       <summary>View change payload</summary>
-                      <div className="mt-2 grid gap-2 lg:grid-cols-2 [&>pre]:max-h-72 [&>pre]:overflow-auto [&>pre]:rounded-lg [&>pre]:bg-foreground [&>pre]:p-3 [&>pre]:text-[11px] [&>pre]:text-background">
-                        <pre>{JSON.stringify(log.oldValue, null, 2)}</pre>
-                        <pre>{JSON.stringify(log.newValue, null, 2)}</pre>
+                      <div className="mt-2 grid gap-2 lg:grid-cols-2 [&>div]:flex [&>div]:flex-col [&>div]:gap-1 [&_span]:text-[10px] [&_span]:font-mono [&_span]:uppercase [&_span]:text-muted-foreground [&>div>pre]:max-h-72 [&>div>pre]:overflow-auto [&>div>pre]:rounded-lg [&>div>pre]:bg-foreground [&>div>pre]:p-3 [&>div>pre]:text-[11px] [&>div>pre]:text-background">
+                        <div>
+                          <span>Previous state</span>
+                          <pre>
+                            {log.oldValue
+                              ? JSON.stringify(log.oldValue, null, 2)
+                              : 'Initial state'}
+                          </pre>
+                        </div>
+                        <div>
+                          <span>New state</span>
+                          <pre>
+                            {log.newValue
+                              ? JSON.stringify(log.newValue, null, 2)
+                              : 'Resource deleted'}
+                          </pre>
+                        </div>
                       </div>
                     </details>
                   ) : null}
