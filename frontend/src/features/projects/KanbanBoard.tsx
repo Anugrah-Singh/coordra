@@ -67,8 +67,8 @@ const TaskCard = ({
       ref={draggable.setNodeRef}
       style={style}
       className={cn(
-        'cursor-pointer rounded-lg border bg-card p-3 shadow-xs transition-all hover:border-primary/30 hover:shadow-md',
-        draggable.isDragging && 'rotate-2 opacity-70 shadow-xl'
+        'card-hover-lift cursor-pointer rounded-xl border bg-card p-3.5 shadow-xs hover:border-primary/40',
+        draggable.isDragging && 'rotate-2 opacity-80 shadow-2xl ring-2 ring-primary/40'
       )}
       onClick={() => onOpen(task)}
     >

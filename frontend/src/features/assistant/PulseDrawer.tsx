@@ -17,17 +17,24 @@ import { PulseMessage } from './PulseMessage';
 import { PulseProposalCard } from './PulseProposal';
 import { usePulse } from './usePulse';
 
-const STARTERS = [
-  'Which tasks are overdue?',
-  'Summarize project risks.',
-  'Who has the heaviest active workload?',
-  'What changed recently?',
-];
-
 export const PulseDrawer = () => {
   const { workspaceId = '', currentWorkspace, projects } = useWorkspace();
   const projectId = useParams<{ projectId?: string }>()?.projectId;
   const project = projects.find((item) => item.id === projectId);
+
+  const starters = project
+    ? [
+        `Summarize risks for ${project.name}`,
+        `Find unassigned tasks in ${project.name}`,
+        `Check blockers in ${project.name}`,
+        `What changed recently in ${project.name}?`,
+      ]
+    : [
+        'Which tasks are overdue in this workspace?',
+        'Summarize project risks across all projects',
+        'Who has the heaviest active workload?',
+        'What changed recently in the workspace?',
+      ];
   const pulse = usePulse(workspaceId, projectId);
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState('');
@@ -104,15 +111,18 @@ export const PulseDrawer = () => {
                 </p>
               </div>
               <div className="grid gap-2" aria-label="Starter prompts">
-                {STARTERS.map((starter) => (
+                {starters.map((starter) => (
                   <Button
-                    className="h-auto justify-start whitespace-normal px-3 py-2.5 text-left"
+                    className="card-hover-lift h-auto justify-start whitespace-normal rounded-xl border-border/70 bg-card/80 px-3.5 py-3 text-left transition-all hover:border-primary/50 hover:bg-card hover:shadow-xs"
                     key={starter}
                     type="button"
                     variant="outline"
                     onClick={() => submit(starter)}
                   >
-                    {starter}
+                    <span className="flex items-center gap-2 text-xs font-medium text-foreground/90">
+                      <Sparkles size={13} className="text-primary shrink-0" />
+                      {starter}
+                    </span>
                   </Button>
                 ))}
               </div>

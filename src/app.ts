@@ -2,7 +2,7 @@ import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import { sql } from 'drizzle-orm';
 
-import express, { Request, Response } from 'express';
+import express, { NextFunction, Request, Response } from 'express';
 
 import helmet from 'helmet';
 import swaggerUi from 'swagger-ui-express';
@@ -44,19 +44,30 @@ export const createApp = (readinessState: AppReadinessState = defaultReadinessSt
     app.set('trust proxy', env.TRUST_PROXY_HOPS);
   }
 
+  app.use(
+    helmet({
+      contentSecurityPolicy: env.NODE_ENV === 'development' ? false : undefined,
+    })
+  );
+
   app.get('/api-docs.json', (_req: Request, res: Response) => {
     res.status(200).json(openApiDocument);
   });
 
   app.use(
     '/api-docs',
+    (_req: Request, res: Response, next: NextFunction) => {
+      res.setHeader(
+        'Content-Security-Policy',
+        "default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' https: 'unsafe-inline'; img-src 'self' data: https:; frame-ancestors 'self';"
+      );
+      next();
+    },
     swaggerUi.serve,
     swaggerUi.setup(openApiDocument, {
       customSiteTitle: 'Coordra API',
     })
   );
-
-  app.use(helmet());
 
   app.use(
     cors({

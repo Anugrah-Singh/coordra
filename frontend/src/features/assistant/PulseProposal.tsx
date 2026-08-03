@@ -19,6 +19,36 @@ const toLocalInput = (value?: string | null) => {
   return new Date(date.getTime() - offset).toISOString().slice(0, 16);
 };
 
+const DiffBadge = ({ label, value }: { label: string; value: string }) => (
+  <span className="inline-flex items-center gap-1 rounded-md border border-primary/30 bg-primary/10 px-2 py-1 text-[11px] font-medium text-primary">
+    <span className="text-muted-foreground">{label}:</span>
+    <span className="font-semibold text-foreground">{value}</span>
+  </span>
+);
+
+const ProposalDiffSummary = ({ payload }: { payload: PulseProposal['payload'] }) => {
+  const diffs: Array<{ label: string; value: string }> = [];
+
+  if (payload.status) diffs.push({ label: 'Status', value: payload.status.replaceAll('_', ' ') });
+  if (payload.priority) diffs.push({ label: 'Priority', value: payload.priority });
+  if (payload.assigneeName !== undefined)
+    diffs.push({ label: 'Assignee', value: payload.assigneeName || 'Unassigned' });
+  if (payload.title) diffs.push({ label: 'Title', value: payload.title });
+
+  if (diffs.length === 0) return null;
+
+  return (
+    <div className="flex flex-wrap items-center gap-1.5 rounded-lg border border-primary/20 bg-primary/5 p-2 my-1">
+      <span className="w-full text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+        Proposed Modifications
+      </span>
+      {diffs.map((diff) => (
+        <DiffBadge key={diff.label} label={diff.label} value={diff.value} />
+      ))}
+    </div>
+  );
+};
+
 export const PulseProposalCard = ({
   workspaceId,
   projects,
@@ -129,6 +159,10 @@ export const PulseProposalCard = ({
             </>
           ) : null}
         </p>
+
+        {proposal.actionType === 'UPDATE_TASK' ? (
+          <ProposalDiffSummary payload={proposal.payload} />
+        ) : null}
 
         {pending && proposal.actionType === 'CREATE_TASK' ? (
           <label className={labelClass}>

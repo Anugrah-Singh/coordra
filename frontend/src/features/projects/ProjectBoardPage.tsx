@@ -13,6 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { memberApi } from '@/features/collaboration/collaboration.api';
 import { KanbanBoard } from '@/features/projects/KanbanBoard';
+import { ProjectHealthBadge } from '@/features/projects/ProjectHealthBadge';
 import { labelApi, projectApi, taskApi } from '@/features/projects/projects.api';
 import { TaskModal } from '@/features/projects/TaskModal';
 import { useWorkspace } from '@/features/workspaces/WorkspaceProvider';
@@ -138,9 +139,12 @@ export const ProjectBoardPage = () => {
     <div className="flex min-w-0 flex-col gap-5">
       <header className="flex flex-col gap-4 border-b pb-5 sm:flex-row sm:items-end sm:justify-between [&_h1]:font-heading [&_h1]:text-3xl [&_h1]:font-semibold [&_p]:mt-1 [&_p]:text-pretty [&_p]:text-muted-foreground">
         <div className="min-w-0">
-          <span className="font-mono text-[10px] font-medium uppercase tracking-[.16em] text-primary">
-            Project board
-          </span>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="font-mono text-[10px] font-medium uppercase tracking-[.16em] text-primary">
+              Project board
+            </span>
+            <ProjectHealthBadge tasks={tasksQuery.data ?? []} />
+          </div>
           <h1 className="truncate text-balance">{projectQuery.data?.name}</h1>
           <p>
             {projectQuery.data?.description ||

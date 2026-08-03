@@ -49,13 +49,17 @@ const envSchema = z
     TRUST_PROXY_HOPS: z.coerce.number().int().min(0).max(10).default(0),
 
     DEMO_MODE: z
-      .enum(['true', 'false'])
+      .string()
       .default('false')
+      .transform((val) => val.toLowerCase())
+      .pipe(z.enum(['true', 'false']))
       .transform((value) => value === 'true'),
 
     AI_ENABLED: z
-      .enum(['true', 'false'])
+      .string()
       .default('false')
+      .transform((val) => val.toLowerCase())
+      .pipe(z.enum(['true', 'false']))
       .transform((value) => value === 'true'),
 
     AI_PROVIDER: z.string().trim().min(1).default('groq'),

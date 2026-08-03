@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import request from 'supertest';
+import jwt from 'jsonwebtoken';
 
 process.env.NODE_ENV = 'test';
 process.env.DATABASE_URL = 'postgresql://test:test@127.0.0.1:5432/test';
@@ -113,5 +114,33 @@ describe('HTTP foundation', () => {
       .expect(401);
     expectError(response.body, APP_ERROR_CODES.INVALID_AUTH_TOKEN);
     assert.equal('real_reason' in response.body.error, false);
+  });
+
+  it('rejects malformed workspace identifiers before database access', async () => {
+    const testSecret =
+      process.env.JWT_SECRET ?? 'test-only-jwt-secret-that-is-at-least-32-characters';
+    const token = jwt.sign(
+      { userId: '00000000-0000-4000-8000-000000000001', email: 'security@example.com' },
+      testSecret
+    );
+
+    const response = await request(app)
+      .get('/api/workspaces/not-a-uuid')
+      .set('Cookie', `auth_token=${token}`)
+      .expect(400);
+
+    expectError(response.body, APP_ERROR_CODES.BAD_REQUEST, 'Invalid workspace ID');
+  });
+
+  it('applies security headers to API documentation responses', async () => {
+    const response = await request(app).get('/api-docs.json').expect(200);
+
+    assert.equal(response.headers['x-content-type-options'], 'nosniff');
+    assert.equal(response.headers['x-frame-options'], 'SAMEORIGIN');
+    assert.equal(typeof response.headers['content-security-policy'], 'string');
+    assert.match(
+      response.headers['content-security-policy'] as string,
+      /default-src 'self'/
+    );
   });
 });

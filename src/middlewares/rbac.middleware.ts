@@ -2,6 +2,8 @@ import { NextFunction, Request, Response } from 'express';
 
 import { and, eq } from 'drizzle-orm';
 
+import { z } from 'zod';
+
 import { db } from '../db/index.js';
 
 import { workspaceMembers } from '../db/schema/workspaces.js';
@@ -57,6 +59,18 @@ export const requireWorkspaceRole = (requiredRole: WorkspaceRole) => {
           code: APP_ERROR_CODES.BAD_REQUEST,
 
           message: 'Workspace id is required',
+        });
+
+        return;
+      }
+
+      if (!z.uuid().safeParse(workspaceId).success) {
+        res.status(400).json({
+          success: false,
+
+          code: APP_ERROR_CODES.BAD_REQUEST,
+
+          message: 'Invalid workspace ID',
         });
 
         return;
