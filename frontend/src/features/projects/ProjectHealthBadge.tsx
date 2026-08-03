@@ -32,7 +32,10 @@ export const ProjectHealthBadge = ({ tasks }: { tasks: Task[] }) => {
 
   if (health.status === 'healthy') {
     return (
-      <Badge variant="outline" className="inline-flex items-center gap-1.5 border-emerald-500/30 bg-emerald-500/10 text-emerald-600 px-2.5 py-1 text-xs font-medium">
+      <Badge
+        variant="outline"
+        className="inline-flex items-center gap-1.5 border-emerald-500/30 bg-emerald-500/10 text-emerald-600 px-2.5 py-1 text-xs font-medium"
+      >
         <CheckCircle2 size={13} className="text-emerald-500" />
         <span>Healthy</span>
       </Badge>
@@ -41,15 +44,24 @@ export const ProjectHealthBadge = ({ tasks }: { tasks: Task[] }) => {
 
   if (health.status === 'warning') {
     return (
-      <Badge variant="outline" className="inline-flex items-center gap-1.5 border-amber-500/30 bg-amber-500/10 text-amber-600 px-2.5 py-1 text-xs font-medium">
+      <Badge
+        variant="outline"
+        className="inline-flex items-center gap-1.5 border-amber-500/30 bg-amber-500/10 text-amber-600 px-2.5 py-1 text-xs font-medium"
+      >
         <AlertTriangle size={13} className="text-amber-500" />
-        <span>{health.totalRisks} Condition{health.totalRisks > 1 ? 's' : ''} Needing Attention</span>
+        <span>
+          {health.totalRisks} Condition{health.totalRisks > 1 ? 's' : ''} Needing
+          Attention
+        </span>
       </Badge>
     );
   }
 
   return (
-    <Badge variant="outline" className="inline-flex items-center gap-1.5 border-rose-500/30 bg-rose-500/10 text-rose-600 px-2.5 py-1 text-xs font-medium">
+    <Badge
+      variant="outline"
+      className="inline-flex items-center gap-1.5 border-rose-500/30 bg-rose-500/10 text-rose-600 px-2.5 py-1 text-xs font-medium"
+    >
       <ShieldAlert size={13} className="text-rose-500" />
       <span>{health.totalRisks} High Risk Conditions</span>
     </Badge>

@@ -29,7 +29,8 @@ const DiffBadge = ({ label, value }: { label: string; value: string }) => (
 const ProposalDiffSummary = ({ payload }: { payload: PulseProposal['payload'] }) => {
   const diffs: Array<{ label: string; value: string }> = [];
 
-  if (payload.status) diffs.push({ label: 'Status', value: payload.status.replaceAll('_', ' ') });
+  if (payload.status)
+    diffs.push({ label: 'Status', value: payload.status.replaceAll('_', ' ') });
   if (payload.priority) diffs.push({ label: 'Priority', value: payload.priority });
   if (payload.assigneeName !== undefined)
     diffs.push({ label: 'Assignee', value: payload.assigneeName || 'Unassigned' });

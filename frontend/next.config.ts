@@ -5,7 +5,9 @@ const apiOrigin = new URL(process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8
 const socketOrigin = apiOrigin.replace(/^http/, 'ws');
 
 const isDev = process.env.NODE_ENV !== 'production';
-const scriptSrc = isDev ? "'self' 'unsafe-inline' 'unsafe-eval'" : "'self' 'unsafe-inline'";
+const scriptSrc = isDev
+  ? "'self' 'unsafe-inline' 'unsafe-eval'"
+  : "'self' 'unsafe-inline'";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,

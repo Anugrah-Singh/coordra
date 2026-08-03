@@ -29,7 +29,10 @@ const parseTableLine = (line: string): string[] =>
   line
     .split('|')
     .map((c) => c.trim())
-    .filter((c, idx, arr) => idx > 0 && idx < arr.length - 1 || (arr.length <= 2 && c.length > 0));
+    .filter(
+      (c, idx, arr) =>
+        (idx > 0 && idx < arr.length - 1) || (arr.length <= 2 && c.length > 0)
+    );
 
 const parseBlocks = (content: string): Block[] => {
   const rawLines = content.split('\n');
@@ -48,7 +51,8 @@ const parseBlocks = (content: string): Block[] => {
     // Markdown Table Detection
     if (
       trimmed.includes('|') &&
-      (trimmed.startsWith('|') || (i + 1 < rawLines.length && rawLines[i + 1].trim().includes('|')))
+      (trimmed.startsWith('|') ||
+        (i + 1 < rawLines.length && rawLines[i + 1].trim().includes('|')))
     ) {
       const tableLines: string[] = [];
       while (i < rawLines.length && rawLines[i].trim().includes('|')) {
@@ -159,7 +163,10 @@ const FormattedContent = ({ content }: { content: string }) => {
                   {block.rows.map((row, rIdx) => (
                     <tr key={rIdx} className="hover:bg-muted/40 transition-colors">
                       {row.map((cell, cIdx) => (
-                        <td key={cIdx} className="px-3 py-2 text-foreground/90 whitespace-nowrap">
+                        <td
+                          key={cIdx}
+                          className="px-3 py-2 text-foreground/90 whitespace-nowrap"
+                        >
                           {formatInline(cell)}
                         </td>
                       ))}
@@ -248,7 +255,11 @@ export const PulseMessage = ({
       <ul className="mt-3 space-y-1 border-t border-border/40 pt-2.5 text-xs text-muted-foreground">
         {message.activities.map((activity) => (
           <li className="flex items-center gap-1.5" key={activity}>
-            <CheckCircle2 aria-hidden="true" size={13} className="text-emerald-500 shrink-0" />{' '}
+            <CheckCircle2
+              aria-hidden="true"
+              size={13}
+              className="text-emerald-500 shrink-0"
+            />{' '}
             {activity}
           </li>
         ))}
@@ -268,4 +279,3 @@ export const PulseMessage = ({
     ) : null}
   </li>
 );
-

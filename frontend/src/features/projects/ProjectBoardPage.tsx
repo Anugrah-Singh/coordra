@@ -168,12 +168,18 @@ export const ProjectBoardPage = () => {
                 t.priority,
                 t.dueDate ? new Date(t.dueDate).toISOString().slice(0, 10) : 'None',
               ]);
-              const csvContent = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+              const csvContent = [
+                headers.join(','),
+                ...rows.map((r) => r.join(',')),
+              ].join('\n');
               const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
               const url = URL.createObjectURL(blob);
               const link = document.createElement('a');
               link.setAttribute('href', url);
-              link.setAttribute('download', `${(projectQuery.data?.name || 'project').toLowerCase().replaceAll(/\s+/g, '-')}-tasks.csv`);
+              link.setAttribute(
+                'download',
+                `${(projectQuery.data?.name || 'project').toLowerCase().replaceAll(/\s+/g, '-')}-tasks.csv`
+              );
               document.body.appendChild(link);
               link.click();
               document.body.removeChild(link);
