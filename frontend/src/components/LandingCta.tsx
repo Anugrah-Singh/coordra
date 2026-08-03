@@ -11,9 +11,8 @@ import { authApi } from '@/features/auth/auth.api';
 import { useAuth } from '@/features/auth/AuthProvider';
 
 export function LandingCta({ prominent = false }: { prominent?: boolean }) {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, demo } = useAuth();
   const router = useRouter();
-  const queryClient = useQueryClient();
   const [demoLoading, setDemoLoading] = useState(false);
 
   const href = user ? '/app' : prominent ? '/register' : '/login';
@@ -28,8 +27,7 @@ export function LandingCta({ prominent = false }: { prominent?: boolean }) {
   const handleGuestDemo = async () => {
     try {
       setDemoLoading(true);
-      await authApi.demo();
-      await queryClient.invalidateQueries({ queryKey: ['me'] });
+      await demo();
       toast.success('Logged in as Guest Evaluator');
       router.push('/app');
     } catch (error) {

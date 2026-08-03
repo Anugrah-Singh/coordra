@@ -16,6 +16,7 @@ type AuthContextValue = {
     password: string;
     fullName: string;
   }) => Promise<User>;
+  demo: () => Promise<User>;
   logout: () => Promise<void>;
 };
 
@@ -31,6 +32,13 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
 
   const loginMutation = useMutation({
     mutationFn: authApi.login,
+    onSuccess: ({ user }) => {
+      queryClient.setQueryData(AUTH_QUERY_KEY, user);
+    },
+  });
+
+  const demoMutation = useMutation({
+    mutationFn: authApi.demo,
     onSuccess: ({ user }) => {
       queryClient.setQueryData(AUTH_QUERY_KEY, user);
     },
@@ -64,11 +72,13 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
       isLoading: authQuery.isLoading,
       login: async (input) => (await loginMutation.mutateAsync(input)).user,
       register: registerMutation.mutateAsync,
+      demo: async () => (await demoMutation.mutateAsync()).user,
       logout: logoutMutation.mutateAsync,
     }),
     [
       authQuery.data,
       authQuery.isLoading,
+      demoMutation,
       loginMutation,
       logoutMutation.mutateAsync,
       registerMutation.mutateAsync,
