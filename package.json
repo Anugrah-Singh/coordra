@@ -9,6 +9,7 @@
   "main": "dist/server.js",
   "type": "module",
   "scripts": {
+    "graphify": "npx -y @mohammednagy/graphify-ts",
     "dev": "tsx watch src/server.ts",
     "typecheck": "tsc --noEmit",
     "test:typecheck": "tsc --noEmit -p tsconfig.test.json",
