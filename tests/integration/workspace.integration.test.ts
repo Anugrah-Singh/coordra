@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import './setup.js';
 import { randomUUID } from 'node:crypto';
 import { after, describe, it } from 'node:test';
 
@@ -12,15 +13,6 @@ if (!process.env.DATABASE_URL) {
 
 // These must be assigned before importing application modules
 // because env.ts validates configuration during module loading.
-process.env.NODE_ENV = 'test';
-
-process.env.JWT_SECRET ??= 'integration-test-only-jwt-secret-with-at-least-32-characters';
-
-process.env.FRONTEND_URL ??= 'http://localhost:3000';
-
-process.env.DB_POOL_MAX ??= '2';
-
-process.env.SHUTDOWN_TIMEOUT_MS ??= '1000';
 
 const [{ createApp }, { closeDatabase, db }, { users }, { workspaces }] =
   await Promise.all([

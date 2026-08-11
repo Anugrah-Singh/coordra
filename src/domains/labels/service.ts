@@ -1,3 +1,4 @@
+import { insertAuditLog } from '../activity/service.js';
 import { and, desc, eq, inArray } from 'drizzle-orm';
 
 import { db } from '../../db/index.js';
@@ -52,7 +53,7 @@ export const createLabel = async (data: {
       throw createHttpError('Failed to create label', 500);
     }
 
-    await tx.insert(auditLogs).values({
+    await insertAuditLog(tx, {
       workspaceId: data.workspaceId,
       actorId: data.actorId,
       action: 'LABEL_CREATED',
@@ -107,7 +108,7 @@ export const updateLabel = async (data: {
       throw createHttpError('Failed to update label', 500);
     }
 
-    await tx.insert(auditLogs).values({
+    await insertAuditLog(tx, {
       workspaceId: data.workspaceId,
       actorId: data.actorId,
       action: 'LABEL_UPDATED',
@@ -152,7 +153,7 @@ export const deleteLabel = async (data: {
       throw createHttpError('Failed to delete label', 500);
     }
 
-    await tx.insert(auditLogs).values({
+    await insertAuditLog(tx, {
       workspaceId: data.workspaceId,
       actorId: data.actorId,
       action: 'LABEL_DELETED',
@@ -305,7 +306,7 @@ export const replaceTaskLabels = async (data: {
         .insert(taskLabels)
         .values(uniqueLabelIds.map((labelId) => ({ taskId: data.taskId, labelId })));
     }
-    await tx.insert(auditLogs).values({
+    await insertAuditLog(tx, {
       workspaceId: data.workspaceId,
       actorId: data.actorId,
       action: 'TASK_LABELS_REPLACED',

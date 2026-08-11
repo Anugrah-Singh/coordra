@@ -1,3 +1,4 @@
+import { pk, timestamps, createdAtCol } from './columns.js';
 import { pgTable, uuid, text, timestamp, pgEnum, uniqueIndex } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 
@@ -12,21 +13,19 @@ export const roleEnum = pgEnum('workspace_role', [
 ]);
 
 export const workspaces = pgTable('workspaces', {
-  id: uuid('id').primaryKey().defaultRandom(),
+  ...pk,
 
   name: text('name').notNull(),
 
   slug: text('slug').notNull().unique(),
 
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  ...timestamps,
 });
 
 export const workspaceMembers = pgTable(
   'workspace_members',
   {
-    id: uuid('id').primaryKey().defaultRandom(),
+    ...pk,
 
     workspaceId: uuid('workspace_id')
       .references(() => workspaces.id, {

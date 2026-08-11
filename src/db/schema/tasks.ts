@@ -1,3 +1,4 @@
+import { pk, timestamps, createdAtCol } from './columns.js';
 import { index, pgEnum, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
 import { projects } from './projects.js';
@@ -22,7 +23,7 @@ export const taskPriorityEnum = pgEnum('task_priority', [
 export const tasks = pgTable(
   'tasks',
   {
-    id: uuid('id').primaryKey().defaultRandom(),
+    ...pk,
 
     workspaceId: uuid('workspace_id')
       .references(() => workspaces.id, {
@@ -56,9 +57,7 @@ export const tasks = pgTable(
 
     archivedAt: timestamp('archived_at'),
 
-    createdAt: timestamp('created_at').defaultNow().notNull(),
-
-    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+    ...timestamps,
   },
   (table) => [
     index('tasks_workspace_idx').on(table.workspaceId),

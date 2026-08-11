@@ -1,3 +1,4 @@
+import { insertAuditLog } from '../activity/service.js';
 import { and, desc, eq } from 'drizzle-orm';
 
 import { db } from '../../db/index.js';
@@ -87,7 +88,7 @@ export const addWorkspaceMemberByEmail = async (data: {
       throw createHttpError('Failed to add workspace member', 500);
     }
 
-    await tx.insert(auditLogs).values({
+    await insertAuditLog(tx, {
       workspaceId: data.workspaceId,
       actorId: data.actorId,
       action: 'MEMBER_ADDED',
@@ -145,7 +146,7 @@ export const updateWorkspaceMemberRole = async (data: {
       throw createHttpError('Failed to update member role', 500);
     }
 
-    await tx.insert(auditLogs).values({
+    await insertAuditLog(tx, {
       workspaceId: data.workspaceId,
       actorId: data.actorId,
       action: 'MEMBER_ROLE_UPDATED',
@@ -200,7 +201,7 @@ export const removeWorkspaceMember = async (data: {
       throw createHttpError('Failed to remove workspace member', 500);
     }
 
-    await tx.insert(auditLogs).values({
+    await insertAuditLog(tx, {
       workspaceId: data.workspaceId,
       actorId: data.actorId,
       action: 'MEMBER_REMOVED',

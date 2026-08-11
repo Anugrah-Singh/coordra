@@ -1,3 +1,4 @@
+import { workspaceParams, projectParams, taskParams, wId } from '../shared.params.js';
 import { Router } from 'express';
 import { z } from 'zod';
 

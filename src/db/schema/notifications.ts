@@ -1,3 +1,4 @@
+import { pk, timestamps, createdAtCol } from './columns.js';
 import { pgTable, uuid, text, timestamp, pgEnum, index } from 'drizzle-orm/pg-core';
 
 import { workspaces } from './workspaces.js';
@@ -15,7 +16,7 @@ export const notificationTypeEnum = pgEnum('notification_type', [
 export const notifications = pgTable(
   'notifications',
   {
-    id: uuid('id').primaryKey().defaultRandom(),
+    ...pk,
 
     workspaceId: uuid('workspace_id')
       .references(() => workspaces.id, {
@@ -39,7 +40,7 @@ export const notifications = pgTable(
 
     readAt: timestamp('read_at'),
 
-    createdAt: timestamp('created_at').defaultNow().notNull(),
+    ...createdAtCol,
   },
   (table) => [
     index('notifications_workspace_idx').on(table.workspaceId),

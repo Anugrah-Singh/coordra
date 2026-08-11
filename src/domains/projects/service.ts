@@ -1,3 +1,4 @@
+import { insertAuditLog } from '../activity/service.js';
 import { and, desc, eq, inArray } from 'drizzle-orm';
 
 import { db } from '../../db/index.js';
@@ -45,7 +46,7 @@ export const createProject = async (data: CreateProjectData) => {
       throw createHttpError('Failed to create project', 500);
     }
 
-    await tx.insert(auditLogs).values({
+    await insertAuditLog(tx, {
       workspaceId: data.workspaceId,
       actorId: data.actorId,
       action: 'PROJECT_CREATED',
@@ -218,7 +219,7 @@ export const updateProject = async (data: UpdateProjectData) => {
       throw createHttpError('Failed to update project', 500);
     }
 
-    await tx.insert(auditLogs).values({
+    await insertAuditLog(tx, {
       workspaceId: data.workspaceId,
       actorId: data.actorId,
       action: 'PROJECT_UPDATED',
@@ -267,7 +268,7 @@ export const deleteProject = async (data: {
       throw createHttpError('Failed to delete project', 500);
     }
 
-    await tx.insert(auditLogs).values({
+    await insertAuditLog(tx, {
       workspaceId: data.workspaceId,
       actorId: data.actorId,
       action: 'PROJECT_DELETED',

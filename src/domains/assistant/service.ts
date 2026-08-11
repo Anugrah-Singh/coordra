@@ -1,3 +1,4 @@
+import { insertAuditLog } from '../activity/service.js';
 import { and, eq } from 'drizzle-orm';
 
 import { proposalPayloadSchemas, type ProposalAction } from '../../ai/types.js';
@@ -5,13 +6,7 @@ import { db } from '../../db/index.js';
 import { aiActionProposals } from '../../db/schema/aiActionProposals.js';
 import { auditLogs } from '../../db/schema/auditLogs.js';
 import { workspaceMembers } from '../../db/schema/workspaces.js';
-import {
-  badRequest,
-  conflict,
-  forbidden,
-  gone,
-  notFound,
-} from '../../utils/httpErrors.js';
+import { AppError } from '../../utils/AppError.js';
 import { createCommentInTransaction } from '../comments/service.js';
 import { getWorkspaceMembers } from '../members/service.js';
 import { getProjectById } from '../projects/service.js';
@@ -54,7 +49,7 @@ export const createStoredProposal = async (input: {
       expiresAt: new Date(now.getTime() + PROPOSAL_LIFETIME_MS),
     })
     .returning();
-  if (!proposal) throw conflict('Could not create the Pulse proposal');
+  if (!proposal) throw AppError.conflict('Could not create the Pulse proposal');
   return sanitizeProposal(proposal);
 };
 
@@ -74,7 +69,7 @@ const getOwnedProposal = async (input: {
       )
     )
     .limit(1);
-  if (!proposal) throw notFound('Proposal not found');
+  if (!proposal) throw AppError.notFound('Proposal not found');
   return proposal;
 };
 
@@ -92,10 +87,10 @@ const ensurePending = async (
           eq(aiActionProposals.status, 'PENDING')
         )
       );
-    throw gone('This proposal has expired. Ask Pulse to prepare a new one.');
+    throw AppError.gone('This proposal has expired. Ask Pulse to prepare a new one.');
   }
   if (proposal.status !== 'PENDING') {
-    throw conflict('This proposal is no longer pending');
+    throw AppError.conflict('This proposal is no longer pending');
   }
 };
 
@@ -121,7 +116,7 @@ export const editProposal = async (input: {
       'dueDate',
     ];
     if (Object.keys(input.changes).some((key) => !allowed.includes(key))) {
-      throw badRequest('The proposal contains an unsupported editable field');
+      throw AppError.badRequest('The proposal contains an unsupported editable field');
     }
     candidate = {
       ...candidate,
@@ -141,7 +136,7 @@ export const editProposal = async (input: {
           limit: '100',
         });
         const member = members.find((item) => item.userId === candidate.assigneeId);
-        if (!member) throw notFound('Assignee not found in this workspace');
+        if (!member) throw AppError.notFound('Assignee not found in this workspace');
         candidate.assigneeName = member.fullName;
       }
     }
@@ -155,7 +150,7 @@ export const editProposal = async (input: {
       'dueDate',
     ];
     if (Object.keys(input.changes).some((key) => !allowed.includes(key))) {
-      throw badRequest('Task and project targets cannot be changed');
+      throw AppError.badRequest('Task and project targets cannot be changed');
     }
     candidate = {
       ...candidate,
@@ -171,13 +166,13 @@ export const editProposal = async (input: {
           limit: '100',
         });
         const member = members.find((item) => item.userId === candidate.assigneeId);
-        if (!member) throw notFound('Assignee not found in this workspace');
+        if (!member) throw AppError.notFound('Assignee not found in this workspace');
         candidate.assigneeName = member.fullName;
       }
     }
   } else {
     if (Object.keys(input.changes).some((key) => key !== 'content')) {
-      throw badRequest('Comment and task targets cannot be changed');
+      throw AppError.badRequest('Comment and task targets cannot be changed');
     }
     candidate = { ...candidate, content: input.changes.content };
   }
@@ -194,7 +189,8 @@ export const editProposal = async (input: {
       and(eq(aiActionProposals.id, proposal.id), eq(aiActionProposals.status, 'PENDING'))
     )
     .returning();
-  if (!updated) throw conflict('This proposal changed before it could be edited');
+  if (!updated)
+    throw AppError.conflict('This proposal changed before it could be edited');
   return sanitizeProposal(updated);
 };
 
@@ -212,7 +208,7 @@ export const rejectProposal = async (input: {
       and(eq(aiActionProposals.id, proposal.id), eq(aiActionProposals.status, 'PENDING'))
     )
     .returning();
-  if (!rejected) throw conflict('This proposal is no longer pending');
+  if (!rejected) throw AppError.conflict('This proposal is no longer pending');
   return sanitizeProposal(rejected);
 };
 
@@ -239,9 +235,9 @@ export const approveProposal = async (input: {
           )
         )
         .limit(1);
-      if (!membership) throw notFound('Proposal not found');
+      if (!membership) throw AppError.notFound('Proposal not found');
       if (membership.role === 'VIEWER') {
-        throw forbidden('Your current workspace role cannot approve changes');
+        throw AppError.forbidden('Your current workspace role cannot approve changes');
       }
 
       const [claimed] = await tx
@@ -256,8 +252,8 @@ export const approveProposal = async (input: {
           )
         )
         .returning();
-      if (!claimed) throw conflict('This proposal is no longer pending');
-      if (claimed.expiresAt <= now) throw gone('This proposal has expired');
+      if (!claimed) throw AppError.conflict('This proposal is no longer pending');
+      if (claimed.expiresAt <= now) throw AppError.gone('This proposal has expired');
       executionStarted = true;
       const payload = parsePayload(claimed.actionType, claimed.payload);
 
@@ -303,7 +299,7 @@ export const approveProposal = async (input: {
         });
       }
 
-      await tx.insert(auditLogs).values({
+      await insertAuditLog(tx, {
         workspaceId: input.workspaceId,
         actorId: input.requesterId,
         action: `AI_ASSISTED_${claimed.actionType}`,
@@ -328,7 +324,7 @@ export const approveProposal = async (input: {
           )
         )
         .returning();
-      if (!executed) throw conflict('The proposal could not be completed');
+      if (!executed) throw AppError.conflict('The proposal could not be completed');
 
       return { proposal: sanitizeProposal(executed), resource, notification };
     });

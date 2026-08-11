@@ -1,3 +1,4 @@
+import { pk, timestamps, createdAtCol } from './columns.js';
 import {
   pgTable,
   uuid,
@@ -14,7 +15,7 @@ import { tasks } from './tasks.js';
 export const labels = pgTable(
   'labels',
   {
-    id: uuid('id').primaryKey().defaultRandom(),
+    ...pk,
 
     workspaceId: uuid('workspace_id')
       .references(() => workspaces.id, {
@@ -26,7 +27,7 @@ export const labels = pgTable(
 
     color: text('color').default('#000000').notNull(),
 
-    createdAt: timestamp('created_at').defaultNow().notNull(),
+    ...createdAtCol,
   },
   (table) => [
     uniqueIndex('labels_workspace_name_unique_idx').on(table.workspaceId, table.name),

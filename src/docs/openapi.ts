@@ -1,3 +1,9 @@
+import {
+  workspaceParams,
+  projectParams,
+  taskParams,
+  wId,
+} from '../domains/shared.params.js';
 import { z } from 'zod';
 import { createDocument } from 'zod-openapi';
 
@@ -54,10 +60,6 @@ const responses = (status = '200') => ({
 const body = (schema: z.ZodType) => ({
   content: { 'application/json': { schema } },
 });
-const id = z.uuid();
-const workspaceParams = z.object({ workspaceId: id });
-const projectParams = z.object({ workspaceId: id, projectId: id });
-const taskParams = z.object({ workspaceId: id, projectId: id, taskId: id });
 
 export const openApiDocument = createDocument({
   openapi: '3.1.0',
@@ -147,7 +149,7 @@ export const openApiDocument = createDocument({
     '/api/workspaces/{workspaceId}/members/{memberId}/role': {
       patch: {
         tags: ['members'],
-        requestParams: { path: z.object({ workspaceId: id, memberId: id }) },
+        requestParams: { path: workspaceParams.extend({ memberId: wId }) },
         requestBody: body(updateMemberRoleSchema.shape.body),
         responses: responses(),
       },
@@ -258,13 +260,13 @@ export const openApiDocument = createDocument({
     '/api/workspaces/{workspaceId}/labels/{labelId}': {
       patch: {
         tags: ['labels'],
-        requestParams: { path: z.object({ workspaceId: id, labelId: id }) },
+        requestParams: { path: workspaceParams.extend({ labelId: wId }) },
         requestBody: body(updateLabelSchema.shape.body),
         responses: responses(),
       },
       delete: {
         tags: ['labels'],
-        requestParams: { path: z.object({ workspaceId: id, labelId: id }) },
+        requestParams: { path: workspaceParams.extend({ labelId: wId }) },
         responses: responses(),
       },
     },
@@ -307,7 +309,7 @@ export const openApiDocument = createDocument({
       patch: {
         tags: ['assistant'],
         requestParams: {
-          path: z.object({ workspaceId: id, proposalId: id }),
+          path: workspaceParams.extend({ proposalId: wId }),
         },
         requestBody: body(editProposalSchema.shape.body),
         responses: responses(),
@@ -317,7 +319,7 @@ export const openApiDocument = createDocument({
       post: {
         tags: ['assistant'],
         requestParams: {
-          path: z.object({ workspaceId: id, proposalId: id }),
+          path: workspaceParams.extend({ proposalId: wId }),
         },
         responses: responses(),
       },
@@ -326,7 +328,7 @@ export const openApiDocument = createDocument({
       post: {
         tags: ['assistant'],
         requestParams: {
-          path: z.object({ workspaceId: id, proposalId: id }),
+          path: workspaceParams.extend({ proposalId: wId }),
         },
         responses: responses(),
       },

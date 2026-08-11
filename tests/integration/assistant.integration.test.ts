@@ -1,16 +1,10 @@
 import assert from 'node:assert/strict';
+import './setup.js';
 import { randomUUID } from 'node:crypto';
 import { after, describe, it } from 'node:test';
 
 import { eq, inArray } from 'drizzle-orm';
 import request from 'supertest';
-
-if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL is required');
-process.env.NODE_ENV = 'test';
-process.env.JWT_SECRET ??= 'pulse-integration-secret-with-at-least-32-characters';
-process.env.FRONTEND_URL ??= 'http://localhost:3000';
-process.env.DB_POOL_MAX ??= '2';
-process.env.AI_ENABLED = 'false';
 
 const [appModule, dbModule, schema, proposals] = await Promise.all([
   import('../../src/app.js'),

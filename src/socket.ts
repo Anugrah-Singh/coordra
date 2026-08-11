@@ -1,7 +1,7 @@
 import { Server as HttpServer } from 'node:http';
 
 import { and, eq } from 'drizzle-orm';
-import jwt, { JwtPayload } from 'jsonwebtoken';
+import { verifyAuthToken } from './utils/verifyToken.js';
 import { Server, Socket } from 'socket.io';
 
 import { env } from './config/env.js';
@@ -10,11 +10,6 @@ import { workspaceMembers } from './db/schema/workspaces.js';
 import { AUTH_COOKIE_NAME } from './utils/auth-cookie.js';
 
 let io: Server | undefined;
-
-type AuthTokenPayload = JwtPayload & {
-  userId?: string;
-  email?: string;
-};
 
 const uuidRegex =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -77,12 +72,7 @@ export const initSocket = (server: HttpServer): Server => {
         return;
       }
 
-      const decoded = jwt.verify(token, env.JWT_SECRET) as AuthTokenPayload;
-
-      if (!decoded.userId) {
-        next(new Error('Invalid authentication token'));
-        return;
-      }
+      const decoded = verifyAuthToken(token);
 
       socket.data.userId = decoded.userId;
       socket.data.email = decoded.email;

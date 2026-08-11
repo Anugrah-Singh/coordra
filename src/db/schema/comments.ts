@@ -1,3 +1,4 @@
+import { pk, timestamps, createdAtCol } from './columns.js';
 import { pgTable, uuid, text, timestamp, index } from 'drizzle-orm/pg-core';
 
 import { workspaces } from './workspaces.js';
@@ -7,7 +8,7 @@ import { users } from './users.js';
 export const comments = pgTable(
   'comments',
   {
-    id: uuid('id').primaryKey().defaultRandom(),
+    ...pk,
 
     workspaceId: uuid('workspace_id')
       .references(() => workspaces.id, {
@@ -31,9 +32,7 @@ export const comments = pgTable(
 
     editedAt: timestamp('edited_at'),
 
-    createdAt: timestamp('created_at').defaultNow().notNull(),
-
-    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+    ...timestamps,
   },
   (table) => [
     index('comments_workspace_idx').on(table.workspaceId),

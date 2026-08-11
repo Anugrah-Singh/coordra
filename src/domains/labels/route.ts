@@ -1,3 +1,4 @@
+import { workspaceParams, projectParams, taskParams, wId } from '../shared.params.js';
 import { Router } from 'express';
 import { z } from 'zod';
 
@@ -39,7 +40,7 @@ export const getWorkspaceLabelsSchema = z.object({
   params: z.object({ workspaceId }),
   query: paging,
 });
-const taskParams = z.object({ workspaceId, projectId: z.uuid(), taskId: z.uuid() });
+
 export const taskLabelsListSchema = z.object({ params: taskParams, query: paging });
 export const replaceTaskLabelsSchema = z.object({
   params: taskParams,

@@ -1,3 +1,4 @@
+import { pk, timestamps, createdAtCol } from './columns.js';
 import { index, jsonb, pgEnum, pgTable, timestamp, uuid } from 'drizzle-orm/pg-core';
 
 import { users } from './users.js';
@@ -21,7 +22,7 @@ export const aiActionStatusEnum = pgEnum('ai_action_status', [
 export const aiActionProposals = pgTable(
   'ai_action_proposals',
   {
-    id: uuid('id').primaryKey().defaultRandom(),
+    ...pk,
     workspaceId: uuid('workspace_id')
       .references(() => workspaces.id, { onDelete: 'cascade' })
       .notNull(),
@@ -32,7 +33,7 @@ export const aiActionProposals = pgTable(
     payload: jsonb('payload').notNull(),
     status: aiActionStatusEnum('status').default('PENDING').notNull(),
     expiresAt: timestamp('expires_at').notNull(),
-    createdAt: timestamp('created_at').defaultNow().notNull(),
+    ...createdAtCol,
     executedAt: timestamp('executed_at'),
   },
   (table) => [

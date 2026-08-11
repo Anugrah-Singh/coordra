@@ -1,3 +1,4 @@
+import { insertAuditLog } from '../activity/service.js';
 import { createHash, randomBytes } from 'node:crypto';
 
 import { and, desc, eq, gt, lte } from 'drizzle-orm';
@@ -152,7 +153,7 @@ export const createWorkspaceInvite = async (data: {
       throw createHttpError('Failed to create workspace invite', 500);
     }
 
-    await tx.insert(auditLogs).values({
+    await insertAuditLog(tx, {
       workspaceId: data.workspaceId,
       actorId: data.invitedById,
       action: 'WORKSPACE_INVITE_CREATED',
@@ -228,7 +229,7 @@ export const deleteWorkspaceInvite = async (data: {
       throw createHttpError('Failed to delete invite', 500);
     }
 
-    await tx.insert(auditLogs).values({
+    await insertAuditLog(tx, {
       workspaceId: data.workspaceId,
       actorId: data.actorId,
       action: 'WORKSPACE_INVITE_DELETED',
@@ -339,7 +340,7 @@ export const acceptWorkspaceInvite = async (data: { token: string; actorId: stri
       membership = newMembership;
     }
 
-    await tx.insert(auditLogs).values({
+    await insertAuditLog(tx, {
       workspaceId: invite.workspaceId,
       actorId: actor.id,
       action: 'WORKSPACE_INVITE_ACCEPTED',
@@ -425,7 +426,7 @@ export const declineWorkspaceInvite = async (data: {
       throw createHttpError('Invite state changed before it could be declined', 409);
     }
 
-    await tx.insert(auditLogs).values({
+    await insertAuditLog(tx, {
       workspaceId: invite.workspaceId,
       actorId: actor.id,
       action: 'WORKSPACE_INVITE_DECLINED',

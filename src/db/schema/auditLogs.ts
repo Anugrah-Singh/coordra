@@ -1,3 +1,4 @@
+import { pk, timestamps, createdAtCol } from './columns.js';
 import { pgTable, uuid, text, timestamp, jsonb, index } from 'drizzle-orm/pg-core';
 
 import { workspaces } from './workspaces.js';
@@ -6,7 +7,7 @@ import { users } from './users.js';
 export const auditLogs = pgTable(
   'audit_logs',
   {
-    id: uuid('id').primaryKey().defaultRandom(),
+    ...pk,
 
     workspaceId: uuid('workspace_id')
       .references(() => workspaces.id, {
@@ -28,7 +29,7 @@ export const auditLogs = pgTable(
 
     newValue: jsonb('new_value'),
 
-    createdAt: timestamp('created_at').defaultNow().notNull(),
+    ...createdAtCol,
   },
   (table) => [
     index('audit_logs_workspace_idx').on(table.workspaceId),

@@ -1,3 +1,4 @@
+import { insertAuditLog } from '../activity/service.js';
 import { and, desc, eq, isNull } from 'drizzle-orm';
 
 import { db } from '../../db/index.js';
@@ -71,7 +72,7 @@ export const createCommentInTransaction = async (
     throw createHttpError('Failed to create comment', 500);
   }
 
-  await tx.insert(auditLogs).values({
+  await insertAuditLog(tx, {
     workspaceId: data.workspaceId,
     actorId: data.userId,
     action: 'COMMENT_CREATED',
@@ -194,7 +195,7 @@ export const updateComment = async (data: {
       throw createHttpError('Failed to update comment', 500);
     }
 
-    await tx.insert(auditLogs).values({
+    await insertAuditLog(tx, {
       workspaceId: data.workspaceId,
       actorId: data.actorId,
       action: 'COMMENT_UPDATED',
@@ -294,7 +295,7 @@ export const deleteComment = async (data: {
       throw createHttpError('Failed to delete comment', 500);
     }
 
-    await tx.insert(auditLogs).values({
+    await insertAuditLog(tx, {
       workspaceId: data.workspaceId,
       actorId: data.actorId,
       action: 'COMMENT_DELETED',

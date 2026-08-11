@@ -60,4 +60,55 @@ export class AppError extends Error {
 
     Error.captureStackTrace?.(this, AppError);
   }
+
+  static badRequest(message: string = 'Bad request', details?: unknown) {
+    return new AppError(message, {
+      statusCode: 400,
+      code: APP_ERROR_CODES.BAD_REQUEST,
+      details,
+    });
+  }
+
+  static unauthorized(message: string = 'Authentication required') {
+    return new AppError(message, {
+      statusCode: 401,
+      code: APP_ERROR_CODES.AUTHENTICATION_REQUIRED,
+    });
+  }
+
+  static forbidden(
+    message: string = 'You do not have permission to perform this action'
+  ) {
+    return new AppError(message, { statusCode: 403, code: APP_ERROR_CODES.FORBIDDEN });
+  }
+
+  static notFound(message: string = 'Not found') {
+    return new AppError(message, {
+      statusCode: 404,
+      code: APP_ERROR_CODES.RESOURCE_NOT_FOUND,
+    });
+  }
+
+  static conflict(message: string = 'Conflict') {
+    return new AppError(message, { statusCode: 409, code: APP_ERROR_CODES.CONFLICT });
+  }
+
+  static gone(message: string = 'Gone') {
+    return new AppError(message, { statusCode: 410, code: APP_ERROR_CODES.GONE });
+  }
+
+  static serviceUnavailable(
+    message: string,
+    code: typeof APP_ERROR_CODES.AI_DISABLED | typeof APP_ERROR_CODES.AI_PROVIDER_ERROR
+  ) {
+    return new AppError(message, { statusCode: 503, code });
+  }
+
+  static internalError(message: string = 'Internal server error', cause?: unknown) {
+    return new AppError(message, {
+      statusCode: 500,
+      code: APP_ERROR_CODES.INTERNAL_ERROR,
+      cause,
+    });
+  }
 }

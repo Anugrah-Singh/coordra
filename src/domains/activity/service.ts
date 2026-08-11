@@ -7,7 +7,7 @@ import { comments } from '../../db/schema/comments.js';
 import { projects } from '../../db/schema/projects.js';
 import { tasks } from '../../db/schema/tasks.js';
 import { users } from '../../db/schema/users.js';
-import { internalError, notFound } from '../../utils/httpErrors.js';
+import { AppError } from '../../utils/AppError.js';
 import { getPagination } from '../../utils/pagination.js';
 
 export const getWorkspaceAuditLogs = async (input: {
@@ -151,7 +151,7 @@ export const markNotificationRead = async (userId: string, notificationId: strin
     .set({ readAt: new Date() })
     .where(and(eq(notifications.id, notificationId), eq(notifications.userId, userId)))
     .returning();
-  if (!notification) throw notFound('Notification not found');
+  if (!notification) throw AppError.notFound('Notification not found');
   return notification;
 };
 
@@ -165,6 +165,33 @@ export const markAllNotificationsRead = async (
     .set({ readAt: new Date() })
     .where(and(...conditions))
     .returning();
-  if (!updated) throw internalError('Failed to mark notifications as read');
+  if (!updated) throw AppError.internalError('Failed to mark notifications as read');
   return updated;
+};
+
+import type { PgTransaction } from 'drizzle-orm/pg-core';
+import type { ExtractTablesWithRelations } from 'drizzle-orm';
+import type { PostgresJsQueryResultHKT } from 'drizzle-orm/postgres-js';
+
+export const insertAuditLog = async (
+  tx: any,
+  entry: {
+    workspaceId: string;
+    actorId: string;
+    action: string;
+    entityType: string;
+    entityId: string;
+    oldValue?: unknown;
+    newValue?: unknown;
+  }
+) => {
+  await tx.insert(auditLogs).values({
+    workspaceId: entry.workspaceId,
+    actorId: entry.actorId,
+    action: entry.action,
+    entityType: entry.entityType,
+    entityId: entry.entityId,
+    oldValue: entry.oldValue ?? null,
+    newValue: entry.newValue ?? null,
+  });
 };

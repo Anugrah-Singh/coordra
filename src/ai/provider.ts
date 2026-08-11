@@ -3,7 +3,7 @@ import { generateText, stepCountIs } from 'ai';
 
 import { env } from '../config/env.js';
 import { APP_ERROR_CODES } from '../utils/AppError.js';
-import { serviceUnavailable } from '../utils/httpErrors.js';
+import { AppError } from '../utils/AppError.js';
 import { buildPulseTools, type PulseToolContext } from './tools.js';
 import type { SanitizedProposal } from './types.js';
 
@@ -45,7 +45,7 @@ ${input.toolContext.role === 'VIEWER' ? 'This user is read-only. Explain that Vi
 
 export const generatePulseText: PulseTextGenerator = async (input) => {
   if (!env.AI_ENABLED || !env.GROQ_API_KEY) {
-    throw serviceUnavailable(
+    throw AppError.serviceUnavailable(
       'Pulse is not enabled for this deployment.',
       APP_ERROR_CODES.AI_DISABLED
     );
@@ -89,12 +89,12 @@ export const generatePulseText: PulseTextGenerator = async (input) => {
       error instanceof Error &&
       (error.name === 'AbortError' || /timeout|timed out/i.test(error.message))
     ) {
-      throw serviceUnavailable(
+      throw AppError.serviceUnavailable(
         'Pulse took too long to respond. Your workspace is still available.',
         APP_ERROR_CODES.AI_PROVIDER_ERROR
       );
     }
-    throw serviceUnavailable(
+    throw AppError.serviceUnavailable(
       'Pulse is temporarily unavailable. Your workspace is still available.',
       APP_ERROR_CODES.AI_PROVIDER_ERROR
     );

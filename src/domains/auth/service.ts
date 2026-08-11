@@ -6,7 +6,6 @@ import { env } from '../../config/env.js';
 import { db } from '../../db/index.js';
 import { users } from '../../db/schema/users.js';
 import { APP_ERROR_CODES, AppError } from '../../utils/AppError.js';
-import { unauthorized, internalError } from '../../utils/httpErrors.js';
 
 const safeUserColumns = {
   id: users.id,
@@ -26,7 +25,7 @@ export const register = async (input: {
     .insert(users)
     .values({ email: input.email, fullName: input.fullName, passwordHash })
     .returning(safeUserColumns);
-  if (!user) throw internalError('Failed to create user');
+  if (!user) throw AppError.internalError('Failed to create user');
   return user;
 };
 
@@ -57,7 +56,7 @@ export const restoreSession = async (userId: string) => {
     .from(users)
     .where(eq(users.id, userId))
     .limit(1);
-  if (!user) throw unauthorized('User account no longer exists');
+  if (!user) throw AppError.unauthorized('User account no longer exists');
   return user;
 };
 
@@ -75,7 +74,7 @@ export const guestDemoLogin = async () => {
       .insert(users)
       .values({ email: demoEmail, fullName: 'Guest Evaluator', passwordHash })
       .returning();
-    if (!newUser) throw internalError('Failed to initialize demo guest user');
+    if (!newUser) throw AppError.internalError('Failed to initialize demo guest user');
     account = newUser;
   }
 

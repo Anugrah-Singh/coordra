@@ -1,3 +1,4 @@
+import { insertAuditLog } from '../activity/service.js';
 import { and, desc, eq, isNotNull, isNull, lt, type SQL } from 'drizzle-orm';
 
 import { db } from '../../db/index.js';
@@ -13,7 +14,7 @@ import { tasks } from '../../db/schema/tasks.js';
 import { workspaceMembers } from '../../db/schema/workspaces.js';
 import { users } from '../../db/schema/users.js';
 
-import { badRequest, internalError, notFound } from '../../utils/httpErrors.js';
+import { AppError } from '../../utils/AppError.js';
 
 import { getPagination } from '../../utils/pagination.js';
 
@@ -100,7 +101,7 @@ const ensureProjectBelongsToWorkspace = async (
     .limit(1);
 
   if (!project) {
-    throw notFound('Project not found in this workspace');
+    throw AppError.notFound('Project not found in this workspace');
   }
 };
 
@@ -128,7 +129,7 @@ const ensureAssigneeIsActiveWorkspaceMember = async (
     .limit(1);
 
   if (!membership) {
-    throw badRequest('Assignee must be an active member of this workspace');
+    throw AppError.badRequest('Assignee must be an active member of this workspace');
   }
 };
 
@@ -164,10 +165,10 @@ export const createTaskInTransaction = async (
     .returning();
 
   if (!newTask) {
-    throw internalError('Failed to create task');
+    throw AppError.internalError('Failed to create task');
   }
 
-  await tx.insert(auditLogs).values({
+  await insertAuditLog(tx, {
     workspaceId: data.workspaceId,
 
     actorId: data.createdById,
@@ -288,7 +289,7 @@ export const getProjectTasks = async (data: GetProjectTasksInput) => {
     .limit(1);
 
   if (!project) {
-    throw notFound('Project not found in this workspace');
+    throw AppError.notFound('Project not found in this workspace');
   }
 
   const conditions: SQL[] = [
@@ -352,7 +353,7 @@ export const getTaskById = async (
     .limit(1);
 
   if (!task) {
-    throw notFound('Task not found');
+    throw AppError.notFound('Task not found');
   }
 
   return task;
@@ -377,7 +378,7 @@ export const updateTaskInTransaction = async (
     .limit(1);
 
   if (!existingTask) {
-    throw notFound('Task not found');
+    throw AppError.notFound('Task not found');
   }
 
   await ensureAssigneeIsActiveWorkspaceMember(tx, data.workspaceId, data.assigneeId);
@@ -429,10 +430,10 @@ export const updateTaskInTransaction = async (
     .returning();
 
   if (!updatedTask) {
-    throw internalError('Failed to update task');
+    throw AppError.internalError('Failed to update task');
   }
 
-  await tx.insert(auditLogs).values({
+  await insertAuditLog(tx, {
     workspaceId: data.workspaceId,
 
     actorId: data.actorId,
@@ -519,7 +520,7 @@ export const duplicateTask = async (data: {
       .limit(1);
 
     if (!existingTask) {
-      throw notFound('Task not found');
+      throw AppError.notFound('Task not found');
     }
 
     const [duplicatedTask] = await tx
@@ -546,10 +547,10 @@ export const duplicateTask = async (data: {
       .returning();
 
     if (!duplicatedTask) {
-      throw internalError('Failed to duplicate task');
+      throw AppError.internalError('Failed to duplicate task');
     }
 
-    await tx.insert(auditLogs).values({
+    await insertAuditLog(tx, {
       workspaceId: data.workspaceId,
 
       actorId: data.actorId,

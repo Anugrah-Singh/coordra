@@ -1,3 +1,4 @@
+import { workspaceParams, projectParams, taskParams, wId } from '../shared.params.js';
 import { Router } from 'express';
 import { z } from 'zod';
 
@@ -19,8 +20,7 @@ import {
 
 const status = z.enum(['BACKLOG', 'TODO', 'IN_PROGRESS', 'DONE', 'BLOCKED']);
 const priority = z.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT']);
-const baseParams = z.object({ workspaceId: z.uuid(), projectId: z.uuid() });
-const taskParams = baseParams.extend({ taskId: z.uuid() });
+
 const taskFields = {
   title: z.string().trim().min(1).optional(),
   description: z.string().trim().nullable().optional(),
@@ -30,11 +30,11 @@ const taskFields = {
   dueDate: z.iso.datetime().nullable().optional(),
 };
 export const createTaskSchema = z.object({
-  params: baseParams,
+  params: projectParams,
   body: z.object({ ...taskFields, title: z.string().trim().min(1) }),
 });
 export const getTasksSchema = z.object({
-  params: baseParams,
+  params: projectParams,
   query: z.object({
     page: z.string().optional(),
     limit: z.string().optional(),

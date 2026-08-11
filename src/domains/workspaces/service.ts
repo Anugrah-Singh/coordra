@@ -1,3 +1,4 @@
+import { insertAuditLog } from '../activity/service.js';
 import { randomBytes } from 'node:crypto';
 
 import { and, eq, sql } from 'drizzle-orm';
@@ -8,13 +9,7 @@ import { auditLogs } from '../../db/schema/auditLogs.js';
 
 import { workspaceMembers, workspaces } from '../../db/schema/workspaces.js';
 
-import {
-  badRequest,
-  conflict,
-  forbidden,
-  internalError,
-  notFound,
-} from '../../utils/httpErrors.js';
+import { AppError } from '../../utils/AppError.js';
 
 type CreateWorkspaceServiceInput = {
   name: string;
@@ -52,7 +47,7 @@ export const createWorkspace = async (data: CreateWorkspaceServiceInput) => {
       .returning();
 
     if (!newWorkspace) {
-      throw internalError('Failed to create workspace');
+      throw AppError.internalError('Failed to create workspace');
     }
 
     const [ownerMembership] = await tx
@@ -67,7 +62,7 @@ export const createWorkspace = async (data: CreateWorkspaceServiceInput) => {
       .returning();
 
     if (!ownerMembership) {
-      throw internalError('Failed to create workspace owner membership');
+      throw AppError.internalError('Failed to create workspace owner membership');
     }
 
     return newWorkspace;
@@ -107,7 +102,7 @@ export const transferWorkspaceOwnership = async (
       .limit(1);
 
     if (!workspace) {
-      throw notFound('Workspace not found');
+      throw AppError.notFound('Workspace not found');
     }
 
     const [currentOwner] = await tx
@@ -123,7 +118,7 @@ export const transferWorkspaceOwnership = async (
       .limit(1);
 
     if (!currentOwner) {
-      throw forbidden('Only the current workspace owner can transfer ownership');
+      throw AppError.forbidden('Only the current workspace owner can transfer ownership');
     }
 
     const [newOwnerMembership] = await tx
@@ -139,11 +134,11 @@ export const transferWorkspaceOwnership = async (
       .limit(1);
 
     if (!newOwnerMembership) {
-      throw notFound('New owner must be an active workspace member');
+      throw AppError.notFound('New owner must be an active workspace member');
     }
 
     if (newOwnerMembership.userId === data.currentOwnerId) {
-      throw badRequest('You are already the workspace owner');
+      throw AppError.badRequest('You are already the workspace owner');
     }
 
     const [previousOwnerMembership] = await tx
@@ -161,7 +156,7 @@ export const transferWorkspaceOwnership = async (
       .returning();
 
     if (!previousOwnerMembership) {
-      throw internalError('Failed to update the previous owner membership');
+      throw AppError.internalError('Failed to update the previous owner membership');
     }
 
     const [promotedMember] = await tx
@@ -173,7 +168,7 @@ export const transferWorkspaceOwnership = async (
       .returning();
 
     if (!promotedMember) {
-      throw internalError('Failed to promote the new workspace owner');
+      throw AppError.internalError('Failed to promote the new workspace owner');
     }
 
     const [updatedWorkspace] = await tx
@@ -185,10 +180,10 @@ export const transferWorkspaceOwnership = async (
       .returning();
 
     if (!updatedWorkspace) {
-      throw internalError('Failed to update workspace owner');
+      throw AppError.internalError('Failed to update workspace owner');
     }
 
-    await tx.insert(auditLogs).values({
+    await insertAuditLog(tx, {
       workspaceId: data.workspaceId,
 
       actorId: data.currentOwnerId,
@@ -239,7 +234,7 @@ export const getWorkspaceById = async (workspaceId: string) => {
     .limit(1);
 
   if (!workspace) {
-    throw notFound('Workspace not found');
+    throw AppError.notFound('Workspace not found');
   }
 
   return workspace;
@@ -258,7 +253,7 @@ export const updateWorkspace = async (data: {
       .limit(1);
 
     if (!existingWorkspace) {
-      throw notFound('Workspace not found');
+      throw AppError.notFound('Workspace not found');
     }
 
     const [updatedWorkspace] = await tx
@@ -271,10 +266,10 @@ export const updateWorkspace = async (data: {
       .returning();
 
     if (!updatedWorkspace) {
-      throw internalError('Failed to update workspace');
+      throw AppError.internalError('Failed to update workspace');
     }
 
-    await tx.insert(auditLogs).values({
+    await insertAuditLog(tx, {
       workspaceId: data.workspaceId,
 
       actorId: data.actorId,
@@ -310,7 +305,7 @@ export const deleteWorkspace = async (data: {
     .limit(1);
 
   if (!existingWorkspace) {
-    throw notFound('Workspace not found');
+    throw AppError.notFound('Workspace not found');
   }
 
   const [ownerMembership] = await db
@@ -326,11 +321,11 @@ export const deleteWorkspace = async (data: {
     .limit(1);
 
   if (!ownerMembership) {
-    throw forbidden('Only the workspace owner can delete this workspace');
+    throw AppError.forbidden('Only the workspace owner can delete this workspace');
   }
 
   if (existingWorkspace.name !== data.confirmationName) {
-    throw badRequest('Workspace name confirmation does not match');
+    throw AppError.badRequest('Workspace name confirmation does not match');
   }
 
   const [deletedWorkspace] = await db
@@ -341,7 +336,7 @@ export const deleteWorkspace = async (data: {
     .returning();
 
   if (!deletedWorkspace) {
-    throw conflict('Workspace changed before it could be deleted');
+    throw AppError.conflict('Workspace changed before it could be deleted');
   }
 
   return deletedWorkspace;

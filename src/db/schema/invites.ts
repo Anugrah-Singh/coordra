@@ -1,3 +1,4 @@
+import { pk, timestamps, createdAtCol } from './columns.js';
 import {
   pgTable,
   uuid,
@@ -21,7 +22,7 @@ export const inviteStatusEnum = pgEnum('invite_status', [
 export const workspaceInvites = pgTable(
   'workspace_invites',
   {
-    id: uuid('id').primaryKey().defaultRandom(),
+    ...pk,
 
     workspaceId: uuid('workspace_id')
       .references(() => workspaces.id, {
@@ -47,7 +48,7 @@ export const workspaceInvites = pgTable(
 
     declinedAt: timestamp('declined_at'),
 
-    createdAt: timestamp('created_at').defaultNow().notNull(),
+    ...createdAtCol,
   },
   (table) => [
     index('workspace_invites_workspace_idx').on(table.workspaceId),

@@ -1,3 +1,4 @@
+import { workspaceParams, projectParams, taskParams, wId } from '../shared.params.js';
 import { Router } from 'express';
 import { z } from 'zod';
 
@@ -73,7 +74,7 @@ router.post(
       history: req.body.history,
       message: req.body.message,
       toolContext: {
-        workspaceId,
+        workspaceId: String(req.params.workspaceId),
         requesterId: res.locals.userId,
         role: res.locals.workspaceRole,
         projectId: req.body.projectId,
@@ -115,7 +116,7 @@ router.post(
   async (req, res) => {
     const workspaceId = String(req.params.workspaceId);
     const result = await approveProposal({
-      workspaceId,
+      workspaceId: String(req.params.workspaceId),
       requesterId: res.locals.userId,
       proposalId: String(req.params.proposalId),
     });
