@@ -1,140 +1,104 @@
-# Coordra
+# Coordra 🌟
 
-Coordra is an AI-assisted workspace for coordinating projects, people, and priorities.
-It combines tenant-safe project delivery, live collaboration, and accountable actions with
-Pulse: one workspace-scoped assistant that answers from verified facts and prepares writes
-for explicit approval.
+Coordra is an AI-assisted workspace for coordinating projects, people, and priorities. It combines tenant-safe project delivery, live collaboration, and accountable actions with Pulse: a workspace-scoped assistant that answers from verified facts and prepares writes for explicit approval.
 
-## Visual proof
+🔗 **Live Demo:** https://saas-team-workspace.vercel.app/
+<!-- 🔗 **Video Walkthrough:** [Link to a 2-minute Loom or YouTube video] -->
 
-The landing preview shows the core interaction: a member asks Pulse what needs attention,
-Pulse summarizes deterministic risk conditions, and an editable proposal remains visibly
-pending until approval. Inside the product, **Ask Pulse** opens a right-side desktop drawer
-or full-screen mobile dialog while preserving the active workspace and project context.
+## 🚀 Key Features
+- **Real-time Accountability:** Implemented Socket.IO workspace rooms with query invalidation to handle concurrent user interactions and ensure transactional audit history.
+- **AI-Assisted Coordination (Pulse):** Integrated an approval-gated AI assistant that summarizes deterministic risk conditions and prepares editable task updates without executing autonomous mutations.
+- **Contextual Workspaces:** Built seamless project management tools, including Kanban tasks, due dates, assignee management, and refresh-safe deep links where work actually happens.
+- **Secure Authentication & Permissions:** Engineered a robust backend-enforced 5-level Role-Based Access Control (RBAC) system for secure workspace membership and tenant isolation.
 
-```mermaid
-sequenceDiagram
-  participant Member
-  participant Pulse
-  participant Domain as Coordra domain services
-  Member->>Pulse: Ask about launch risk
-  Pulse->>Domain: Read tenant-scoped facts
-  Domain-->>Pulse: Tasks, aggregates, sanitized activity
-  Pulse-->>Member: Cautious summary + proposed action
-  Member->>Domain: Review, edit, approve
-  Domain-->>Member: One committed mutation + audit + live refresh
+## 🛠️ Tech Stack & Architecture
+
+**Frontend**
+- **Framework:** Next.js
+- **Styling:** Tailwind CSS
+
+**Backend**
+- **Runtime Environment:** Node.js (v24.18+)
+- **Framework:** Express.js
+- **Database:** PostgreSQL (via Drizzle ORM)
+- **AI Provider:** Groq (via Vercel AI SDK)
+
+**System Workflow Diagram**
+```text
+[ Client / Browser ] ----( HTTP Requests )----> [ Express.js API Gateway ]
+        |                                                 |
+(WebSocket Connection)                             (Drizzle ORM DB Queries)
+        |                                                 |
+        v                                                 v
+[ Socket.io Server ]                             [ PostgreSQL DB ]
 ```
 
-## Five capabilities
+## 🧠 Technical Challenges & Key Learnings
+💡 *Note for Reviewers: This section highlights my engineering mindset, problem-solving methodologies, and ability to overcome technical roadblocks during development.*
 
-1. **Projects and priorities** — projects, filtered Kanban tasks, due dates, assignees,
-   labels, archive/restore, and duplication.
-2. **People and permissions** — workspace membership, invitations, ownership transfer,
-   and backend-enforced five-level RBAC. The recruiter demo focuses on Owner, Member, and
-   Viewer while all five roles remain implemented.
-3. **Context where work happens** — task comments, notification inboxes, and refresh-safe
-   deep links.
-4. **Live accountability** — Socket.IO workspace rooms, query invalidation, and
-   transactional audit history.
-5. **Pulse coordination** — workspace questions, deterministic risk summaries, and
-   approval-gated create-task, update-task, and add-comment proposals.
+**Challenge 1: Safe AI Mutations in a Multi-Tenant Environment**
+- **The Problem:** Allowing an AI model to directly execute mutations on a database introduces severe security and data integrity risks, especially when dealing with tenant-isolated data.
+- **The Solution:** I designed an approval-gated architecture where the AI generates a 15-minute `PENDING` proposal instead of directly executing writes. The approval process is model-free, atomically validating identity and roles before executing the command and emitting a live event.
 
-## Architecture
+**Challenge 2: Preventing LLM Hallucinations on Domain Data**
+- **The Problem:** The AI could easily invent UUIDs or expose sensitive data from other tenants if given raw database access.
+- **The Solution:** I implemented workspace-scoped service results. Tool inputs omit workspace IDs entirely, and projects/tasks are resolved by name against strictly verified workspace data. Risk severity is computed deterministically in TypeScript, leaving the model only responsible for summarizing safe conditions.
 
-```mermaid
-flowchart LR
-  UI[Next.js feature UI] --> API[Express domain routes]
-  API --> SEC[JWT cookie · Origin · Zod · RBAC]
-  SEC --> DOM[Workspace domain services]
-  DOM --> PG[(PostgreSQL via Drizzle)]
-  DOM --> IO[Socket.IO rooms]
-  UI --> PULSE[Pulse drawer]
-  PULSE --> AR[Assistant route context]
-  AR --> GROQ[Groq via Vercel AI SDK]
-  GROQ --> TOOLS[Role-scoped local tools]
-  TOOLS --> DOM
-  AR --> PROP[(AI action proposals)]
-```
+## 📦 Getting Started & Local Setup
 
-Every tenant-owned lookup includes `workspaceId`. The AI adapter and tools never import
-Drizzle; they call narrow domain reads. Conversation history is ephemeral and limited to
-ten messages/12,000 characters. The raw audit endpoint remains Owner/Admin-only, while
-Pulse sees sanitized activity labels and resource titles.
+**Prerequisites**
+Make sure you have the following installed on your machine:
+- Node.js (v24.18+)
+- npm (v9.x or higher)
+- A running instance of PostgreSQL 17 (or a Neon URL)
 
-## Pulse safety model
-
-- AI is optional and disabled by default; normal Coordra behavior does not depend on Groq.
-- Read tools return at most 20 rows and are built from verified workspace/user/role context.
-- Viewer receives four read tools. Member and above additionally receive three proposal
-  tools. There is no delete tool.
-- Tool inputs omit workspace IDs. Projects, tasks, and assignees are resolved by name
-  against workspace-scoped service results; invented model UUIDs are never accepted.
-- Risk severity is computed in TypeScript from database facts. The model only summarizes
-  the returned conditions and next actions.
-- Proposal tools store a 15-minute `PENDING` proposal but never execute a mutation.
-- Approval is model-free: it revalidates identity, current role, ownership, workspace,
-  expiry, and payload; atomically claims the pending row; runs the existing command and
-  an `AI_ASSISTED_*` audit record in one transaction; then emits the live event after commit.
-- Provider calls time out after 30 seconds. Disabled, quota, timeout, and provider failures
-  return safe application errors without provider details.
-
-## Setup
-
-Prerequisites: Node.js 24.18+ and PostgreSQL 17 (a Neon URL also works).
-
+**Installation & Environment Configuration**
+Clone the repository to your local machine:
 ```bash
+git clone https://github.com/yourusername/coordra.git
+cd coordra
+```
+
+Install the necessary dependencies for both the client and server:
+```bash
+# Install backend dependencies
 npm ci
+
+# Install frontend dependencies
 npm --prefix frontend ci
+```
+
+Create a `.env` file in the root directory and frontend directory:
+```bash
 cp .env.example .env
 cp frontend/.env.example frontend/.env
+```
+
+**Running the Application**
+To launch the development server locally:
+```bash
+# Setup the database and seed it
 npm run db:migrate
 DEMO_SEED_CONFIRM=coordra-demo DEMO_SEED_PASSWORD='<12+ characters>' npm run db:seed:demo
+
+# Run the backend
 npm run dev
 ```
 
-Run `npm run frontend:dev` in another terminal. The web app is at
-`http://localhost:3000`, the API at `http://localhost:8000`, and Swagger at
-`http://localhost:8000/api-docs`.
-
-Pulse stays hidden with the default `AI_ENABLED=false`. To enable it on the backend:
-
-```env
-AI_ENABLED=true
-AI_PROVIDER=groq
-GROQ_API_KEY=<server-only-key>
-GROQ_MODEL=openai/gpt-oss-20b
-AI_MAX_STEPS=4
-```
-
-Never expose `GROQ_API_KEY` to Next.js or prefix it with `NEXT_PUBLIC_`.
-
-## Behavior-based testing
-
+In another terminal, run the frontend:
 ```bash
-npm run verify
+npm run frontend:dev
 ```
+The web app will be available at `http://localhost:3000`, the API at `http://localhost:8000`, and Swagger docs at `http://localhost:8000/api-docs`.
 
-Verification covers formatting, backend and test type checks, unit tests, PostgreSQL HTTP
-journeys, Socket.IO behavior, production audits/builds, frontend lint/type checks, and
-Vitest/Testing Library interaction tests. CI never calls Groq; Pulse generation accepts a
-fake model generator in tests. Integration journeys exercise tenant isolation, RBAC,
-proposal edit/reject/expiry, exactly-once approval, stale permissions, audit records, and
-the ordinary SaaS routes with AI disabled.
+## 🔮 Future Improvements & Roadmap
+- Implement a distributed rate-limit store to support horizontally scaled APIs.
+- Add streaming presentation for Pulse AI responses.
+- Integrate Redis for robust, distributed server-side caching.
+- Expand deterministic read tools for the assistant.
 
-## Limitations
-
-- Pulse responses are non-streaming and conversations are not persisted.
-- The deployment uses provider quota plus in-process hourly user/IP limiters; distributed
-  rate-limit storage would be needed for a horizontally scaled API.
-- Risk rules are intentionally explicit and conservative rather than predictive.
-- Socket events use coarse invalidation, favoring correctness over minimal refetching.
-
-## Future possibilities
-
-Narrowly scoped follow-ups could add streaming presentation, a shared rate-limit store,
-or additional deterministic read tools. Autonomous writes, deletion tools, persistent
-conversation memory, RAG, MCP, queues, external integrations, and a separate AI service
-are intentionally outside this implementation.
-
-Engineering and deployment details live in [Deployment guide](docs/DEPLOYMENT.md) and
-[Interview guide](docs/INTERVIEW_GUIDE.md).
+## 🤝 Contact & Coding Profiles
+- **Name:** Your Name
+- **Email:** your.email@example.com
+- **LinkedIn:** linkedin.com
+- **GitHub:** github.com/yourusername
