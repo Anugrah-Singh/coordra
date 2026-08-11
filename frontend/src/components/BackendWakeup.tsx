@@ -47,7 +47,8 @@ export function BackendWakeup() {
         <div className="space-y-2">
           <h3 className="font-semibold text-lg">Backend is waking up</h3>
           <p className="text-sm text-muted-foreground">
-            Since this is hosted on a free tier (Render), it can take up to 50 seconds to spin up after inactivity. Please wait before interacting...
+            Since this is hosted on a free tier (Render), it can take up to 50 seconds to
+            spin up after inactivity. Please wait before interacting...
           </p>
         </div>
       </div>
