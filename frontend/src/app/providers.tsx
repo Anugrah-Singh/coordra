@@ -6,6 +6,7 @@ import { Toaster } from '@/components/ui/sonner';
 import { AuthProvider } from '@/features/auth/AuthProvider';
 import { AppErrorBoundary } from '@/components/AppErrorBoundary';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import { BackendWakeup } from '@/components/BackendWakeup';
 
 export function Providers({ children }: PropsWithChildren) {
   const [queryClient] = useState(
@@ -39,6 +40,7 @@ export function Providers({ children }: PropsWithChildren) {
           <AppErrorBoundary>{children}</AppErrorBoundary>
         </TooltipProvider>
         <Toaster position="top-right" richColors closeButton />
+        <BackendWakeup />
       </AuthProvider>
     </QueryClientProvider>
   );
