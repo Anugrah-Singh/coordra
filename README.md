@@ -27,6 +27,7 @@ Coordra is an AI-assisted workspace for coordinating projects, people, and prior
 - **AI Provider:** Groq (via Vercel AI SDK)
 
 **System Workflow Diagram**
+```mermaid
 flowchart TD
 
 subgraph group_backend["Node API"]
@@ -124,6 +125,7 @@ class node_next_app,node_project_board,node_workspace_socket,node_pulse_drawer,n
 class node_workspace_service,node_project_service,node_task_service,node_comment_service toneMint
 class node_assistant_service,node_pulse_tools toneRose
 class node_postgres,node_migrations toneIndigo
+```
 
 ## 🧠 Technical Challenges & Key Learnings
 
