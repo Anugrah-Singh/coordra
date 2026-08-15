@@ -112,9 +112,3 @@ The web app will be available at `http://localhost:3000`, the API at `http://loc
 - Integrate Redis for robust, distributed server-side caching.
 - Expand deterministic read tools for the assistant.
 
-## 🤝 Contact & Coding Profiles
-
-- **Name:** Your Name
-- **Email:** your.email@example.com
-- **LinkedIn:** linkedin.com
-- **GitHub:** github.com/yourusername
