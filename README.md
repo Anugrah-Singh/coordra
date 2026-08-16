@@ -2,7 +2,7 @@
 
 Coordra is an AI-assisted workspace for coordinating projects, people, and priorities. It combines tenant-safe project delivery, live collaboration, and accountable actions with Pulse: a workspace-scoped assistant that answers from verified facts and prepares writes for explicit approval.
 
-🔗 **Live Demo:** https://saas-team-workspace.vercel.app/
+🔗 **Live Demo:** https://saas-team-workspace.vercel.app/ (wait for the backend to start on render)
 <!-- 🔗 **Video Walkthrough:** [Link to a 2-minute Loom or YouTube video] -->
 
 ## 🚀 Key Features
