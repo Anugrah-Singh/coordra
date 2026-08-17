@@ -29,136 +29,54 @@ Coordra is an AI-assisted workspace for coordinating projects, people, and prior
 **System Workflow Diagram**
 
 ```mermaid
-flowchart TD
+flowchart LR
 
     User["User / Browser"]
 
     subgraph Frontend["Next.js Frontend"]
-        App["Next.js App Router"]
-        AuthUI["Auth UI / AuthProvider"]
-        WorkspaceUI["Workspace / Project UI"]
-        PulseUI["Pulse Assistant UI"]
-        QueryCache["TanStack Query Cache"]
-        APIClient["Frontend API Client"]
+        UI["React UI"]
+        Query["TanStack Query"]
+        APIClient["API Client"]
         SocketClient["Socket.IO Client"]
     end
 
-    subgraph Backend["Node.js Backend - Express Modular Monolith"]
-        Server["server.ts<br/>HTTP server bootstrap"]
-
-        subgraph HttpLayer["HTTP / API Layer"]
-            Express["Express app"]
-            Security["Security Middleware<br/>Helmet / CORS / Cookies / CSRF<br/>Rate Limit / Validation"]
-            AuthMW["Authentication Middleware<br/>JWT cookie verification"]
-            RBAC["Workspace RBAC<br/>membership + role check"]
-            APIRouter["API Router<br/>/api"]
-        end
-
-        subgraph Domains["Domain Services"]
-            Auth["Auth Service"]
-            Workspace["Workspace Service"]
-            Collaboration["Members / Invites / Labels / Activity"]
-            Projects["Project Service"]
-            Tasks["Task Service"]
-            Comments["Comment Service"]
-        end
-
+    subgraph Backend["Node.js / Express Backend"]
+        API["REST API"]
+        Auth["Auth + RBAC"]
+        Services["Domain Services"]
+        
         subgraph Pulse["Pulse AI"]
-            AssistantRoute["Assistant Routes"]
-            AssistantService["Assistant Service<br/>proposal lifecycle"]
-            AITools["Verified AI Tools"]
-            Resolution["Name Resolution"]
-            Risks["Deterministic Risk Analysis"]
-            Provider["AI Provider<br/>Vercel AI SDK"]
+            Assistant["Assistant"]
+            Tools["Verified AI Tools"]
         end
 
-        subgraph Realtime["Realtime"]
-            SocketServer["Socket.IO Server"]
-            SocketEvents["Workspace / User Events"]
-        end
-
-        subgraph Persistence["Persistence"]
-            Drizzle["Drizzle ORM"]
-            PGPool["node-postgres Pool"]
-            PostgreSQL[("PostgreSQL")]
-            Migrations["Drizzle SQL Migrations"]
-        end
+        Realtime["Socket.IO Realtime"]
     end
 
-    Groq["Groq API<br/>LLM Provider"]
+    DB[("PostgreSQL<br/>Drizzle ORM")]
+    Groq["Groq API"]
 
-    User --> App
-    App --> AuthUI
-    App --> WorkspaceUI
-    App --> PulseUI
+    User --> UI
 
-    AuthUI -->|HTTP / JSON + auth cookie| APIClient
-    WorkspaceUI -->|HTTP / JSON| APIClient
-    PulseUI -->|HTTP / JSON| APIClient
+    UI --> APIClient
+    APIClient -->|HTTP / REST| API
 
-    APIClient -->|HTTPS / REST-style API| Express
+    API --> Auth
+    Auth --> Services
+    Services --> DB
 
-    Server -->|creates| Express
-    Server -->|attaches to| SocketServer
+    Services --> Realtime
+    Realtime -->|Live updates| SocketClient
+    SocketClient --> Query
 
-    Express --> Security
-    Security --> AuthMW
-    AuthMW --> RBAC
-    RBAC --> APIRouter
+    UI --> Pulse["Pulse UI"]
+    Pulse -->|HTTP / REST| API
+    API --> Assistant
+    Assistant --> Tools
+    Tools --> Services
+    Assistant -->|LLM| Groq
 
-    APIRouter --> Auth
-    APIRouter --> Workspace
-    APIRouter --> Collaboration
-    APIRouter --> Projects
-    APIRouter --> Tasks
-    APIRouter --> Comments
-    APIRouter --> AssistantRoute
-
-    Auth --> Drizzle
-    Workspace --> Drizzle
-    Collaboration --> Drizzle
-    Projects --> Drizzle
-    Tasks --> Drizzle
-    Comments --> Drizzle
-
-    Tasks -->|audit + notifications| Collaboration
-    Tasks -->|workspace mutation events| SocketEvents
-    Workspace -->|workspace events| SocketEvents
-
-    Drizzle --> PGPool
-    PGPool --> PostgreSQL
-    Migrations --> PostgreSQL
-
-    SocketClient -->|Socket.IO| SocketServer
-    SocketServer -->|authenticated workspace rooms| SocketEvents
-    SocketEvents -->|workspace changed / notifications changed| SocketClient
-    SocketClient -->|invalidate queries| QueryCache
-    QueryCache -->|refetch authoritative state| APIClient
-
-    AssistantRoute --> AssistantService
-    AssistantService --> Provider
-    Provider --> AITools
-    AITools --> Resolution
-    AITools --> Risks
-
-    AITools -->|verified workspace reads| Workspace
-    AITools -->|verified project/task reads| Projects
-    AITools -->|verified task reads| Tasks
-    AITools -->|store pending proposal| AssistantService
-
-    Provider -->|LLM generation| Groq
-    Groq -->|response / tool decisions| Provider
-
-    AssistantService -->|PENDING proposal| Drizzle
-
-    PulseUI -->|edit / reject / approve| APIClient
-    APIRouter --> AssistantRoute
-
-    AssistantRoute -->|approve proposal| AssistantService
-    AssistantService -->|atomic approved mutation| Tasks
-    AssistantService -->|atomic approved comment| Comments
-    AssistantService -->|audit approval + execution| Collaboration
-    AssistantService -->|emit realtime update| SocketEvents
+    Query -->|Fetch / Refetch| APIClient
 ```
 
 ## 🧠 Technical Challenges & Key Learnings
